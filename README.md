@@ -1,5 +1,7 @@
 # MCP Learning Guide
 
+**[Start Learning →](https://habond.github.io/learn-mcp/)**
+
 An interactive, hands-on educational guide for learning the Model Context Protocol (MCP). Build your own MCP server from scratch using Python.
 
 ## Overview
