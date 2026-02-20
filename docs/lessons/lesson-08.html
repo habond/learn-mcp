@@ -62,6 +62,23 @@
                 </header>
 
                 <div class="content">
+                    <h2>What You'll Build</h2>
+                    <p>
+                        In this lesson, you'll build <code>sse_server.py</code> &mdash; an MCP server
+                        using HTTP POST for requests and Server-Sent Events for streaming responses.
+                        By the end, your server will:
+                    </p>
+                    <ul>
+                        <li>Handle JSON-RPC requests via HTTP POST</li>
+                        <li>Support both JSON and SSE response modes</li>
+                        <li>Manage client sessions with the <code>Mcp-Session-Id</code> header</li>
+                        <li>Stream progress updates for long-running operations</li>
+                        <li>Support CORS for browser-based clients</li>
+                    </ul>
+                    <p>
+                        Each step builds on the previous one, and you'll test your server with curl commands.
+                    </p>
+
                     <h2>The Streamable HTTP Transport</h2>
                     <p>
                         MCP's <strong>Streamable HTTP</strong> transport combines standard HTTP POST requests

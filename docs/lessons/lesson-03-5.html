@@ -27,8 +27,8 @@
                 <div class="toc-title">Steps</div>
                 <ol class="toc-list">
                     <li class="toc-item"><a href="lesson-03.html" class="toc-link completed"><span class="toc-number">1</span><span>Protocol Overview</span></a></li>
-                    <li class="toc-item"><a href="lesson-03-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Request & Response</span></a></li>
-                    <li class="toc-item"><a href="lesson-03-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Error Handling</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Creating Requests</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Responses & Errors</span></a></li>
                     <li class="toc-item"><a href="lesson-03-4.html" class="toc-link completed"><span class="toc-number">4</span><span>Notifications</span></a></li>
                     <li class="toc-item"><a href="lesson-03-5.html" class="toc-link active"><span class="toc-number">5</span><span>Building a Router</span></a></li>
                 </ol>
@@ -61,11 +61,10 @@
                 </header>
 
                 <div class="content">
-                    <h2>What is a Method Router?</h2>
+                    <h2>What is a Router?</h2>
                     <p>
-                        A <strong>method router</strong> maps incoming JSON-RPC method names to handler
-                        functions. It's the central dispatch mechanism for your server, routing messages
-                        like <code>tools/list</code> to the appropriate handler.
+                        A <strong>router</strong> maps incoming JSON-RPC method names to handler functions.
+                        When a message arrives, the router looks up the method name and calls the right handler:
                     </p>
 
                     <div class="code-block">
@@ -73,60 +72,60 @@
                             <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>Incoming Request                   Router                      Handler
-+-------------------+          +------------+          +------------------+
-| method: tools/list| -------> |   Match    | -------> | handle_tools_list|
-+-------------------+          |   method   |          +------------------+
-                               +------------+
-                                     |
-+-------------------+                |
-| method: tools/call| ---------------+-------> handle_tools_call
-+-------------------+                |
-                                     |
-+-------------------+                |
-| method: initialize| ---------------+-------> handle_initialize
-+-------------------+</code></pre>
+                        <pre><code>Message: {"method": "tools/list", ...}
+                    |
+                    v
+         Router: "tools/list" -> handle_tools_list()
+                    |
+                    v
+         Response: {"result": {"tools": [...]}, ...}</code></pre>
                     </div>
 
-                    <h2>Basic Router Implementation</h2>
+                    <h2>Edit: <code>jsonrpc.py</code></h2>
+
+                    <h3>Step 1: Add an Exception Class</h3>
                     <p>
-                        Let's start with a simple router that maps methods to handler functions:
+                        <strong>Add</strong> this class after the <code>ERROR_MESSAGES</code> dict:
                     </p>
 
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">jsonrpc.py - Add after ERROR_MESSAGES</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">"""
-jsonrpc_router.py - A simple JSON-RPC 2.0 method router.
-"""
+                        <pre><code class="language-python">class JsonRpcError(Exception):
+    """Exception that converts to a JSON-RPC error response."""
 
-from typing import Callable, Any, Optional
-from enum import IntEnum
-
-
-class JsonRpcErrorCode(IntEnum):
-    PARSE_ERROR = -32700
-    INVALID_REQUEST = -32600
-    METHOD_NOT_FOUND = -32601
-    INVALID_PARAMS = -32602
-    INTERNAL_ERROR = -32603
-
-
-class JsonRpcError(Exception):
-    """JSON-RPC error that can be converted to an error response."""
-
-    def __init__(self, code: JsonRpcErrorCode, message: str, data: Any = None):
+    def __init__(
+        self,
+        code: JsonRpcErrorCode,
+        message: str | None = None,
+        data: Any = None
+    ):
         self.code = code
-        self.message = message
+        self.message = message or ERROR_MESSAGES.get(code, "Unknown error")
         self.data = data
-        super().__init__(message)
+        super().__init__(self.message)</code></pre>
+                    </div>
+
+                    <h3>Step 2: Add the Router Class</h3>
+                    <p>
+                        <strong>Add</strong> this class after all your functions (before the test block):
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <span class="code-filename">jsonrpc.py - Add before the test block</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from typing import Callable, cast
 
 
 class JsonRpcRouter:
     """
-    Routes JSON-RPC methods to handler functions.
+    Routes JSON-RPC messages to handler functions.
 
     Usage:
         router = JsonRpcRouter()
@@ -156,9 +155,9 @@ class JsonRpcRouter:
             return func
         return decorator
 
-    def handle(self, message: dict) -> Optional[dict]:
+    def handle(self, message: dict) -> dict | None:
         """
-        Process a JSON-RPC message and return response if needed.
+        Process a JSON-RPC message and return a response.
 
         Args:
             message: Parsed JSON-RPC message
@@ -166,19 +165,15 @@ class JsonRpcRouter:
         Returns:
             Response dict for requests, None for notifications
         """
-        # Detect message type
-        is_request = "id" in message and "method" in message
-        is_notification = "id" not in message and "method" in message
-
-        if is_notification:
+        if is_notification(message):
             self._handle_notification(message)
             return None
 
-        if is_request:
+        if is_request(message):
             return self._handle_request(message)
 
         # Invalid message
-        return self._error_response(
+        return create_error_response(
             request_id=message.get("id"),
             code=JsonRpcErrorCode.INVALID_REQUEST,
             message="Invalid JSON-RPC message"
@@ -186,14 +181,14 @@ class JsonRpcRouter:
 
     def _handle_request(self, request: dict) -> dict:
         """Handle a request and return a response."""
-        request_id = request.get("id")
-        method = request.get("method")
+        request_id = cast(int | str, request.get("id"))
+        method = request.get("method", "")
         params = request.get("params", {})
 
         # Find handler
         handler = self._request_handlers.get(method)
         if not handler:
-            return self._error_response(
+            return create_error_response(
                 request_id=request_id,
                 code=JsonRpcErrorCode.METHOD_NOT_FOUND,
                 message=f"Method not found: {method}",
@@ -203,28 +198,24 @@ class JsonRpcRouter:
         # Execute handler
         try:
             result = handler(params)
-            return {
-                "jsonrpc": "2.0",
-                "id": request_id,
-                "result": result
-            }
+            return create_success_response(request_id, result)
         except JsonRpcError as e:
-            return self._error_response(
+            return create_error_response(
                 request_id=request_id,
                 code=e.code,
                 message=e.message,
                 data=e.data
             )
         except Exception as e:
-            return self._error_response(
+            return create_error_response(
                 request_id=request_id,
                 code=JsonRpcErrorCode.INTERNAL_ERROR,
                 message=str(e)
             )
 
     def _handle_notification(self, notification: dict):
-        """Handle a notification (no response)."""
-        method = notification.get("method")
+        """Handle a notification silently (no response)."""
+        method = notification.get("method", "")
         params = notification.get("params", {})
 
         handler = self._notification_handlers.get(method)
@@ -232,262 +223,32 @@ class JsonRpcRouter:
             try:
                 handler(params)
             except Exception as e:
-                # Log but don't respond
-                print(f"Notification error ({method}): {e}")
-
-    def _error_response(
-        self,
-        request_id: Any,
-        code: JsonRpcErrorCode,
-        message: str,
-        data: Any = None
-    ) -> dict:
-        """Create an error response."""
-        error = {"code": int(code), "message": message}
-        if data is not None:
-            error["data"] = data
-
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": error
-        }</code></pre>
+                # Log but never respond
+                print(f"Notification error ({method}): {e}")</code></pre>
                     </div>
 
-                    <h2>Using the Router</h2>
+                    <h3>Step 3: Update the Test Block</h3>
                     <p>
-                        Register handlers using decorators for a clean API:
+                        <strong>Replace</strong> your test block with this router demo:
                     </p>
 
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">jsonrpc.py - Replace the test block</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">"""Example usage of the JSON-RPC router."""
-
-router = JsonRpcRouter()
-
-
-@router.method("initialize")
-def handle_initialize(params: dict) -> dict:
-    """Handle the initialize request."""
-    client_info = params.get("clientInfo", {})
-    print(f"Client connected: {client_info.get('name', 'unknown')}")
-
-    return {
-        "protocolVersion": "2024-11-05",
-        "capabilities": {
-            "tools": {},
-            "resources": {}
-        },
-        "serverInfo": {
-            "name": "example-server",
-            "version": "1.0.0"
-        }
-    }
-
-
-@router.method("tools/list")
-def handle_tools_list(params: dict) -> dict:
-    """Return list of available tools."""
-    return {
-        "tools": [
-            {
-                "name": "calculator",
-                "description": "Performs basic math operations",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "expression": {
-                            "type": "string",
-                            "description": "Math expression to evaluate"
-                        }
-                    },
-                    "required": ["expression"]
-                }
-            }
-        ]
-    }
-
-
-@router.method("tools/call")
-def handle_tools_call(params: dict) -> dict:
-    """Execute a tool."""
-    tool_name = params.get("name")
-    arguments = params.get("arguments", {})
-
-    if tool_name == "calculator":
-        expression = arguments.get("expression", "")
-        try:
-            # WARNING: eval is dangerous! Use a safe parser in production
-            result = eval(expression)
-            return {
-                "content": [
-                    {"type": "text", "text": f"Result: {result}"}
-                ]
-            }
-        except Exception as e:
-            raise JsonRpcError(
-                JsonRpcErrorCode.INVALID_PARAMS,
-                f"Invalid expression: {e}"
-            )
-
-    raise JsonRpcError(
-        JsonRpcErrorCode.INVALID_PARAMS,
-        f"Unknown tool: {tool_name}",
-        {"tool": tool_name}
-    )
-
-
-@router.notification("notifications/initialized")
-def handle_initialized(params: dict):
-    """Client has finished initializing."""
-    print("Client initialization complete")
-
-
-@router.notification("notifications/cancelled")
-def handle_cancelled(params: dict):
-    """Client cancelled a request."""
-    request_id = params.get("requestId")
-    print(f"Request {request_id} was cancelled")</code></pre>
-                    </div>
-
-                    <h2>Complete Server with Router</h2>
-                    <p>
-                        Here's a complete HTTP server using our JSON-RPC router:
-                    </p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">"""
-jsonrpc_server.py - Complete JSON-RPC server with routing.
-"""
-
-import json
-from http.server import HTTPServer, BaseHTTPRequestHandler
-
-
-class JsonRpcHandler(BaseHTTPRequestHandler):
-    """HTTP handler that routes JSON-RPC requests."""
-
-    # Class-level router (shared by all handlers)
-    router: JsonRpcRouter = None
-
-    def log_message(self, format, *args):
-        """Custom logging."""
-        print(f"[{self.log_date_time_string()}] {format % args}")
-
-    def do_POST(self):
-        """Handle POST requests containing JSON-RPC messages."""
-        # Validate content type
-        content_type = self.headers.get("Content-Type", "")
-        if "application/json" not in content_type:
-            self._send_error(415, "Content-Type must be application/json")
-            return
-
-        # Read body
-        content_length = int(self.headers.get("Content-Length", 0))
-        if content_length == 0:
-            self._send_error(400, "Empty request body")
-            return
-
-        body = self.rfile.read(content_length)
-
-        # Parse JSON
-        try:
-            message = json.loads(body.decode("utf-8"))
-        except json.JSONDecodeError as e:
-            response = {
-                "jsonrpc": "2.0",
-                "id": None,
-                "error": {
-                    "code": -32700,
-                    "message": f"Parse error: {e}"
-                }
-            }
-            self._send_json(response, 200)
-            return
-
-        # Validate basic structure
-        if not isinstance(message, dict):
-            response = {
-                "jsonrpc": "2.0",
-                "id": None,
-                "error": {
-                    "code": -32600,
-                    "message": "Request must be a JSON object"
-                }
-            }
-            self._send_json(response, 200)
-            return
-
-        if message.get("jsonrpc") != "2.0":
-            response = {
-                "jsonrpc": "2.0",
-                "id": message.get("id"),
-                "error": {
-                    "code": -32600,
-                    "message": "jsonrpc must be '2.0'"
-                }
-            }
-            self._send_json(response, 200)
-            return
-
-        # Route the message
-        response = self.router.handle(message)
-
-        # Send response (None for notifications)
-        if response is not None:
-            self._send_json(response, 200)
-        else:
-            # No content for notifications
-            self.send_response(204)
-            self.end_headers()
-
-    def _send_json(self, data: dict, status: int = 200):
-        """Send a JSON response."""
-        body = json.dumps(data, indent=2).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-    def _send_error(self, status: int, message: str):
-        """Send an HTTP error response."""
-        body = json.dumps({"error": message}).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-
-def run_server(router: JsonRpcRouter, host: str = "localhost", port: int = 8080):
-    """Start the JSON-RPC server."""
-    JsonRpcHandler.router = router
-    server = HTTPServer((host, port), JsonRpcHandler)
-
-    print(f"JSON-RPC server running on http://{host}:{port}")
-    print("Press Ctrl+C to stop")
-
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nShutting down...")
-        server.shutdown()
-
+                        <pre><code class="language-python"># =============================================================================
+# Try it out
+# =============================================================================
 
 if __name__ == "__main__":
-    # Create router and register handlers
+    # Create a router
     router = JsonRpcRouter()
 
+    # Register request handlers using decorators
     @router.method("initialize")
-    def handle_initialize(params):
+    def handle_initialize(params: dict) -> dict:
         return {
             "protocolVersion": "2024-11-05",
             "capabilities": {"tools": {}},
@@ -495,99 +256,241 @@ if __name__ == "__main__":
         }
 
     @router.method("tools/list")
-    def handle_tools_list(params):
-        return {"tools": []}
+    def handle_tools_list(params: dict) -> dict:
+        return {
+            "tools": [
+                {
+                    "name": "calculator",
+                    "description": "Basic math operations",
+                    "inputSchema": {"type": "object"}
+                }
+            ]
+        }
 
+    @router.method("tools/call")
+    def handle_tools_call(params: dict) -> dict:
+        tool_name = params.get("name")
+        if tool_name != "calculator":
+            raise JsonRpcError(
+                JsonRpcErrorCode.INVALID_PARAMS,
+                f"Unknown tool: {tool_name}"
+            )
+        return {"content": [{"type": "text", "text": "4"}]}
+
+    # Register notification handlers
     @router.notification("notifications/initialized")
-    def on_initialized(params):
-        print("Client ready!")
+    def on_initialized(params: dict):
+        print("  [Server] Client initialization complete!")
 
-    # Start server
-    run_server(router)</code></pre>
+    # Test the router
+    print("=" * 60)
+    print("JSON-RPC Router Demo")
+    print("=" * 60)
+
+    test_messages = [
+        # Request: initialize
+        {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+        # Notification: initialized (no response expected)
+        {"jsonrpc": "2.0", "method": "notifications/initialized"},
+        # Request: tools/list
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+        # Request: unknown method
+        {"jsonrpc": "2.0", "id": 3, "method": "unknown/method"},
+        # Request: tools/call with invalid params
+        {"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "invalid"}},
+    ]
+
+    for msg in test_messages:
+        print(f"\n-> Incoming: {json.dumps(msg)}")
+        response = router.handle(msg)
+        if response:
+            print(f"<- Response: {json.dumps(response, indent=2)}")
+        else:
+            print("<- (no response - notification)")
+
+    print("\n" + "=" * 60)
+    print("Router demo complete!")
+    print("=" * 60)</code></pre>
                     </div>
 
-                    <h2>Testing the Server</h2>
-                    <p>
-                        Test your server with curl:
-                    </p>
-
+                    <h2>Try It</h2>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash"># Start the server
-python jsonrpc_server.py
-
-# In another terminal, test initialize
-curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "initialize",
-    "params": {
-      "protocolVersion": "2024-11-05",
-      "clientInfo": {"name": "test-client", "version": "1.0"}
-    }
-  }'
-
-# Response:
-# {
-#   "jsonrpc": "2.0",
-#   "id": 1,
-#   "result": {
-#     "protocolVersion": "2024-11-05",
-#     "capabilities": {"tools": {}},
-#     "serverInfo": {"name": "demo-server", "version": "1.0.0"}
-#   }
-# }
-
-# Test notification (no response body)
-curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc": "2.0", "method": "notifications/initialized"}'
-
-# Test unknown method (error response)
-curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc": "2.0", "id": 2, "method": "unknown/method"}'
-
-# Response:
-# {
-#   "jsonrpc": "2.0",
-#   "id": 2,
-#   "error": {
-#     "code": -32601,
-#     "message": "Method not found: unknown/method"
-#   }
-# }</code></pre>
+                        <pre><code class="language-bash">python jsonrpc.py</code></pre>
                     </div>
+
+                    <h2>Expected Output</h2>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>============================================================
+JSON-RPC Router Demo
+============================================================
+
+-> Incoming: {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}
+<- Response: {
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "tools": {}
+    },
+    "serverInfo": {
+      "name": "demo-server",
+      "version": "1.0.0"
+    }
+  }
+}
+
+-> Incoming: {"jsonrpc": "2.0", "method": "notifications/initialized"}
+  [Server] Client initialization complete!
+<- (no response - notification)
+
+-> Incoming: {"jsonrpc": "2.0", "id": 2, "method": "tools/list"}
+<- Response: {
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "tools": [...]
+  }
+}
+
+-> Incoming: {"jsonrpc": "2.0", "id": 3, "method": "unknown/method"}
+<- Response: {
+  "jsonrpc": "2.0",
+  "id": 3,
+  "error": {
+    "code": -32601,
+    "message": "Method not found: unknown/method"
+  }
+}
+
+-> Incoming: {"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "invalid"}}
+<- Response: {
+  "jsonrpc": "2.0",
+  "id": 4,
+  "error": {
+    "code": -32602,
+    "message": "Unknown tool: invalid"
+  }
+}
+
+============================================================
+Router demo complete!
+============================================================</code></pre>
+                    </div>
+
+                    <h2>Understanding the Router</h2>
+
+                    <h3>The Decorator Pattern</h3>
+                    <p>
+                        The <code>@router.method("tools/list")</code> syntax is a Python decorator.
+                        It registers the function with the router, so when a message with
+                        <code>"method": "tools/list"</code> arrives, the router knows to call that function.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># These two are equivalent:
+
+# Using decorator
+@router.method("tools/list")
+def handle_tools_list(params):
+    return {"tools": []}
+
+# Manual registration
+def handle_tools_list(params):
+    return {"tools": []}
+router._request_handlers["tools/list"] = handle_tools_list</code></pre>
+                    </div>
+
+                    <h3>Error Handling Flow</h3>
+                    <p>The router handles errors at multiple levels:</p>
+                    <ol>
+                        <li><strong>Unknown method</strong> &rarr; <code>METHOD_NOT_FOUND</code> error</li>
+                        <li><strong>Handler raises <code>JsonRpcError</code></strong> &rarr; That error is returned</li>
+                        <li><strong>Handler raises other exception</strong> &rarr; <code>INTERNAL_ERROR</code></li>
+                    </ol>
 
                     <div class="info-box tip">
                         <div class="info-box-title">Ready for MCP!</div>
                         <p>
-                            This router pattern is exactly what you'll use for MCP servers.
-                            In the next lesson, you'll add the MCP handshake (<code>initialize</code>
-                            and <code>initialized</code>) to make it a real MCP server.
+                            This router is exactly what you'll use for MCP servers. In the next lesson,
+                            you'll add the MCP handshake (<code>initialize</code> + <code>initialized</code>)
+                            to make it a real MCP server.
                         </p>
                     </div>
+
+                    <h2>Your Complete Module</h2>
+                    <p>Your <code>jsonrpc.py</code> now has everything you need:</p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Component</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>JsonRpcErrorCode</code></td>
+                                <td style="padding: 0.75rem;">Standard error codes</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>JsonRpcError</code></td>
+                                <td style="padding: 0.75rem;">Exception for handler errors</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>create_request()</code></td>
+                                <td style="padding: 0.75rem;">Build request messages</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>create_success_response()</code></td>
+                                <td style="padding: 0.75rem;">Build success responses</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>create_error_response()</code></td>
+                                <td style="padding: 0.75rem;">Build error responses</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>create_notification()</code></td>
+                                <td style="padding: 0.75rem;">Build notifications</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>is_request()</code>, etc.</td>
+                                <td style="padding: 0.75rem;">Detect message types</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>JsonRpcRouter</code></td>
+                                <td style="padding: 0.75rem;">Dispatch messages to handlers</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
                     <h2>What You've Learned</h2>
                     <p>In this lesson, you mastered JSON-RPC 2.0:</p>
                     <ul>
                         <li><strong>Protocol basics</strong> &mdash; requests, responses, and notifications</li>
-                        <li><strong>Request/Response matching</strong> &mdash; using IDs to correlate messages</li>
-                        <li><strong>Error handling</strong> &mdash; standard error codes and error responses</li>
-                        <li><strong>Notifications</strong> &mdash; fire-and-forget messages</li>
-                        <li><strong>Method routing</strong> &mdash; dispatching to handler functions</li>
+                        <li><strong>Message creation</strong> &mdash; building valid JSON-RPC messages</li>
+                        <li><strong>Error handling</strong> &mdash; standard codes and error responses</li>
+                        <li><strong>Message routing</strong> &mdash; dispatching to handler functions</li>
                     </ul>
 
-                    <h2>What's Next?</h2>
+                    <h2>What's Next</h2>
                     <p>
-                        In Lesson 4, you'll implement the MCP handshake &mdash; the <code>initialize</code>
-                        request and <code>initialized</code> notification that establish an MCP session.
-                        You'll learn about protocol version negotiation and capability exchange.
+                        In Lesson 4, you'll implement the <strong>MCP handshake</strong> &mdash; the
+                        <code>initialize</code> request and <code>initialized</code> notification that
+                        establish an MCP session. You'll learn about protocol version negotiation
+                        and capability exchange.
                     </p>
                 </div>
 

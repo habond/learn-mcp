@@ -62,31 +62,47 @@
                 </header>
 
                 <div class="content">
-                    <h2>Complete Calculator Server</h2>
+                    <h2>Building Incrementally</h2>
                     <p>
-                        Let's build a complete MCP server with calculator tools. This brings together
-                        everything we've learned: tool definitions, <code>tools/list</code>,
-                        <code>tools/call</code>, and result formatting.
+                        Let's build a complete MCP calculator server step by step. We'll create
+                        <code>calculator_server.py</code> incrementally, testing as we go.
                     </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">File Structure</div>
+                        <p>
+                            We'll build one file: <code>calculator_server.py</code>. Each section below
+                            adds to this file. Follow along and add each section in order.
+                        </p>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Section 1: Imports and Tool Definitions</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Create: <code>calculator_server.py</code></h3>
+                    <p>Start with the imports and tool definitions:</p>
 
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">calculator_server.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">"""
 calculator_server.py - MCP server with calculator tools.
 
 Run with: python calculator_server.py
-Test with: curl commands or an MCP client
+Test with: curl commands
 """
 
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from typing import cast
 
 
 # =============================================================================
-# Tool Definitions
+# Section 1: Tool Definitions
 # =============================================================================
 
 TOOLS = [
@@ -147,30 +163,82 @@ TOOLS = [
 ]
 
 
-# =============================================================================
-# Result Helpers
+# Quick test - print tool names
+if __name__ == "__main__":
+    print("Defined tools:")
+    for tool in TOOLS:
+        print(f"  - {tool['name']}: {tool['description']}")</code></pre>
+                    </div>
+
+                    <h3>Try It</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">python calculator_server.py</code></pre>
+                    </div>
+
+                    <h3>Expected Output</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Defined tools:
+  - add: Add two numbers together and return the sum
+  - subtract: Subtract the second number from the first and return the difference
+  - multiply: Multiply two numbers and return the product</code></pre>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Section 2: Result Helpers</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Edit: <code>calculator_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 1 (after the TOOLS list):</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 2: Result Helpers
 # =============================================================================
 
-def text_result(text):
+def text_result(text: str) -> dict:
     """Create a successful text result."""
     return {
         "content": [{"type": "text", "text": str(text)}]
     }
 
 
-def error_result(message):
+def error_result(message: str) -> dict:
     """Create an error result."""
     return {
         "content": [{"type": "text", "text": f"Error: {message}"}],
         "isError": True
-    }
+    }</code></pre>
+                    </div>
 
+                    <!-- ============================================================= -->
+                    <h2>Section 3: Tool Implementations</h2>
+                    <!-- ============================================================= -->
 
+                    <h3>Edit: <code>calculator_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 2:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 3: Tool Implementations
 # =============================================================================
-# Tool Implementations
-# =============================================================================
 
-def execute_add(arguments):
+def execute_add(arguments: dict) -> dict:
     """Add two numbers."""
     a = arguments.get("a")
     b = arguments.get("b")
@@ -185,7 +253,7 @@ def execute_add(arguments):
     return text_result(f"{a} + {b} = {result}")
 
 
-def execute_subtract(arguments):
+def execute_subtract(arguments: dict) -> dict:
     """Subtract two numbers."""
     a = arguments.get("a")
     b = arguments.get("b")
@@ -200,7 +268,7 @@ def execute_subtract(arguments):
     return text_result(f"{a} - {b} = {result}")
 
 
-def execute_multiply(arguments):
+def execute_multiply(arguments: dict) -> dict:
     """Multiply two numbers."""
     a = arguments.get("a")
     b = arguments.get("b")
@@ -215,19 +283,67 @@ def execute_multiply(arguments):
     return text_result(f"{a} * {b} = {result}")
 
 
-# Map tool names to handlers
+# Map tool names to their handler functions
 TOOL_HANDLERS = {
     "add": execute_add,
     "subtract": execute_subtract,
     "multiply": execute_multiply,
-}
+}</code></pre>
+                    </div>
 
+                    <p><strong>Update</strong> the <code>if __name__ == "__main__"</code> block to test the tools:</p>
 
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Quick test - execute tools directly
+if __name__ == "__main__":
+    print("Testing tools directly:")
+    print(execute_add({"a": 5, "b": 3}))
+    print(execute_subtract({"a": 10, "b": 4}))
+    print(execute_multiply({"a": 7, "b": 8}))</code></pre>
+                    </div>
+
+                    <h3>Try It</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">python calculator_server.py</code></pre>
+                    </div>
+
+                    <h3>Expected Output</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Testing tools directly:
+{'content': [{'type': 'text', 'text': '5 + 3 = 8'}]}
+{'content': [{'type': 'text', 'text': '10 - 4 = 6'}]}
+{'content': [{'type': 'text', 'text': '7 * 8 = 56'}]}</code></pre>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Section 4: MCP Method Handlers</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Edit: <code>calculator_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 3:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 4: MCP Method Handlers
 # =============================================================================
-# MCP Method Handlers
-# =============================================================================
 
-def handle_initialize(request_id, params):
+def handle_initialize(request_id: int | str | None, params: dict) -> dict:
     """Handle the initialize method."""
     return {
         "jsonrpc": "2.0",
@@ -235,7 +351,7 @@ def handle_initialize(request_id, params):
         "result": {
             "protocolVersion": "2024-11-05",
             "capabilities": {
-                "tools": {}
+                "tools": {}  # We support tools
             },
             "serverInfo": {
                 "name": "calculator-server",
@@ -245,7 +361,7 @@ def handle_initialize(request_id, params):
     }
 
 
-def handle_tools_list(request_id, params):
+def handle_tools_list(request_id: int | str | None, params: dict) -> dict:
     """Handle the tools/list method."""
     return {
         "jsonrpc": "2.0",
@@ -256,7 +372,7 @@ def handle_tools_list(request_id, params):
     }
 
 
-def handle_tools_call(request_id, params):
+def handle_tools_call(request_id: int | str | None, params: dict) -> dict:
     """Handle the tools/call method."""
     tool_name = params.get("name")
     arguments = params.get("arguments", {})
@@ -280,17 +396,29 @@ def handle_tools_call(request_id, params):
         "jsonrpc": "2.0",
         "id": request_id,
         "result": result
-    }
+    }</code></pre>
+                    </div>
 
+                    <!-- ============================================================= -->
+                    <h2>Section 5: Request Router</h2>
+                    <!-- ============================================================= -->
 
+                    <h3>Edit: <code>calculator_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 4:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 5: Request Router
 # =============================================================================
-# Request Router
-# =============================================================================
 
-def handle_request(request):
+def handle_request(request: dict) -> dict | None:
     """Route JSON-RPC requests to appropriate handlers."""
     method = request.get("method")
-    request_id = request.get("id")
+    request_id = cast(int | str | None, request.get("id"))
     params = request.get("params", {})
 
     # Route to handler based on method
@@ -316,11 +444,23 @@ def handle_request(request):
             "code": -32601,
             "message": f"Method not found: {method}"
         }
-    }
+    }</code></pre>
+                    </div>
 
+                    <!-- ============================================================= -->
+                    <h2>Section 6: HTTP Server</h2>
+                    <!-- ============================================================= -->
 
-# =============================================================================
-# HTTP Server
+                    <h3>Edit: <code>calculator_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 5:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 6: HTTP Server
 # =============================================================================
 
 class MCPHandler(BaseHTTPRequestHandler):
@@ -330,7 +470,7 @@ class MCPHandler(BaseHTTPRequestHandler):
         """Custom logging."""
         print(f"[MCP] {args[0]}")
 
-    def send_json(self, data, status=200):
+    def send_json(self, data: dict, status: int = 200):
         """Send a JSON response."""
         body = json.dumps(data, indent=2).encode("utf-8")
         self.send_response(status)
@@ -376,7 +516,7 @@ class MCPHandler(BaseHTTPRequestHandler):
         self.send_json(response)
 
 
-def run_server(host="localhost", port=8080):
+def run_server(host: str = "localhost", port: int = 8080):
     """Start the MCP calculator server."""
     server = HTTPServer((host, port), MCPHandler)
     print(f"Calculator MCP Server running on http://{host}:{port}")
@@ -387,15 +527,25 @@ def run_server(host="localhost", port=8080):
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nShutting down...")
-        server.shutdown()
+        server.shutdown()</code></pre>
+                    </div>
 
+                    <p><strong>Replace</strong> the <code>if __name__ == "__main__"</code> block:</p>
 
-if __name__ == "__main__":
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">if __name__ == "__main__":
     run_server()</code></pre>
                     </div>
 
-                    <h2>Testing the Server</h2>
-                    <p>Start the server:</p>
+                    <!-- ============================================================= -->
+                    <h2>Testing Your Server</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Start the Server</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -404,7 +554,19 @@ if __name__ == "__main__":
                         <pre><code class="language-bash">python calculator_server.py</code></pre>
                     </div>
 
-                    <h3>Test tools/list</h3>
+                    <p>You should see:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Calculator MCP Server running on http://localhost:8080
+Available tools: add, subtract, multiply
+Press Ctrl+C to stop</code></pre>
+                    </div>
+
+                    <h3>Test 1: List Tools</h3>
+                    <p>In another terminal:</p>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -412,15 +574,12 @@ if __name__ == "__main__":
                         </div>
                         <pre><code class="language-bash">curl -X POST http://localhost:8080 \
   -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "tools/list",
-    "params": {}
-  }'</code></pre>
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}'</code></pre>
                     </div>
 
-                    <h3>Test add tool</h3>
+                    <p>Expected: A JSON response listing all three tools with their schemas.</p>
+
+                    <h3>Test 2: Add Two Numbers</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -432,14 +591,17 @@ if __name__ == "__main__":
     "jsonrpc": "2.0",
     "id": 2,
     "method": "tools/call",
-    "params": {
-        "name": "add",
-        "arguments": {"a": 15, "b": 27}
-    }
-  }'
+    "params": {"name": "add", "arguments": {"a": 15, "b": 27}}
+  }'</code></pre>
+                    </div>
 
-# Response:
-{
+                    <p>Expected:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
   "jsonrpc": "2.0",
   "id": 2,
   "result": {
@@ -450,7 +612,7 @@ if __name__ == "__main__":
 }</code></pre>
                     </div>
 
-                    <h3>Test subtract tool</h3>
+                    <h3>Test 3: Multiply</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -462,25 +624,13 @@ if __name__ == "__main__":
     "jsonrpc": "2.0",
     "id": 3,
     "method": "tools/call",
-    "params": {
-        "name": "subtract",
-        "arguments": {"a": 100, "b": 37}
-    }
-  }'
-
-# Response:
-{
-  "jsonrpc": "2.0",
-  "id": 3,
-  "result": {
-    "content": [
-      {"type": "text", "text": "100 - 37 = 63"}
-    ]
-  }
-}</code></pre>
+    "params": {"name": "multiply", "arguments": {"a": 7, "b": 8}}
+  }'</code></pre>
                     </div>
 
-                    <h3>Test multiply tool</h3>
+                    <p>Expected: <code>"7 * 8 = 56"</code></p>
+
+                    <h3>Test 4: Unknown Tool (Error)</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -492,32 +642,24 @@ if __name__ == "__main__":
     "jsonrpc": "2.0",
     "id": 4,
     "method": "tools/call",
-    "params": {
-        "name": "multiply",
-        "arguments": {"a": 7, "b": 8}
-    }
-  }'
-
-# Response:
-{
-  "jsonrpc": "2.0",
-  "id": 4,
-  "result": {
-    "content": [
-      {"type": "text", "text": "7 * 8 = 56"}
-    ]
-  }
-}</code></pre>
+    "params": {"name": "divide", "arguments": {"a": 10, "b": 2}}
+  }'</code></pre>
                     </div>
 
+                    <p>Expected: JSON-RPC error with "Unknown tool: divide"</p>
+
+                    <!-- ============================================================= -->
                     <h2>What You've Built</h2>
+                    <!-- ============================================================= -->
+
                     <p>Congratulations! Your calculator server now:</p>
                     <ul>
-                        <li>Defines three tools with proper inputSchema</li>
+                        <li>Defines three tools with proper <code>inputSchema</code></li>
                         <li>Handles <code>tools/list</code> to advertise capabilities</li>
                         <li>Handles <code>tools/call</code> to execute tools</li>
-                        <li>Returns properly formatted results</li>
-                        <li>Handles errors gracefully with <code>isError</code></li>
+                        <li>Returns properly formatted results with content arrays</li>
+                        <li>Handles errors gracefully with <code>isError</code> flag</li>
+                        <li>Validates arguments before execution</li>
                     </ul>
 
                     <div class="info-box tip">

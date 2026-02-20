@@ -62,27 +62,29 @@
                 </header>
 
                 <div class="content">
-                    <h2>Putting It All Together</h2>
+                    <h2>Building the Complete Server</h2>
                     <p>
-                        Now let's combine everything we've learned into a complete, production-ready
-                        MCP server using HTTP/SSE transport. This server will:
-                    </p>
-                    <ul>
-                        <li>Handle the MCP initialization handshake over HTTP</li>
-                        <li>Support both JSON and SSE response modes</li>
-                        <li>Manage client sessions with the Mcp-Session-Id header</li>
-                        <li>Expose tools that can stream progress via SSE</li>
-                        <li>Include comprehensive error handling and logging</li>
-                    </ul>
-
-                    <h2>The Complete Server</h2>
-                    <p>
-                        Save this as <code>sse_server.py</code>:
+                        Now let's combine everything we've learned into a complete MCP server
+                        using HTTP/SSE transport. We'll build this incrementally in 6 sections.
                     </p>
 
+                    <div class="info-box info">
+                        <div class="info-box-title">What We're Building</div>
+                        <p>
+                            A complete HTTP/SSE MCP server with session management, tool support,
+                            and optional SSE streaming for long-running operations.
+                        </p>
+                    </div>
+
+                    <!-- Section 1 -->
+                    <h2>Section 1: Imports and Configuration</h2>
+                    <p>Start by creating the file with imports and constants.</p>
+
+                    <h3>Create: <code>sse_server.py</code></h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">sse_server.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">#!/usr/bin/env python3
@@ -93,14 +95,6 @@ This server demonstrates the Streamable HTTP transport for MCP:
 - POST /mcp: JSON-RPC endpoint with optional SSE streaming
 - Session management via Mcp-Session-Id header
 - Support for both immediate JSON and streaming SSE responses
-
-Usage:
-    python sse_server.py
-
-Then test with:
-    curl -X POST http://localhost:8080/mcp \
-         -H "Content-Type: application/json" \
-         -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{...}}'
 """
 
 import json
@@ -110,11 +104,11 @@ import logging
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Any, Generator
+from typing import Dict, Optional, Any, Generator, cast
 
-# ============================================================================
+# =============================================================================
 # Logging Setup
-# ============================================================================
+# =============================================================================
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -122,20 +116,33 @@ logging.basicConfig(
 )
 logger = logging.getLogger("mcp-sse-server")
 
-# ============================================================================
+# =============================================================================
 # JSON-RPC Error Codes
-# ============================================================================
+# =============================================================================
 
 class ErrorCode:
     PARSE_ERROR = -32700
     INVALID_REQUEST = -32600
     METHOD_NOT_FOUND = -32601
     INVALID_PARAMS = -32602
-    INTERNAL_ERROR = -32603
+    INTERNAL_ERROR = -32603</code></pre>
+                    </div>
 
-# ============================================================================
+                    <!-- Section 2 -->
+                    <h2>Section 2: Session Management</h2>
+                    <p>Add the session classes to track client connections.</p>
+
+                    <h3>Edit: <code>sse_server.py</code></h3>
+                    <p><strong>Add</strong> the following after the ErrorCode class:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
 # Session Management
-# ============================================================================
+# =============================================================================
 
 @dataclass
 class MCPSession:
@@ -192,11 +199,24 @@ class SessionStore:
 
 
 # Global session store
-sessions = SessionStore()
+sessions = SessionStore()</code></pre>
+                    </div>
 
-# ============================================================================
+                    <!-- Section 3 -->
+                    <h2>Section 3: Tool Definitions</h2>
+                    <p>Add the tools and execution functions.</p>
+
+                    <h3>Edit: <code>sse_server.py</code></h3>
+                    <p><strong>Add</strong> the following after the session store:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
 # Tool Definitions
-# ============================================================================
+# =============================================================================
 
 TOOLS = [
     {
@@ -277,10 +297,22 @@ def execute_tool(name: str, arguments: dict) -> dict:
         return {"content": [{"type": "text", "text": f"{a} + {b} = {result}"}]}
 
     else:
-        raise ValueError(f"Unknown tool: {name}")
+        raise ValueError(f"Unknown tool: {name}")</code></pre>
+                    </div>
 
+                    <!-- Section 4 -->
+                    <h2>Section 4: SSE Streaming Support</h2>
+                    <p>Add the streaming tool execution for SSE responses.</p>
 
-def execute_tool_streaming(name: str, arguments: dict, request_id) -> Generator[str, None, None]:
+                    <h3>Edit: <code>sse_server.py</code></h3>
+                    <p><strong>Add</strong> the following after the <code>execute_tool</code> function:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def execute_tool_streaming(name: str, arguments: dict, request_id: int | str) -> Generator[str, None, None]:
     """
     Execute a tool with SSE streaming support.
 
@@ -321,18 +353,31 @@ def execute_tool_streaming(name: str, arguments: dict, request_id) -> Generator[
             "id": request_id,
             "result": result
         }
-        yield f"event: message\ndata: {json.dumps(response)}\n\n"
+        yield f"event: message\ndata: {json.dumps(response)}\n\n"</code></pre>
+                    </div>
 
-# ============================================================================
+                    <!-- Section 5 -->
+                    <h2>Section 5: HTTP Request Handler</h2>
+                    <p>Add the HTTP handler class that processes requests.</p>
+
+                    <h3>Edit: <code>sse_server.py</code></h3>
+                    <p><strong>Add</strong> the following after the streaming function:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
 # HTTP Request Handler
-# ============================================================================
+# =============================================================================
 
 class MCPHTTPHandler(BaseHTTPRequestHandler):
     """HTTP handler for MCP with SSE support."""
 
     protocol_version = "HTTP/1.1"
 
-    def log_message(self, format, *args):
+    def log_message(self, format: str, *args) -> None:
         """Override to use our logger."""
         logger.debug(f"{self.address_string()} - {format % args}")
 
@@ -348,7 +393,7 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
         accept = self.headers.get("Accept", "")
         return "text/event-stream" in accept
 
-    def send_cors_headers(self):
+    def send_cors_headers(self) -> None:
         """Send CORS headers for browser clients."""
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "POST, DELETE, OPTIONS")
@@ -356,13 +401,13 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
                         "Content-Type, Accept, Mcp-Session-Id")
         self.send_header("Access-Control-Expose-Headers", "Mcp-Session-Id")
 
-    def do_OPTIONS(self):
+    def do_OPTIONS(self) -> None:
         """Handle CORS preflight requests."""
         self.send_response(204)
         self.send_cors_headers()
         self.end_headers()
 
-    def do_DELETE(self):
+    def do_DELETE(self) -> None:
         """Handle session termination."""
         if self.path != "/mcp":
             self.send_error(404, "Not Found")
@@ -377,7 +422,7 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
         else:
             self.send_error(404, "Session not found")
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         """Handle MCP JSON-RPC requests."""
         if self.path != "/mcp":
             self.send_error(404, "Not Found")
@@ -408,7 +453,7 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
             return
 
         method = request.get("method")
-        request_id = request.get("id")
+        request_id = cast(int | str | None, request.get("id"))
         params = request.get("params", {})
 
         logger.debug(f"Request: {method} (id={request_id})")
@@ -467,13 +512,12 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
                          "message": f"Method not found: {method}"}
             }, session=session)
 
-    # ========================================================================
+    # =========================================================================
     # MCP Method Handlers
-    # ========================================================================
+    # =========================================================================
 
-    def handle_initialize(self, request_id, params):
+    def handle_initialize(self, request_id: int | str | None, params: dict) -> None:
         """Handle the initialize request."""
-        # Create new session
         session = sessions.create_session()
         session.client_info = params.get("clientInfo", {})
         session.capabilities = params.get("capabilities", {})
@@ -500,7 +544,7 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
 
         self.send_json_response(response, session=session)
 
-    def handle_notification(self, method, params, session):
+    def handle_notification(self, method: str, params: dict, session: MCPSession) -> None:
         """Handle notifications (no response expected)."""
         if method == "notifications/initialized":
             session.initialized = True
@@ -510,7 +554,7 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
         else:
             logger.warning(f"Unknown notification: {method}")
 
-    def handle_tools_list(self, request_id, session):
+    def handle_tools_list(self, request_id: int | str | None, session: MCPSession) -> None:
         """Handle the tools/list request."""
         self.send_json_response({
             "jsonrpc": "2.0",
@@ -518,7 +562,7 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
             "result": {"tools": TOOLS}
         }, session=session)
 
-    def handle_tools_call(self, request_id, params, session):
+    def handle_tools_call(self, request_id: int | str | None, params: dict, session: MCPSession) -> None:
         """Handle the tools/call request with optional SSE streaming."""
         tool_name = params.get("name")
         arguments = params.get("arguments", {})
@@ -557,7 +601,7 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
                              "message": str(e)}
                 }, session=session)
 
-    def handle_resources_list(self, request_id, session):
+    def handle_resources_list(self, request_id: int | str | None, session: MCPSession) -> None:
         """Handle the resources/list request."""
         self.send_json_response({
             "jsonrpc": "2.0",
@@ -565,7 +609,7 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
             "result": {"resources": []}
         }, session=session)
 
-    def handle_prompts_list(self, request_id, session):
+    def handle_prompts_list(self, request_id: int | str | None, session: MCPSession) -> None:
         """Handle the prompts/list request."""
         self.send_json_response({
             "jsonrpc": "2.0",
@@ -573,7 +617,7 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
             "result": {"prompts": []}
         }, session=session)
 
-    def handle_ping(self, request_id, session):
+    def handle_ping(self, request_id: int | str | None, session: MCPSession) -> None:
         """Handle ping request."""
         self.send_json_response({
             "jsonrpc": "2.0",
@@ -581,11 +625,11 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
             "result": {}
         }, session=session)
 
-    # ========================================================================
+    # =========================================================================
     # Response Helpers
-    # ========================================================================
+    # =========================================================================
 
-    def send_json_response(self, data, status=200, session=None):
+    def send_json_response(self, data: dict, status: int = 200, session: MCPSession | None = None) -> None:
         """Send a JSON response."""
         body = json.dumps(data).encode("utf-8")
         self.send_response(status)
@@ -597,7 +641,7 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def send_sse_response(self, event_generator: Generator[str, None, None], session):
+    def send_sse_response(self, event_generator: Generator[str, None, None], session: MCPSession) -> None:
         """Send an SSE streaming response."""
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
@@ -612,13 +656,26 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
                 self.wfile.write(event.encode("utf-8"))
                 self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError):
-            logger.warning("Client disconnected during SSE stream")
+            logger.warning("Client disconnected during SSE stream")</code></pre>
+                    </div>
 
-# ============================================================================
+                    <!-- Section 6 -->
+                    <h2>Section 6: Main Entry Point</h2>
+                    <p>Add the main function to start the server.</p>
+
+                    <h3>Edit: <code>sse_server.py</code></h3>
+                    <p><strong>Add</strong> the following at the end of the file:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
 # Main Entry Point
-# ============================================================================
+# =============================================================================
 
-def main():
+def main() -> None:
     """Start the MCP HTTP/SSE server."""
     host = "localhost"
     port = 8080
@@ -642,21 +699,24 @@ if __name__ == "__main__":
     main()</code></pre>
                     </div>
 
-                    <h2>Testing the Server</h2>
-                    <p>
-                        Start the server and test it with curl:
-                    </p>
+                    <h2>Try It</h2>
+                    <p>Start the server:</p>
 
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash"># Start the server
-python sse_server.py
+                        <pre><code class="language-bash">python sse_server.py</code></pre>
+                    </div>
 
-# In another terminal, test the initialize handshake
-curl -X POST http://localhost:8080/mcp \
+                    <h3>Test 1: Initialize a Session</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -667,13 +727,29 @@ curl -X POST http://localhost:8080/mcp \
       "capabilities": {},
       "clientInfo": {"name": "curl-test", "version": "1.0"}
     }
-  }'
-
-# Response includes Mcp-Session-Id header - save it!
-# Example: Mcp-Session-Id: abc123-def456-789...</code></pre>
+  }'</code></pre>
                     </div>
 
-                    <h3>Complete Session Flow</h3>
+                    <h3>Expected Output</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {"tools": {}, "resources": {}, "prompts": {}},
+    "serverInfo": {"name": "sse-demo-server", "version": "1.0.0"}
+  }
+}</code></pre>
+                    </div>
+
+                    <h3>Test 2: Complete Session Flow</h3>
+                    <p>Run this script to test the full flow:</p>
+
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -700,22 +776,15 @@ echo "Session ID: $SESSION_ID"
 curl -X POST http://localhost:8080/mcp \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SESSION_ID" \
-  -d '{
-    "jsonrpc": "2.0",
-    "method": "notifications/initialized"
-  }'
+  -d '{"jsonrpc": "2.0", "method": "notifications/initialized"}'
 
-# Step 3: List available tools
+# Step 3: List tools
 curl -X POST http://localhost:8080/mcp \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SESSION_ID" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 2,
-    "method": "tools/list"
-  }'
+  -d '{"jsonrpc": "2.0", "id": 2, "method": "tools/list"}'
 
-# Step 4: Call a tool
+# Step 4: Call echo tool
 curl -X POST http://localhost:8080/mcp \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SESSION_ID" \
@@ -723,13 +792,17 @@ curl -X POST http://localhost:8080/mcp \
     "jsonrpc": "2.0",
     "id": 3,
     "method": "tools/call",
-    "params": {
-      "name": "echo",
-      "arguments": {"message": "Hello from HTTP!"}
-    }
-  }'
+    "params": {"name": "echo", "arguments": {"message": "Hello HTTP!"}}
+  }'</code></pre>
+                    </div>
 
-# Step 5: Test SSE streaming (countdown tool)
+                    <h3>Test 3: SSE Streaming</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Using the same SESSION_ID from above
 curl -X POST http://localhost:8080/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
@@ -738,85 +811,26 @@ curl -X POST http://localhost:8080/mcp \
     "jsonrpc": "2.0",
     "id": 4,
     "method": "tools/call",
-    "params": {
-      "name": "countdown",
-      "arguments": {"start": 5}
-    }
-  }'
-
-# Step 6: Terminate session
-curl -X DELETE http://localhost:8080/mcp \
-  -H "Mcp-Session-Id: $SESSION_ID"</code></pre>
+    "params": {"name": "countdown", "arguments": {"start": 5}}
+  }'</code></pre>
                     </div>
 
-                    <h2>Key Implementation Details</h2>
-
-                    <h3>1. Session-Based State Management</h3>
+                    <h3>Expected SSE Output</h3>
                     <div class="code-block">
                         <div class="code-header">
-                            <span class="code-language">python</span>
+                            <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python"># Create session on initialize
-if method == "initialize":
-    session = sessions.create_session()
-    session.client_info = params.get("clientInfo", {})
+                        <pre><code>event: message
+data: {"jsonrpc":"2.0","method":"notifications/progress","params":{"progressToken":4,"progress":0,"total":5,"message":"Counting: 5"}}
 
-# Require session for all other methods
-session = self.get_session()
-if session is None:
-    # Return error - must initialize first</code></pre>
-                    </div>
+event: message
+data: {"jsonrpc":"2.0","method":"notifications/progress","params":{"progressToken":4,"progress":1,"total":5,"message":"Counting: 4"}}
 
-                    <h3>2. SSE vs JSON Response Selection</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">def wants_sse(self) -> bool:
-    """Check if client accepts SSE responses."""
-    accept = self.headers.get("Accept", "")
-    return "text/event-stream" in accept
+... (more progress events) ...
 
-# In handler:
-if self.wants_sse() and supports_streaming:
-    self.send_sse_response(event_generator, session)
-else:
-    self.send_json_response(result, session=session)</code></pre>
-                    </div>
-
-                    <h3>3. SSE Event Formatting</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python"># Progress notification
-yield f"event: message\ndata: {json.dumps(notification)}\n\n"
-
-# Final result
-yield f"event: message\ndata: {json.dumps(result)}\n\n"
-
-# Each event has:
-# - event: type (always "message" for MCP)
-# - data: JSON-RPC message
-# - Two newlines to end the event</code></pre>
-                    </div>
-
-                    <h3>4. CORS Support for Browsers</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">def send_cors_headers(self):
-    """Send CORS headers for browser clients."""
-    self.send_header("Access-Control-Allow-Origin", "*")
-    self.send_header("Access-Control-Allow-Methods", "POST, DELETE, OPTIONS")
-    self.send_header("Access-Control-Allow-Headers",
-                    "Content-Type, Accept, Mcp-Session-Id")
-    self.send_header("Access-Control-Expose-Headers", "Mcp-Session-Id")</code></pre>
+event: message
+data: {"jsonrpc":"2.0","id":4,"result":{"content":[{"type":"text","text":"Countdown complete!"}]}}</code></pre>
                     </div>
 
                     <div class="info-box warning">
@@ -827,52 +841,8 @@ yield f"event: message\ndata: {json.dumps(result)}\n\n"
                             <li>Add authentication (API keys, OAuth, etc.)</li>
                             <li>Use a production WSGI server like Gunicorn or uWSGI</li>
                             <li>Store sessions in Redis for horizontal scaling</li>
-                            <li>Implement proper session expiration and cleanup</li>
                         </ul>
                     </div>
-
-                    <h2>HTTP/SSE vs STDIO Comparison</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid var(--border-color);">
-                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Feature</th>
-                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">STDIO</th>
-                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">HTTP/SSE</th>
-                            </tr>
-                        </thead>
-                        <tbody style="color: var(--text-secondary);">
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 0.75rem;">Connection</td>
-                                <td style="padding: 0.75rem;">Local process</td>
-                                <td style="padding: 0.75rem;">Network (local or remote)</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 0.75rem;">Multiple Clients</td>
-                                <td style="padding: 0.75rem;">One per process</td>
-                                <td style="padding: 0.75rem;">Many concurrent</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 0.75rem;">Session Management</td>
-                                <td style="padding: 0.75rem;">Implicit (process lifetime)</td>
-                                <td style="padding: 0.75rem;">Explicit (Mcp-Session-Id)</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 0.75rem;">Streaming</td>
-                                <td style="padding: 0.75rem;">Line-by-line</td>
-                                <td style="padding: 0.75rem;">SSE events</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 0.75rem;">Complexity</td>
-                                <td style="padding: 0.75rem;">Simpler</td>
-                                <td style="padding: 0.75rem;">More complex</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 0.75rem;">Use Case</td>
-                                <td style="padding: 0.75rem;">Desktop apps, CLI tools</td>
-                                <td style="padding: 0.75rem;">Web services, shared servers</td>
-                            </tr>
-                        </tbody>
-                    </table>
 
                     <h2>What's Next?</h2>
                     <p>
@@ -890,19 +860,6 @@ yield f"event: message\ndata: {json.dumps(result)}\n\n"
                         In the next lesson, we'll explore implementing prompts, which allow your MCP
                         server to provide reusable prompt templates to clients.
                     </p>
-
-                    <div class="info-box tip">
-                        <div class="info-box-title">Extend Your Server</div>
-                        <p>
-                            Try enhancing your HTTP/SSE server with these features:
-                        </p>
-                        <ul>
-                            <li>Add more tools that benefit from streaming (file processing, API calls)</li>
-                            <li>Implement resources with real-time updates via SSE</li>
-                            <li>Add authentication using API keys or JWT tokens</li>
-                            <li>Create a simple web client that connects via JavaScript</li>
-                        </ul>
-                    </div>
                 </div>
 
                 <nav class="step-navigation">

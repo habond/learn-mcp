@@ -27,8 +27,8 @@
                 <div class="toc-title">Steps</div>
                 <ol class="toc-list">
                     <li class="toc-item"><a href="lesson-03.html" class="toc-link completed"><span class="toc-number">1</span><span>Protocol Overview</span></a></li>
-                    <li class="toc-item"><a href="lesson-03-2.html" class="toc-link active"><span class="toc-number">2</span><span>Request & Response</span></a></li>
-                    <li class="toc-item"><a href="lesson-03-3.html" class="toc-link"><span class="toc-number">3</span><span>Error Handling</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-2.html" class="toc-link active"><span class="toc-number">2</span><span>Creating Requests</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-3.html" class="toc-link"><span class="toc-number">3</span><span>Responses & Errors</span></a></li>
                     <li class="toc-item"><a href="lesson-03-4.html" class="toc-link"><span class="toc-number">4</span><span>Notifications</span></a></li>
                     <li class="toc-item"><a href="lesson-03-5.html" class="toc-link"><span class="toc-number">5</span><span>Building a Router</span></a></li>
                 </ol>
@@ -56,25 +56,40 @@
             <div class="content-wrapper">
                 <header class="step-header">
                     <span class="step-badge">Lesson 3 - Step 2 of 5</span>
-                    <h1 class="step-title">Request & Response</h1>
-                    <p class="step-description">Learn to create valid JSON-RPC requests and match responses by ID.</p>
+                    <h1 class="step-title">Creating Requests</h1>
+                    <p class="step-description">Build a function to create valid JSON-RPC 2.0 requests.</p>
                 </header>
 
                 <div class="content">
-                    <h2>Anatomy of a Request</h2>
+                    <h2>Create: <code>jsonrpc.py</code></h2>
                     <p>
-                        A JSON-RPC 2.0 request has four fields. Let's examine each one in detail
-                        and understand how to construct valid requests in Python.
+                        Create a new file called <code>jsonrpc.py</code>. This will be your JSON-RPC utility
+                        module that you'll build up throughout this lesson.
                     </p>
 
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">jsonrpc.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">def create_request(method: str, params: dict = None, request_id: int = None) -> dict:
+                        <pre><code class="language-python">"""
+jsonrpc.py - JSON-RPC 2.0 utilities for MCP.
+
+This module provides functions for creating and handling JSON-RPC messages.
+"""
+
+import json
+from typing import Any
+
+
+def create_request(
+    method: str,
+    params: dict | None = None,
+    request_id: int | None = None
+) -> dict:
     """
-    Create a valid JSON-RPC 2.0 request.
+    Create a JSON-RPC 2.0 request.
 
     Args:
         method: The method name to call (e.g., "tools/list")
@@ -84,145 +99,120 @@
     Returns:
         A properly formatted JSON-RPC request dict
     """
-    request = {
-        "jsonrpc": "2.0",  # Always exactly "2.0"
-        "method": method,   # Required: the method to call
+    request: dict[str, Any] = {
+        "jsonrpc": "2.0",
+        "method": method,
     }
 
-    # ID is required for requests (not notifications)
     if request_id is not None:
         request["id"] = request_id
 
-    # Params are optional
     if params is not None:
         request["params"] = params
 
     return request
 
 
-# Example usage
-request = create_request(
-    method="tools/call",
-    params={"name": "calculator", "arguments": {"expression": "2 + 2"}},
-    request_id=1
-)
+# =============================================================================
+# Try it out
+# =============================================================================
 
-print(request)
-# {
-#     "jsonrpc": "2.0",
-#     "id": 1,
-#     "method": "tools/call",
-#     "params": {"name": "calculator", "arguments": {"expression": "2 + 2"}}
-# }</code></pre>
+if __name__ == "__main__":
+    # Create a simple request
+    req1 = create_request("tools/list", request_id=1)
+    print("Request 1 (tools/list):")
+    print(json.dumps(req1, indent=2))
+    print()
+
+    # Create a request with parameters
+    req2 = create_request(
+        method="tools/call",
+        params={"name": "calculator", "arguments": {"expression": "2 + 2"}},
+        request_id=2
+    )
+    print("Request 2 (tools/call with params):")
+    print(json.dumps(req2, indent=2))</code></pre>
                     </div>
 
-                    <h2>Generating Request IDs</h2>
-                    <p>
-                        Request IDs must be unique within a session. Here's a robust way to generate them:
-                    </p>
+                    <h2>Try It</h2>
+                    <p>Run your new module:</p>
 
                     <div class="code-block">
                         <div class="code-header">
-                            <span class="code-language">python</span>
+                            <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">import threading
-
-
-class RequestIdGenerator:
-    """Thread-safe request ID generator."""
-
-    def __init__(self):
-        self._counter = 0
-        self._lock = threading.Lock()
-
-    def next_id(self) -> int:
-        """Generate the next unique request ID."""
-        with self._lock:
-            self._counter += 1
-            return self._counter
-
-
-# Usage
-id_generator = RequestIdGenerator()
-
-request1 = create_request("tools/list", request_id=id_generator.next_id())
-request2 = create_request("resources/list", request_id=id_generator.next_id())
-
-print(request1["id"])  # 1
-print(request2["id"])  # 2</code></pre>
+                        <pre><code class="language-bash">python jsonrpc.py</code></pre>
                     </div>
 
-                    <div class="info-box info">
-                        <div class="info-box-title">ID Types</div>
-                        <p>
-                            JSON-RPC allows IDs to be strings, integers, or null. MCP conventionally
-                            uses incrementing integers, but UUIDs or other string identifiers also work.
-                        </p>
-                    </div>
-
-                    <h2>Building Success Responses</h2>
-                    <p>
-                        When a request succeeds, the server responds with a <code>result</code> field.
-                        The <code>id</code> must match the request's ID exactly.
-                    </p>
-
+                    <h2>Expected Output</h2>
                     <div class="code-block">
                         <div class="code-header">
-                            <span class="code-language">python</span>
+                            <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">def create_success_response(request_id, result: dict) -> dict:
-    """
-    Create a success response for a JSON-RPC request.
+                        <pre><code>Request 1 (tools/list):
+{
+  "jsonrpc": "2.0",
+  "method": "tools/list",
+  "id": 1
+}
 
-    Args:
-        request_id: The ID from the original request (must match exactly)
-        result: The result data to return
-
-    Returns:
-        A properly formatted JSON-RPC success response
-    """
-    return {
-        "jsonrpc": "2.0",
-        "id": request_id,  # Must match the request ID
-        "result": result
+Request 2 (tools/call with params):
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "id": 2,
+  "params": {
+    "name": "calculator",
+    "arguments": {
+      "expression": "2 + 2"
     }
-
-
-# Example: responding to a tools/list request
-response = create_success_response(
-    request_id=1,
-    result={
-        "tools": [
-            {
-                "name": "calculator",
-                "description": "Performs math calculations",
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "expression": {"type": "string"}
-                    }
-                }
-            }
-        ]
-    }
-)
-
-print(response)
-# {
-#     "jsonrpc": "2.0",
-#     "id": 1,
-#     "result": {
-#         "tools": [...]
-#     }
-# }</code></pre>
+  }
+}</code></pre>
                     </div>
 
-                    <h2>Matching Responses to Requests</h2>
+                    <h2>Understanding the Code</h2>
+
+                    <h3>The Four Fields</h3>
+                    <p>A JSON-RPC 2.0 request has four possible fields:</p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Field</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Required?</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>jsonrpc</code></td>
+                                <td style="padding: 0.75rem;">Yes</td>
+                                <td style="padding: 0.75rem;">Must be exactly <code>"2.0"</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>method</code></td>
+                                <td style="padding: 0.75rem;">Yes</td>
+                                <td style="padding: 0.75rem;">The method name to call</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>id</code></td>
+                                <td style="padding: 0.75rem;">For requests</td>
+                                <td style="padding: 0.75rem;">Unique identifier (string or int)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>params</code></td>
+                                <td style="padding: 0.75rem;">No</td>
+                                <td style="padding: 0.75rem;">Parameters for the method</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Type Annotations</h3>
                     <p>
-                        In asynchronous systems, responses may arrive out of order. Use a pending
-                        request registry to match responses back to their original requests.
+                        Notice the type hints use <code>dict | None</code> syntax. This tells Python
+                        (and your IDE) that the parameter can be either a dict or None:
                     </p>
 
                     <div class="code-block">
@@ -230,226 +220,29 @@ print(response)
                             <span class="code-language">python</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">import asyncio
-from typing import Any
+                        <pre><code class="language-python"># This is the modern Python 3.10+ syntax
+params: dict | None = None
 
-
-class PendingRequests:
-    """Track pending requests and match them to responses."""
-
-    def __init__(self):
-        self._pending: dict[int, asyncio.Future] = {}
-        self._id_generator = RequestIdGenerator()
-
-    def create_request(self, method: str, params: dict = None) -> tuple[dict, asyncio.Future]:
-        """
-        Create a request and register it as pending.
-
-        Returns:
-            A tuple of (request_dict, future_for_response)
-        """
-        request_id = self._id_generator.next_id()
-
-        # Create a future to hold the eventual response
-        future = asyncio.get_event_loop().create_future()
-        self._pending[request_id] = future
-
-        request = create_request(method, params, request_id)
-        return request, future
-
-    def resolve(self, response: dict) -> bool:
-        """
-        Match a response to its pending request.
-
-        Returns:
-            True if the response was matched, False otherwise
-        """
-        request_id = response.get("id")
-
-        if request_id not in self._pending:
-            return False  # Unknown ID - possibly a late response
-
-        future = self._pending.pop(request_id)
-
-        # Check if it's an error response
-        if "error" in response:
-            future.set_exception(
-                JsonRpcError(response["error"]["code"], response["error"]["message"])
-            )
-        else:
-            future.set_result(response.get("result"))
-
-        return True
-
-
-class JsonRpcError(Exception):
-    """Represents a JSON-RPC error response."""
-
-    def __init__(self, code: int, message: str, data=None):
-        self.code = code
-        self.message = message
-        self.data = data
-        super().__init__(f"JSON-RPC Error {code}: {message}")</code></pre>
-                    </div>
-
-                    <h2>Complete Request/Response Flow</h2>
-                    <p>
-                        Here's a complete example showing how requests and responses flow through
-                        a client-server interaction:
-                    </p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">import json
-
-
-class JsonRpcClient:
-    """A simple JSON-RPC client demonstrating request/response matching."""
-
-    def __init__(self):
-        self._pending = PendingRequests()
-
-    async def call(self, method: str, params: dict = None) -> Any:
-        """
-        Make a JSON-RPC call and wait for the response.
-
-        Args:
-            method: The method to call
-            params: Optional parameters
-
-        Returns:
-            The result from the server
-
-        Raises:
-            JsonRpcError: If the server returns an error
-        """
-        # Create request and get future for response
-        request, future = self._pending.create_request(method, params)
-
-        # Send the request (in real code, this would go over HTTP/stdio)
-        print(f"Sending: {json.dumps(request)}")
-        await self._send(request)
-
-        # Wait for the response
-        result = await future
-        return result
-
-    async def _send(self, request: dict):
-        """Send request to server. Override in subclass."""
-        pass
-
-    def handle_response(self, response: dict):
-        """Process an incoming response from the server."""
-        if not self._pending.resolve(response):
-            print(f"Warning: Received response for unknown ID: {response.get('id')}")
-
-
-# Example usage (pseudocode)
-async def example():
-    client = JsonRpcClient()
-
-    # Make concurrent requests
-    tools_future = client.call("tools/list")
-    resources_future = client.call("resources/list")
-
-    # Both requests sent, now wait for responses
-    # They can arrive in any order!
-    tools = await tools_future
-    resources = await resources_future
-
-    print(f"Got {len(tools['tools'])} tools")
-    print(f"Got {len(resources['resources'])} resources")</code></pre>
+# Equivalent to the older typing.Optional syntax:
+# from typing import Optional
+# params: Optional[dict] = None</code></pre>
                     </div>
 
                     <div class="info-box tip">
                         <div class="info-box-title">Why IDs Matter</div>
                         <p>
-                            Without IDs, concurrent requests would be impossible. The client wouldn't
-                            know which response belongs to which request. IDs enable:
+                            The <code>id</code> field lets you match responses to requests. When you send
+                            multiple requests concurrently, responses might arrive out of order. The ID
+                            tells you which response belongs to which request.
                         </p>
-                        <ul>
-                            <li>Concurrent (parallel) requests</li>
-                            <li>Out-of-order response handling</li>
-                            <li>Request timeouts and cancellation</li>
-                            <li>Error attribution to specific requests</li>
-                        </ul>
                     </div>
 
-                    <h2>Validation Rules</h2>
+                    <h2>What's Next</h2>
                     <p>
-                        Always validate incoming requests and responses. Here's a validation function:
+                        Your module can create requests, but what about responses? In the next step,
+                        you'll add functions to create success responses, error responses, and handle
+                        JSON-RPC error codes.
                     </p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">def validate_request(request: dict) -> tuple[bool, str]:
-    """
-    Validate a JSON-RPC request.
-
-    Returns:
-        A tuple of (is_valid, error_message)
-    """
-    if not isinstance(request, dict):
-        return False, "Request must be a JSON object"
-
-    if request.get("jsonrpc") != "2.0":
-        return False, "jsonrpc field must be exactly '2.0'"
-
-    if "method" not in request:
-        return False, "Missing required 'method' field"
-
-    if not isinstance(request["method"], str):
-        return False, "method must be a string"
-
-    # ID validation (required for requests, absent for notifications)
-    if "id" in request:
-        id_val = request["id"]
-        if not isinstance(id_val, (str, int)) or id_val is None:
-            return False, "id must be a string or integer, not null"
-
-    # Params must be object or array if present
-    if "params" in request:
-        params = request["params"]
-        if not isinstance(params, (dict, list)):
-            return False, "params must be an object or array"
-
-    return True, ""
-
-
-def validate_response(response: dict) -> tuple[bool, str]:
-    """
-    Validate a JSON-RPC response.
-
-    Returns:
-        A tuple of (is_valid, error_message)
-    """
-    if not isinstance(response, dict):
-        return False, "Response must be a JSON object"
-
-    if response.get("jsonrpc") != "2.0":
-        return False, "jsonrpc field must be exactly '2.0'"
-
-    if "id" not in response:
-        return False, "Response must have an 'id' field"
-
-    # Must have either result or error, not both
-    has_result = "result" in response
-    has_error = "error" in response
-
-    if has_result and has_error:
-        return False, "Response cannot have both 'result' and 'error'"
-
-    if not has_result and not has_error:
-        return False, "Response must have either 'result' or 'error'"
-
-    return True, ""</code></pre>
-                    </div>
                 </div>
 
                 <nav class="step-navigation">
@@ -458,7 +251,7 @@ def validate_response(response: dict) -> tuple[bool, str]:
                         <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Protocol Overview</span></span>
                     </a>
                     <a href="lesson-03-3.html" class="nav-button next">
-                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Error Handling</span></span>
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Responses & Errors</span></span>
                         <span>&#8594;</span>
                     </a>
                 </nav>

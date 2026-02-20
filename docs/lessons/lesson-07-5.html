@@ -73,90 +73,113 @@
                 </header>
 
                 <div class="content">
-                    <h2>Putting It All Together</h2>
+                    <h2>Building Incrementally</h2>
                     <p>
-                        Now let's combine everything we've learned into a complete, production-ready
-                        MCP server using STDIO transport. This server will:
+                        Let's build a complete STDIO MCP server step by step. We'll create
+                        <code>stdio_server.py</code> incrementally, testing as we go.
                     </p>
-                    <ul>
-                        <li>Handle the MCP initialization handshake</li>
-                        <li>Expose a simple tool for demonstration</li>
-                        <li>Use proper stdin/stdout/stderr separation</li>
-                        <li>Include comprehensive logging</li>
-                    </ul>
 
-                    <h2>The Complete Server</h2>
-                    <p>
-                        Save this as <code>stdio_server.py</code>:
-                    </p>
+                    <div class="info-box info">
+                        <div class="info-box-title">File Structure</div>
+                        <p>
+                            We'll build one file: <code>stdio_server.py</code>. Each section below
+                            adds to this file. Follow along and add each section in order.
+                        </p>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Section 1: Imports and Logging Setup</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Create: <code>stdio_server.py</code></h3>
+                    <p>Start with the imports and logging (to stderr only!):</p>
 
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">stdio_server.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">#!/usr/bin/env python3
 """
-Complete MCP Server using STDIO Transport.
+stdio_server.py - MCP server using STDIO transport.
 
-This server demonstrates proper STDIO handling for MCP:
-- stdin: JSON-RPC requests from client
-- stdout: JSON-RPC responses to client
-- stderr: Debug logging
-
-Usage:
-    python stdio_server.py
-
-Or with Claude Desktop configuration:
-    {
-        "mcpServers": {
-            "my-server": {
-                "command": "python",
-                "args": ["/path/to/stdio_server.py"]
-            }
-        }
-    }
+Run with: python stdio_server.py
+Test with: echo commands piped to stdin
 """
 
 import sys
 import json
 import logging
 from datetime import datetime
+from typing import cast
 
-# ============================================================================
-# Logging Setup (stderr only!)
-# ============================================================================
+
+# =============================================================================
+# Section 1: Logging Setup (stderr only!)
+# =============================================================================
 
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s [%(levelname)s] %(message)s',
-    handlers=[logging.StreamHandler(sys.stderr)]
+    handlers=[logging.StreamHandler(sys.stderr)]  # CRITICAL: stderr only!
 )
 logger = logging.getLogger("mcp-stdio-server")
 
-# ============================================================================
-# JSON-RPC Error Codes
-# ============================================================================
 
 class ErrorCode:
+    """JSON-RPC error codes."""
     PARSE_ERROR = -32700
     INVALID_REQUEST = -32600
     METHOD_NOT_FOUND = -32601
     INVALID_PARAMS = -32602
     INTERNAL_ERROR = -32603
 
-# ============================================================================
-# Response Functions (stdout)
-# ============================================================================
 
-def write_response(response):
+# Quick test
+if __name__ == "__main__":
+    logger.info("Logging test - this goes to stderr")
+    print("Print test - this goes to stdout")</code></pre>
+                    </div>
+
+                    <h3>Try It</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">python stdio_server.py</code></pre>
+                    </div>
+
+                    <h3>Expected Output</h3>
+                    <p>You'll see both outputs - logging to stderr and print to stdout.</p>
+
+                    <!-- ============================================================= -->
+                    <h2>Section 2: Response Functions</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Edit: <code>stdio_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 1:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 2: Response Functions (stdout)
+# =============================================================================
+
+def write_response(response: dict) -> None:
     """Write a JSON-RPC response to stdout."""
+    # Use compact JSON - no pretty printing for STDIO!
     json_str = json.dumps(response, separators=(',', ':'))
     sys.stdout.write(json_str + "\n")
-    sys.stdout.flush()
-    logger.debug(f"Sent: {response.get('id', 'notification')}")
+    sys.stdout.flush()  # CRITICAL: Always flush!
+    logger.debug(f"Sent response for id={response.get('id')}")
 
-def send_result(msg_id, result):
+
+def send_result(msg_id: int, result: dict) -> None:
     """Send a successful JSON-RPC response."""
     write_response({
         "jsonrpc": "2.0",
@@ -164,20 +187,31 @@ def send_result(msg_id, result):
         "result": result
     })
 
-def send_error(msg_id, code, message, data=None):
+
+def send_error(msg_id: int | None, code: int, message: str) -> None:
     """Send a JSON-RPC error response."""
-    error = {"code": code, "message": message}
-    if data:
-        error["data"] = data
     write_response({
         "jsonrpc": "2.0",
         "id": msg_id,
-        "error": error
-    })
+        "error": {"code": code, "message": message}
+    })</code></pre>
+                    </div>
 
-# ============================================================================
-# Tool Definitions
-# ============================================================================
+                    <!-- ============================================================= -->
+                    <h2>Section 3: Tool Definitions</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Edit: <code>stdio_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 2:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 3: Tool Definitions
+# =============================================================================
 
 TOOLS = [
     {
@@ -209,23 +243,18 @@ TOOLS = [
         "inputSchema": {
             "type": "object",
             "properties": {
-                "a": {
-                    "type": "number",
-                    "description": "First number"
-                },
-                "b": {
-                    "type": "number",
-                    "description": "Second number"
-                }
+                "a": {"type": "number", "description": "First number"},
+                "b": {"type": "number", "description": "Second number"}
             },
             "required": ["a", "b"]
         }
     }
 ]
 
-def execute_tool(name, arguments):
-    """Execute a tool and return the result."""
-    logger.info(f"Executing tool: {name} with args: {arguments}")
+
+def execute_tool(name: str, arguments: dict) -> dict:
+    """Execute a tool and return the result content."""
+    logger.info(f"Executing tool: {name}")
 
     if name == "echo":
         message = arguments.get("message", "")
@@ -238,81 +267,96 @@ def execute_tool(name, arguments):
     elif name == "add_numbers":
         a = arguments.get("a", 0)
         b = arguments.get("b", 0)
-        result = a + b
-        return {"type": "text", "text": f"{a} + {b} = {result}"}
+        return {"type": "text", "text": f"{a} + {b} = {a + b}"}
 
     else:
-        raise ValueError(f"Unknown tool: {name}")
+        raise ValueError(f"Unknown tool: {name}")</code></pre>
+                    </div>
 
-# ============================================================================
-# MCP Method Handlers
-# ============================================================================
+                    <!-- ============================================================= -->
+                    <h2>Section 4: MCP Method Handlers</h2>
+                    <!-- ============================================================= -->
 
-def handle_initialize(msg_id, params):
+                    <h3>Edit: <code>stdio_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 3:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 4: MCP Method Handlers
+# =============================================================================
+
+def handle_initialize(msg_id: int | str, params: dict) -> None:
     """Handle the initialize request."""
     client_info = params.get("clientInfo", {})
     logger.info(f"Client connecting: {client_info.get('name', 'unknown')}")
 
     send_result(msg_id, {
         "protocolVersion": "2024-11-05",
-        "capabilities": {
-            "tools": {}
-        },
+        "capabilities": {"tools": {}},
         "serverInfo": {
             "name": "stdio-demo-server",
             "version": "1.0.0"
         }
     })
 
-def handle_tools_list(msg_id, params):
+
+def handle_tools_list(msg_id: int | str, params: dict) -> None:
     """Handle the tools/list request."""
     logger.debug("Listing tools")
     send_result(msg_id, {"tools": TOOLS})
 
-def handle_tools_call(msg_id, params):
+
+def handle_tools_call(msg_id: int | str, params: dict) -> None:
     """Handle the tools/call request."""
     tool_name = params.get("name")
     arguments = params.get("arguments", {})
 
     try:
         result = execute_tool(tool_name, arguments)
-        send_result(msg_id, {
-            "content": [result]
-        })
+        send_result(msg_id, {"content": [result]})
     except ValueError as e:
         send_error(msg_id, ErrorCode.METHOD_NOT_FOUND, str(e))
     except Exception as e:
-        logger.error(f"Tool execution error: {e}")
-        send_error(msg_id, ErrorCode.INTERNAL_ERROR, str(e))
+        logger.error(f"Tool error: {e}")
+        send_error(msg_id, ErrorCode.INTERNAL_ERROR, str(e))</code></pre>
+                    </div>
 
-def handle_notification(method, params):
-    """Handle notifications (no response expected)."""
-    if method == "notifications/initialized":
-        logger.info("Client initialization complete")
-    elif method == "notifications/cancelled":
-        logger.info(f"Request cancelled: {params}")
-    else:
-        logger.warning(f"Unknown notification: {method}")
+                    <!-- ============================================================= -->
+                    <h2>Section 5: Message Router and Main Loop</h2>
+                    <!-- ============================================================= -->
 
-# ============================================================================
-# Message Router
-# ============================================================================
+                    <h3>Edit: <code>stdio_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 4:</p>
 
-def handle_message(message):
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 5: Message Router and Main Loop
+# =============================================================================
+
+def handle_message(message: dict) -> None:
     """Route a JSON-RPC message to the appropriate handler."""
-
-    # Validate JSON-RPC version
     if message.get("jsonrpc") != "2.0":
         logger.error("Invalid JSON-RPC version")
         return
 
     method = message.get("method")
-    msg_id = message.get("id")
+    msg_id = cast(int | str | None, message.get("id"))
     params = message.get("params", {})
 
-    # Notifications (no id)
+    # Notifications (no id) - no response needed
     if method and msg_id is None:
-        handle_notification(method, params)
+        if method == "notifications/initialized":
+            logger.info("Client initialization complete")
+        else:
+            logger.warning(f"Unknown notification: {method}")
         return
 
     # Requests (has method and id)
@@ -329,18 +373,10 @@ def handle_message(message):
         if handler:
             handler(msg_id, params)
         else:
-            send_error(msg_id, ErrorCode.METHOD_NOT_FOUND,
-                      f"Method not found: {method}")
-        return
+            send_error(msg_id, ErrorCode.METHOD_NOT_FOUND, f"Unknown method: {method}")
 
-    # Unknown message type
-    logger.warning(f"Unknown message format: {message}")
 
-# ============================================================================
-# Main Loop
-# ============================================================================
-
-def main():
+def main() -> None:
     """Main server loop - read and process messages until EOF."""
     logger.info("STDIO MCP Server starting...")
 
@@ -364,7 +400,6 @@ def main():
                 message = json.loads(line)
             except json.JSONDecodeError as e:
                 logger.error(f"JSON parse error: {e}")
-                logger.error(f"Raw input: {repr(line)}")
                 continue
 
             # Handle the message
@@ -376,44 +411,70 @@ def main():
         except Exception as e:
             logger.error(f"Unexpected error: {e}", exc_info=True)
 
-    logger.info("Server shutdown complete")
+    logger.info("Server shutdown complete")</code></pre>
+                    </div>
 
-if __name__ == "__main__":
+                    <p><strong>Replace</strong> the <code>if __name__ == "__main__"</code> block:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">if __name__ == "__main__":
     main()</code></pre>
                     </div>
 
-                    <h2>Testing the Server</h2>
-                    <p>
-                        You can test the server by sending JSON-RPC messages through stdin:
-                    </p>
+                    <!-- ============================================================= -->
+                    <h2>Testing Your Server</h2>
+                    <!-- ============================================================= -->
 
+                    <h3>Test 1: Initialize Handshake</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash"># Test the initialize handshake
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | python stdio_server.py
+                        <pre><code class="language-bash">echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | python stdio_server.py</code></pre>
+                    </div>
 
-# Test listing tools (need to send initialize first)
-(
+                    <p>Expected: JSON response with protocolVersion, capabilities, and serverInfo.</p>
+
+                    <h3>Test 2: List Tools</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">(
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
 echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
 echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
-) | python stdio_server.py
+) | python stdio_server.py</code></pre>
+                    </div>
 
-# Test calling a tool
-(
+                    <p>Expected: Two responses - initialize result and tools list.</p>
+
+                    <h3>Test 3: Call a Tool</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">(
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
 echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
 echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arguments":{"message":"Hello, MCP!"}}}'
 ) | python stdio_server.py</code></pre>
                     </div>
 
+                    <p>Expected: Response with <code>"text": "Hello, MCP!"</code></p>
+
+                    <!-- ============================================================= -->
                     <h2>Claude Desktop Configuration</h2>
-                    <p>
-                        To use this server with Claude Desktop, add it to your configuration file:
-                    </p>
+                    <!-- ============================================================= -->
+
+                    <p>To use this server with Claude Desktop, add it to your configuration file:</p>
 
                     <div class="code-block">
                         <div class="code-header">
@@ -439,58 +500,19 @@ echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arg
                         </p>
                     </div>
 
-                    <h2>Key Implementation Details</h2>
+                    <!-- ============================================================= -->
+                    <h2>What You've Built</h2>
+                    <!-- ============================================================= -->
 
-                    <h3>1. Clean Stream Separation</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python"># Logging goes to stderr ONLY
-logging.basicConfig(handlers=[logging.StreamHandler(sys.stderr)])
-
-# Responses go to stdout ONLY
-sys.stdout.write(json_str + "\n")
-sys.stdout.flush()</code></pre>
-                    </div>
-
-                    <h3>2. Always Flush Output</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python"># Every write to stdout must be flushed
-sys.stdout.write(json_str + "\n")
-sys.stdout.flush()  # Never forget this!</code></pre>
-                    </div>
-
-                    <h3>3. Graceful EOF Handling</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">line = sys.stdin.readline()
-if not line:  # Empty string = EOF
-    logger.info("EOF received, shutting down")
-    break</code></pre>
-                    </div>
-
-                    <h3>4. Error Recovery</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python"># Don't crash on bad JSON - log and continue
-try:
-    message = json.loads(line)
-except json.JSONDecodeError as e:
-    logger.error(f"JSON parse error: {e}")
-    continue  # Keep processing</code></pre>
-                    </div>
+                    <p>Your STDIO MCP server now:</p>
+                    <ul>
+                        <li>Reads JSON-RPC messages from stdin (one per line)</li>
+                        <li>Writes compact JSON responses to stdout</li>
+                        <li>Logs debug information to stderr</li>
+                        <li>Handles the MCP initialization handshake</li>
+                        <li>Exposes three tools: echo, get_time, add_numbers</li>
+                        <li>Handles errors gracefully</li>
+                    </ul>
 
                     <div class="info-box warning">
                         <div class="info-box-title">Common Mistakes to Avoid</div>
@@ -499,38 +521,14 @@ except json.JSONDecodeError as e:
                             <li>Forgetting to call <code>flush()</code> after writing</li>
                             <li>Pretty-printing JSON responses (breaks line-based protocol)</li>
                             <li>Not handling EOF properly (server hangs)</li>
-                            <li>Importing libraries that print to stdout</li>
                         </ul>
                     </div>
 
                     <h2>What's Next?</h2>
                     <p>
-                        Congratulations! You've built a complete STDIO-based MCP server. You now understand:
-                    </p>
-                    <ul>
-                        <li>How STDIO transport works in MCP</li>
-                        <li>Reading JSON-RPC messages from stdin</li>
-                        <li>Writing responses to stdout correctly</li>
-                        <li>Using stderr for debug logging</li>
-                        <li>Building a complete, production-ready server</li>
-                    </ul>
-
-                    <p>
                         In the next lesson, we'll explore HTTP/SSE transport, which enables remote
                         MCP servers and web-based clients.
                     </p>
-
-                    <div class="info-box tip">
-                        <div class="info-box-title">Extend Your Server</div>
-                        <p>
-                            Try adding more tools to your server! Some ideas:
-                        </p>
-                        <ul>
-                            <li>A <code>read_file</code> tool that reads local files</li>
-                            <li>A <code>run_command</code> tool that executes shell commands</li>
-                            <li>A <code>weather</code> tool that fetches weather data from an API</li>
-                        </ul>
-                    </div>
                 </div>
 
                 <nav class="step-navigation">

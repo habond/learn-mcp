@@ -65,28 +65,60 @@
                     <h2>Building an MCP REPL</h2>
                     <p>
                         A REPL (Read-Eval-Print Loop) is an interactive shell for exploring
-                        MCP servers. It's invaluable for testing and debugging.
+                        MCP servers. It's invaluable for testing and debugging. We'll build
+                        this in 3 sections.
                     </p>
 
+                    <div class="info-box info">
+                        <div class="info-box-title">What We're Building</div>
+                        <p>
+                            An interactive command-line tool that connects to any STDIO MCP server
+                            and lets you explore its capabilities, call tools, read resources, and
+                            test prompts.
+                        </p>
+                    </div>
+
+                    <!-- Section 1 -->
+                    <h2>Section 1: REPL Command Structure</h2>
+                    <p>Create the REPL class with command registration and the main loop.</p>
+
+                    <h3>Create: <code>mcp_repl.py</code></h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">mcp_repl.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">"""
+                        <pre><code class="language-python">#!/usr/bin/env python3
+"""
 mcp_repl.py - Interactive MCP client REPL.
+
+Commands:
+    help              Show help message
+    info              Show server information
+    tools             List available tools
+    resources         List available resources
+    prompts           List available prompts
+    call <tool> [json]    Call a tool with optional JSON arguments
+    read <uri>            Read a resource
+    prompt <name> [json]  Get a prompt with optional arguments
+    raw <method> [json]   Send a raw JSON-RPC request
+    quit              Exit the REPL
 """
 
 import json
 import sys
 import shlex
-from typing import Optional
+from typing import Any
+
+# Type alias for the client (will be passed in)
+MCPClient = Any
 
 
 class MCPREPL:
     """Interactive REPL for MCP servers."""
 
-    def __init__(self, client):
+    def __init__(self, client: MCPClient):
         self.client = client
         self.commands = {
             "help": self.cmd_help,
@@ -102,7 +134,7 @@ class MCPREPL:
             "exit": self.cmd_quit,
         }
 
-    def run(self):
+    def run(self) -> None:
         """Start the REPL loop."""
         print("\nMCP Interactive Client")
         print("Type 'help' for commands, 'quit' to exit\n")
@@ -130,7 +162,7 @@ class MCPREPL:
             except Exception as e:
                 print(f"Error: {e}")
 
-    def cmd_help(self, args):
+    def cmd_help(self, args: list) -> None:
         """Show help message."""
         print("""
 Available commands:
@@ -146,7 +178,7 @@ Available commands:
   quit              Exit the REPL
 """)
 
-    def cmd_info(self, args):
+    def cmd_info(self, args: list) -> None:
         """Show server information."""
         print(f"\nServer: {self.client.server_info.get('name', 'Unknown')}")
         print(f"Version: {self.client.server_info.get('version', 'Unknown')}")
@@ -156,7 +188,25 @@ Available commands:
             print(f"  {cap}: {value}")
         print()
 
-    def cmd_tools(self, args):
+    def cmd_quit(self, args: list) -> None:
+        """Exit the REPL."""
+        print("Goodbye!")
+        sys.exit(0)</code></pre>
+                    </div>
+
+                    <!-- Section 2 -->
+                    <h2>Section 2: List Commands</h2>
+                    <p>Add commands to list tools, resources, and prompts.</p>
+
+                    <h3>Edit: <code>mcp_repl.py</code></h3>
+                    <p><strong>Add</strong> the following methods before <code>cmd_quit</code>:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">    def cmd_tools(self, args: list) -> None:
         """List available tools."""
         if not self.client.has_tools():
             print("Server does not support tools")
@@ -181,7 +231,7 @@ Available commands:
                     print(f"      {name}{req}: {desc}")
             print()
 
-    def cmd_resources(self, args):
+    def cmd_resources(self, args: list) -> None:
         """List available resources."""
         if not self.client.has_resources():
             print("Server does not support resources")
@@ -200,7 +250,7 @@ Available commands:
                 print(f"    Type: {resource.mime_type}")
             print()
 
-    def cmd_prompts(self, args):
+    def cmd_prompts(self, args: list) -> None:
         """List available prompts."""
         if not self.client.has_prompts():
             print("Server does not support prompts")
@@ -220,9 +270,22 @@ Available commands:
                 for arg in prompt.arguments:
                     req = "*" if arg.required else ""
                     print(f"      {arg.name}{req}: {arg.description}")
-            print()
+            print()</code></pre>
+                    </div>
 
-    def cmd_call(self, args):
+                    <!-- Section 3 -->
+                    <h2>Section 3: Action Commands</h2>
+                    <p>Add commands to call tools, read resources, and get prompts.</p>
+
+                    <h3>Edit: <code>mcp_repl.py</code></h3>
+                    <p><strong>Add</strong> the following methods before <code>cmd_quit</code>:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">    def cmd_call(self, args: list) -> None:
         """Call a tool."""
         if not args:
             print("Usage: call <tool_name> [json_arguments]")
@@ -252,7 +315,7 @@ Available commands:
         except Exception as e:
             print(f"Error: {e}")
 
-    def cmd_read(self, args):
+    def cmd_read(self, args: list) -> None:
         """Read a resource."""
         if not args:
             print("Usage: read <resource_uri>")
@@ -273,7 +336,7 @@ Available commands:
         except Exception as e:
             print(f"Error: {e}")
 
-    def cmd_prompt(self, args):
+    def cmd_prompt(self, args: list) -> None:
         """Get a prompt."""
         if not args:
             print("Usage: prompt <prompt_name> [json_arguments]")
@@ -302,11 +365,13 @@ Available commands:
                     text = content.get("text", str(content))
                 else:
                     text = str(content)
-                print(f"  [{role}]: {text[:100]}...")
+                # Truncate long messages for display
+                display_text = text[:200] + "..." if len(text) > 200 else text
+                print(f"  [{role}]: {display_text}")
         except Exception as e:
             print(f"Error: {e}")
 
-    def cmd_raw(self, args):
+    def cmd_raw(self, args: list) -> None:
         """Send a raw JSON-RPC request."""
         if not args:
             print("Usage: raw <method> [json_params]")
@@ -332,27 +397,30 @@ Available commands:
             print("Result:")
             print(json.dumps(result, indent=2))
         except Exception as e:
-            print(f"Error: {e}")
-
-    def cmd_quit(self, args):
-        """Exit the REPL."""
-        print("Goodbye!")
-        sys.exit(0)</code></pre>
+            print(f"Error: {e}")</code></pre>
                     </div>
 
-                    <h2>Running the REPL</h2>
-                    <p>
-                        Create a simple main script to launch the REPL:
-                    </p>
+                    <!-- Section 4 -->
+                    <h2>Section 4: Main Launcher</h2>
+                    <p>Create a launcher script to start the REPL with any server.</p>
 
+                    <h3>Create: <code>main.py</code></h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">main.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">#!/usr/bin/env python3
 """
 main.py - Launch the MCP REPL.
+
+Usage:
+    python main.py <server_command> [args...]
+
+Examples:
+    python main.py python my_server.py
+    python main.py ./calculator_server
 """
 
 import sys
@@ -360,7 +428,7 @@ from stdio_client import StdioClient
 from mcp_repl import MCPREPL
 
 
-def main():
+def main() -> None:
     if len(sys.argv) < 2:
         print("Usage: python main.py <server_command> [args...]")
         print("Example: python main.py python my_server.py")
@@ -391,51 +459,73 @@ if __name__ == "__main__":
     main()</code></pre>
                     </div>
 
-                    <h2>Example REPL Session</h2>
+                    <h2>Try It</h2>
+                    <p>
+                        Test the REPL with one of your MCP servers from previous lessons.
+                        Make sure you have both <code>stdio_client.py</code> (from earlier steps)
+                        and the server you want to test.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Test with your STDIO calculator server
+python main.py python stdio_server.py</code></pre>
+                    </div>
+
+                    <h3>Example REPL Session</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>$ python main.py python weather_server.py
-Starting server: python weather_server.py
-Connected to weather-server
+                        <pre><code>$ python main.py python stdio_server.py
+Starting server: python stdio_server.py
+Connected to stdio-calculator
 
 MCP Interactive Client
 Type 'help' for commands, 'quit' to exit
 
 mcp> info
 
-Server: weather-server
+Server: stdio-calculator
 Version: 1.0.0
 Protocol: 2024-11-05
 
 Capabilities:
   tools: {}
-  resources: {'subscribe': False}
 
 mcp> tools
 
-Available tools (2):
+Available tools (3):
 
-  get_weather
-    Get current weather for a city
+  add
+    Add two numbers together
     Parameters:
-      city*: City name
-      units: Temperature units (celsius/fahrenheit)
+      a*: First number
+      b*: Second number
 
-  get_forecast
-    Get 5-day weather forecast
+  subtract
+    Subtract second number from first
     Parameters:
-      city*: City name
+      a*: First number
+      b*: Second number
 
-mcp> call get_weather {"city": "Tokyo", "units": "celsius"}
+  multiply
+    Multiply two numbers
+    Parameters:
+      a*: First number
+      b*: Second number
 
-Calling tool: get_weather
-Arguments: {"city": "Tokyo", "units": "celsius"}
+mcp> call add {"a": 5, "b": 3}
+
+Calling tool: add
+Arguments: {"a": 5, "b": 3}
 
 Result:
-Tokyo: 22C, Partly Cloudy
+5 + 3 = 8
 
 mcp> quit
 Goodbye!</code></pre>

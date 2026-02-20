@@ -62,6 +62,22 @@
                 </header>
 
                 <div class="content">
+                    <h2>What You'll Build</h2>
+                    <p>
+                        In this lesson, you'll build <code>mcp_server.py</code> &mdash; a working MCP server
+                        that properly implements the initialization handshake. By the end, your server will:
+                    </p>
+                    <ul>
+                        <li>Track connection state (disconnected, initializing, ready)</li>
+                        <li>Handle the <code>initialize</code> request with version negotiation</li>
+                        <li>Respond with server capabilities</li>
+                        <li>Process the <code>notifications/initialized</code> notification</li>
+                        <li>Reject requests before initialization is complete</li>
+                    </ul>
+                    <p>
+                        Each step builds on the previous one, and you'll test your server with curl commands.
+                    </p>
+
                     <h2>The Three Phases of MCP</h2>
                     <p>
                         Every MCP connection follows a strict lifecycle with three distinct phases.

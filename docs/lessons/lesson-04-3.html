@@ -207,7 +207,7 @@
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">from dataclasses import dataclass, field, asdict
-from typing import Any
+from typing import Any, cast
 
 # Server configuration
 SERVER_NAME = "my-mcp-server"
@@ -392,7 +392,7 @@ print(response)</code></pre>
 
     Returns either a success response or error response.
     """
-    request_id = request.get("id")
+    request_id = cast(int | str, request.get("id"))
     params = request.get("params", {})
 
     try:

@@ -61,25 +61,38 @@
                 </header>
 
                 <div class="content">
-                    <h2>The Complete File Resource Server</h2>
+                    <h2>Building Incrementally</h2>
                     <p>
-                        Let's put everything together and build a complete MCP server that exposes
-                        files from a directory as resources. This is a practical example you can
-                        extend for your own projects.
+                        Let's build a complete file resource server step by step. We'll create
+                        <code>file_resource_server.py</code> incrementally, testing as we go.
                     </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">File Structure</div>
+                        <p>
+                            We'll build one file: <code>file_resource_server.py</code>. Each section below
+                            adds to this file. Follow along and add each section in order.
+                        </p>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Section 1: Imports and Configuration</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Create: <code>file_resource_server.py</code></h3>
+                    <p>Start with the imports and configuration:</p>
 
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">file_resource_server.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">"""
-file_resource_server.py - Complete MCP server exposing files as resources
+file_resource_server.py - MCP server exposing files as resources.
 
-This server:
-1. Scans a directory for files
-2. Exposes them via resources/list
-3. Returns their contents via resources/read
+Run with: python file_resource_server.py
+Test with: curl commands
 """
 
 import json
@@ -87,8 +100,13 @@ import base64
 import mimetypes
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from typing import cast
 
-# Configuration
+
+# =============================================================================
+# Section 1: Configuration
+# =============================================================================
+
 PROJECT_DIR = Path("./project")  # Directory to expose
 ALLOWED_EXTENSIONS = {".py", ".js", ".json", ".md", ".txt", ".html", ".css"}
 
@@ -101,6 +119,47 @@ class MCPError(Exception):
         super().__init__(message)
 
 
+# Quick test
+if __name__ == "__main__":
+    print(f"Project directory: {PROJECT_DIR.absolute()}")
+    print(f"Allowed extensions: {ALLOWED_EXTENSIONS}")</code></pre>
+                    </div>
+
+                    <h3>Try It</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">python file_resource_server.py</code></pre>
+                    </div>
+
+                    <h3>Expected Output</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Project directory: /path/to/your/project
+Allowed extensions: {'.py', '.js', '.json', '.md', '.txt', '.html', '.css'}</code></pre>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Section 2: File Utilities</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Edit: <code>file_resource_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 1:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 2: File Utilities
+# =============================================================================
+
 def get_mime_type(file_path: Path) -> str:
     """Get MIME type for a file."""
     mime_type, _ = mimetypes.guess_type(str(file_path))
@@ -112,8 +171,6 @@ def get_mime_type(file_path: Path) -> str:
         ".py": "text/x-python",
         ".js": "text/javascript",
         ".ts": "text/typescript",
-        ".jsx": "text/javascript",
-        ".tsx": "text/typescript",
         ".md": "text/markdown",
         ".yml": "text/yaml",
         ".yaml": "text/yaml",
@@ -124,8 +181,24 @@ def get_mime_type(file_path: Path) -> str:
 def is_binary_file(file_path: Path) -> bool:
     """Check if a file is binary."""
     binary_extensions = {".png", ".jpg", ".jpeg", ".gif", ".pdf", ".zip", ".exe"}
-    return file_path.suffix.lower() in binary_extensions
+    return file_path.suffix.lower() in binary_extensions</code></pre>
+                    </div>
 
+                    <!-- ============================================================= -->
+                    <h2>Section 3: Directory Scanner</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Edit: <code>file_resource_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 2:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 3: Directory Scanner
+# =============================================================================
 
 def scan_directory(directory: Path) -> list[dict]:
     """Scan directory and return resource definitions."""
@@ -157,8 +230,64 @@ def scan_directory(directory: Path) -> list[dict]:
             "mimeType": get_mime_type(file_path)
         })
 
-    return sorted(resources, key=lambda r: r["name"])
+    return sorted(resources, key=lambda r: r["name"])</code></pre>
+                    </div>
 
+                    <p><strong>Update</strong> the <code>if __name__ == "__main__"</code> block to test scanning:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Quick test - scan directory
+if __name__ == "__main__":
+    # Create test directory with sample files
+    PROJECT_DIR.mkdir(exist_ok=True)
+    (PROJECT_DIR / "config.json").write_text('{"debug": true}')
+    (PROJECT_DIR / "README.md").write_text("# Test Project")
+
+    print("Scanning directory...")
+    resources = scan_directory(PROJECT_DIR)
+    for r in resources:
+        print(f"  {r['name']}: {r['uri']}")</code></pre>
+                    </div>
+
+                    <h3>Try It</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">python file_resource_server.py</code></pre>
+                    </div>
+
+                    <h3>Expected Output</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Scanning directory...
+  README.md: file:///path/to/project/README.md
+  config.json: file:///path/to/project/config.json</code></pre>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Section 4: File Reader</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Edit: <code>file_resource_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 3:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 4: File Reader
+# =============================================================================
 
 def read_file_resource(uri: str) -> dict:
     """Read a file and return its content."""
@@ -196,7 +325,6 @@ def read_file_resource(uri: str) -> dict:
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
         except UnicodeDecodeError:
-            # Fall back to binary if text decoding fails
             with open(file_path, "rb") as f:
                 content = base64.b64encode(f.read()).decode("utf-8")
             return {
@@ -209,17 +337,31 @@ def read_file_resource(uri: str) -> dict:
             "uri": uri,
             "mimeType": mime_type,
             "text": content
-        }
+        }</code></pre>
+                    </div>
 
+                    <!-- ============================================================= -->
+                    <h2>Section 5: MCP Method Handlers</h2>
+                    <!-- ============================================================= -->
 
-# MCP Method Handlers
+                    <h3>Edit: <code>file_resource_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 4:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 5: MCP Method Handlers
+# =============================================================================
 
 def handle_initialize(params: dict) -> dict:
     """Handle initialize request."""
     return {
         "protocolVersion": "2024-11-05",
         "capabilities": {
-            "resources": {}
+            "resources": {}  # We support resources
         },
         "serverInfo": {
             "name": "file-resource-server",
@@ -241,28 +383,43 @@ def handle_resources_read(params: dict) -> dict:
         raise MCPError(-32602, "Missing required parameter: uri")
 
     content = read_file_resource(uri)
-    return {"contents": [content]}
+    return {"contents": [content]}</code></pre>
+                    </div>
 
+                    <!-- ============================================================= -->
+                    <h2>Section 6: Request Router and HTTP Server</h2>
+                    <!-- ============================================================= -->
 
-# Request Router
+                    <h3>Edit: <code>file_resource_server.py</code></h3>
+                    <p><strong>Add</strong> the following after Section 5:</p>
 
-def route_request(method: str, params: dict) -> dict:
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Section 6: Request Router and HTTP Server
+# =============================================================================
+
+def route_request(method: str, params: dict) -> dict | None:
     """Route JSON-RPC requests to handlers."""
     handlers = {
         "initialize": handle_initialize,
-        "initialized": lambda p: {},  # Notification, no response needed
         "resources/list": handle_resources_list,
         "resources/read": handle_resources_read,
     }
 
     handler = handlers.get(method)
-    if not handler:
-        raise MCPError(-32601, f"Method not found: {method}")
+    if handler:
+        return handler(params)
 
-    return handler(params)
+    # Handle notifications
+    if method == "notifications/initialized":
+        return None
 
+    raise MCPError(-32601, f"Method not found: {method}")
 
-# HTTP Server
 
 class MCPHandler(BaseHTTPRequestHandler):
     """HTTP handler for MCP requests."""
@@ -283,14 +440,13 @@ class MCPHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         """Handle POST requests."""
         try:
-            # Read request
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length)
             request = json.loads(body.decode("utf-8"))
 
             method = request.get("method")
             params = request.get("params", {})
-            request_id = request.get("id")
+            request_id = cast(int | str | None, request.get("id"))
 
             # Handle notification (no id)
             if request_id is None:
@@ -302,6 +458,10 @@ class MCPHandler(BaseHTTPRequestHandler):
             # Handle request
             try:
                 result = route_request(method, params)
+                if result is None:
+                    self.send_response(204)
+                    self.end_headers()
+                    return
                 self.send_json({
                     "jsonrpc": "2.0",
                     "id": request_id,
@@ -311,42 +471,26 @@ class MCPHandler(BaseHTTPRequestHandler):
                 self.send_json({
                     "jsonrpc": "2.0",
                     "id": request_id,
-                    "error": {
-                        "code": e.code,
-                        "message": e.message
-                    }
+                    "error": {"code": e.code, "message": e.message}
                 })
 
         except json.JSONDecodeError as e:
             self.send_json({
                 "jsonrpc": "2.0",
                 "id": None,
-                "error": {
-                    "code": -32700,
-                    "message": f"Parse error: {e}"
-                }
+                "error": {"code": -32700, "message": f"Parse error: {e}"}
             }, status=400)
 
 
-def main():
-    """Start the MCP server."""
-    # Create project directory if it doesn't exist
+def run_server(host: str = "localhost", port: int = 8080):
+    """Start the MCP file resource server."""
+    # Create project directory with sample files
     PROJECT_DIR.mkdir(exist_ok=True)
+    (PROJECT_DIR / "config.json").write_text('{\n  "debug": true,\n  "port": 8080\n}')
+    (PROJECT_DIR / "README.md").write_text("# My Project\n\nThis is a sample project.")
+    (PROJECT_DIR / "main.py").write_text('def main():\n    print("Hello!")\n\nif __name__ == "__main__":\n    main()')
 
-    # Create some sample files
-    (PROJECT_DIR / "config.json").write_text(
-        '{\n  "debug": true,\n  "port": 8080\n}'
-    )
-    (PROJECT_DIR / "README.md").write_text(
-        "# My Project\n\nThis is a sample project."
-    )
-    (PROJECT_DIR / "main.py").write_text(
-        'def main():\n    print("Hello, World!")\n\nif __name__ == "__main__":\n    main()'
-    )
-
-    host, port = "localhost", 8080
     server = HTTPServer((host, port), MCPHandler)
-
     print(f"File Resource Server running on http://{host}:{port}")
     print(f"Serving files from: {PROJECT_DIR.absolute()}")
     print("Press Ctrl+C to stop")
@@ -355,63 +499,59 @@ def main():
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nShutting down...")
-        server.shutdown()
-
-
-if __name__ == "__main__":
-    main()</code></pre>
+        server.shutdown()</code></pre>
                     </div>
 
-                    <h2>Testing the Server</h2>
-                    <p>Start the server and test it with curl:</p>
+                    <p><strong>Replace</strong> the <code>if __name__ == "__main__"</code> block:</p>
 
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">if __name__ == "__main__":
+    run_server()</code></pre>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Testing Your Server</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Start the Server</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash"># Start the server
-python file_resource_server.py
-
-# In another terminal, test initialization
-curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "initialize",
-    "params": {
-        "protocolVersion": "2024-11-05",
-        "capabilities": {},
-        "clientInfo": {"name": "test-client", "version": "1.0.0"}
-    }
-  }'</code></pre>
+                        <pre><code class="language-bash">python file_resource_server.py</code></pre>
                     </div>
 
-                    <p>Expected response:</p>
+                    <p>You should see:</p>
                     <div class="code-block">
                         <div class="code-header">
-                            <span class="code-language">json</span>
+                            <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-json">{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": {
-    "protocolVersion": "2024-11-05",
-    "capabilities": {
-      "resources": {}
-    },
-    "serverInfo": {
-      "name": "file-resource-server",
-      "version": "1.0.0"
-    }
-  }
-}</code></pre>
+                        <pre><code>File Resource Server running on http://localhost:8080
+Serving files from: /path/to/project
+Press Ctrl+C to stop</code></pre>
                     </div>
 
-                    <h2>List Available Resources</h2>
+                    <h3>Test 1: List Resources</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "resources/list", "params": {}}'</code></pre>
+                    </div>
 
+                    <p>Expected: A list of resources with URIs, names, descriptions, and MIME types.</p>
+
+                    <h3>Test 2: Read a Resource</h3>
+                    <p>Copy a URI from the list response and use it here:</p>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -422,12 +562,12 @@ curl -X POST http://localhost:8080 \
   -d '{
     "jsonrpc": "2.0",
     "id": 2,
-    "method": "resources/list",
-    "params": {}
+    "method": "resources/read",
+    "params": {"uri": "file:///path/to/project/config.json"}
   }'</code></pre>
                     </div>
 
-                    <p>Expected response:</p>
+                    <p>Expected:</p>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">json</span>
@@ -436,60 +576,6 @@ curl -X POST http://localhost:8080 \
                         <pre><code class="language-json">{
   "jsonrpc": "2.0",
   "id": 2,
-  "result": {
-    "resources": [
-      {
-        "uri": "file:///path/to/project/README.md",
-        "name": "README.md",
-        "description": "File: README.md",
-        "mimeType": "text/markdown"
-      },
-      {
-        "uri": "file:///path/to/project/config.json",
-        "name": "config.json",
-        "description": "File: config.json",
-        "mimeType": "application/json"
-      },
-      {
-        "uri": "file:///path/to/project/main.py",
-        "name": "main.py",
-        "description": "File: main.py",
-        "mimeType": "text/x-python"
-      }
-    ]
-  }
-}</code></pre>
-                    </div>
-
-                    <h2>Read a Resource</h2>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">bash</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-bash"># Use the exact URI from the resources/list response
-curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 3,
-    "method": "resources/read",
-    "params": {
-        "uri": "file:///path/to/project/config.json"
-    }
-  }'</code></pre>
-                    </div>
-
-                    <p>Expected response:</p>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">json</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-json">{
-  "jsonrpc": "2.0",
-  "id": 3,
   "result": {
     "contents": [
       {
@@ -502,7 +588,28 @@ curl -X POST http://localhost:8080 \
 }</code></pre>
                     </div>
 
+                    <h3>Test 3: Read Non-Existent Resource (Error)</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "resources/read",
+    "params": {"uri": "file:///nonexistent.txt"}
+  }'</code></pre>
+                    </div>
+
+                    <p>Expected: JSON-RPC error with "File not found".</p>
+
+                    <!-- ============================================================= -->
                     <h2>What You've Built</h2>
+                    <!-- ============================================================= -->
+
                     <p>Your file resource server now:</p>
                     <ul>
                         <li>Scans a directory for files with allowed extensions</li>

@@ -61,6 +61,22 @@
                 </header>
 
                 <div class="content">
+                    <h2>What You'll Build</h2>
+                    <p>
+                        In this lesson, you'll build <code>file_resource_server.py</code> &mdash; an MCP server
+                        that exposes local files as resources. By the end, your server will:
+                    </p>
+                    <ul>
+                        <li>Scan a directory for files with allowed extensions</li>
+                        <li>Handle <code>resources/list</code> to advertise available files</li>
+                        <li>Handle <code>resources/read</code> to return file contents</li>
+                        <li>Return text content for readable files, base64 for binary</li>
+                        <li>Include security checks to prevent directory traversal</li>
+                    </ul>
+                    <p>
+                        Each step builds on the previous one, and you'll test your server with curl commands.
+                    </p>
+
                     <h2>Resources: Application-Controlled Data</h2>
                     <p>
                         <strong>Resources</strong> are one of the three core primitives in MCP, alongside Tools and Prompts.

@@ -61,31 +61,111 @@
                 </header>
 
                 <div class="content">
-                    <h2>Real-World Prompt Examples</h2>
+                    <h2>Building a Complete Prompts Server</h2>
                     <p>
-                        Let's build a complete collection of useful prompts that demonstrate
-                        best practices and common patterns. These prompts can serve as templates
-                        for your own MCP servers.
+                        Let's build a complete MCP server with useful prompts for real-world
+                        tasks. We'll create this incrementally in 5 sections.
                     </p>
 
-                    <h2>Code Review Prompt</h2>
-                    <p>
-                        A comprehensive code review prompt that adapts to different languages
-                        and focus areas:
-                    </p>
+                    <div class="info-box info">
+                        <div class="info-box-title">What We're Building</div>
+                        <p>
+                            A prompts server with four practical prompts: code review, text summarization,
+                            code explanation, and git commit message generation.
+                        </p>
+                    </div>
+
+                    <!-- Section 1 -->
+                    <h2>Section 1: Imports and Prompt Definitions</h2>
+                    <p>Start by creating the file with imports and prompt metadata.</p>
+
+                    <h3>Create: <code>prompts_server.py</code></h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <span class="code-filename">prompts_server.py</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">#!/usr/bin/env python3
+"""
+prompts_server.py - MCP server with useful prompt templates.
+
+This server provides prompts for:
+- Code review with configurable focus areas
+- Text summarization in various styles
+- Code explanation for different audiences
+- Git commit message generation
+"""
+
+import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from typing import Any, cast
+
+# =============================================================================
+# Prompt Definitions
+# =============================================================================
+
+PROMPTS = {
+    "code-review": {
+        "name": "code-review",
+        "description": "Review code for bugs, security, performance, or style",
+        "arguments": [
+            {"name": "code", "description": "The code to review", "required": True},
+            {"name": "language", "description": "Programming language", "required": True},
+            {"name": "focus", "description": "Focus: security, performance, style, or all", "required": False}
+        ]
+    },
+    "summarize": {
+        "name": "summarize",
+        "description": "Summarize text in various formats",
+        "arguments": [
+            {"name": "text", "description": "Text to summarize", "required": True},
+            {"name": "style", "description": "Style: paragraph, bullets, tldr, executive", "required": False},
+            {"name": "max_length", "description": "Maximum sentences", "required": False}
+        ]
+    },
+    "explain-code": {
+        "name": "explain-code",
+        "description": "Explain code for different audience levels",
+        "arguments": [
+            {"name": "code", "description": "Code to explain", "required": True},
+            {"name": "audience", "description": "Audience: beginner, developer, expert", "required": False},
+            {"name": "include_examples", "description": "Include examples: true/false", "required": False}
+        ]
+    },
+    "git-commit": {
+        "name": "git-commit",
+        "description": "Generate a commit message from a diff",
+        "arguments": [
+            {"name": "diff", "description": "Git diff output", "required": True},
+            {"name": "style", "description": "Style: conventional, detailed, simple", "required": False}
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <!-- Section 2 -->
+                    <h2>Section 2: Prompt Generators</h2>
+                    <p>Add the functions that generate prompt content based on arguments.</p>
+
+                    <h3>Edit: <code>prompts_server.py</code></h3>
+                    <p><strong>Add</strong> the following after the PROMPTS dictionary:</p>
 
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">def generate_code_review(arguments):
+                        <pre><code class="language-python"># =============================================================================
+# Prompt Generators
+# =============================================================================
+
+def generate_code_review(arguments: dict) -> dict:
     """Generate a thorough code review prompt."""
     code = arguments.get("code", "")
     language = arguments.get("language", "")
     focus = arguments.get("focus", "all")
 
-    # Build focus-specific instructions
     focus_instructions = {
         "security": """Focus your review on security concerns:
 - Input validation and sanitization
@@ -136,20 +216,10 @@ For each issue found, please:
                 "content": {"type": "text", "text": text}
             }
         ]
-    }</code></pre>
-                    </div>
+    }
 
-                    <h2>Summarization Prompt</h2>
-                    <p>
-                        A flexible summarization prompt with format options:
-                    </p>
 
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">def generate_summarize(arguments):
+def generate_summarize(arguments: dict) -> dict:
     """Generate a text summarization prompt."""
     text = arguments.get("text", "")
     style = arguments.get("style", "paragraph")
@@ -186,20 +256,10 @@ Capture the most important information while maintaining accuracy."""
                 "content": {"type": "text", "text": prompt_text}
             }
         ]
-    }</code></pre>
-                    </div>
+    }
 
-                    <h2>Code Explanation Prompt</h2>
-                    <p>
-                        Explain code at different levels of detail:
-                    </p>
 
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">def generate_explain_code(arguments):
+def generate_explain_code(arguments: dict) -> dict:
     """Generate a code explanation prompt."""
     code = arguments.get("code", "")
     audience = arguments.get("audience", "developer")
@@ -238,20 +298,10 @@ Structure your explanation to cover:
                 "content": {"type": "text", "text": prompt_text}
             }
         ]
-    }</code></pre>
-                    </div>
+    }
 
-                    <h2>Git Commit Message Prompt</h2>
-                    <p>
-                        Help write good commit messages based on a diff:
-                    </p>
 
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">def generate_git_commit(arguments):
+def generate_git_commit(arguments: dict) -> dict:
     """Generate a git commit message prompt."""
     diff = arguments.get("diff", "")
     style = arguments.get("style", "conventional")
@@ -293,75 +343,49 @@ Analyze the changes and write an appropriate commit message."""
                 "content": {"type": "text", "text": prompt_text}
             }
         ]
-    }</code></pre>
+    }
+
+
+# Map prompt names to generator functions
+GENERATORS = {
+    "code-review": generate_code_review,
+    "summarize": generate_summarize,
+    "explain-code": generate_explain_code,
+    "git-commit": generate_git_commit,
+}</code></pre>
                     </div>
 
-                    <h2>Complete Server Implementation</h2>
-                    <p>
-                        Here's a complete MCP server with all the prompts:
-                    </p>
+                    <!-- Section 3 -->
+                    <h2>Section 3: MCP Method Handlers</h2>
+                    <p>Add the handlers for MCP methods.</p>
+
+                    <h3>Edit: <code>prompts_server.py</code></h3>
+                    <p><strong>Add</strong> the following after the GENERATORS dictionary:</p>
 
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">python</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">"""
-complete_prompts_server.py - Full MCP server with useful prompts
-"""
+                        <pre><code class="language-python"># =============================================================================
+# MCP Method Handlers
+# =============================================================================
 
-import json
-from http.server import HTTPServer, BaseHTTPRequestHandler
-
-# Prompt definitions
-PROMPTS = {
-    "code-review": {
-        "name": "code-review",
-        "description": "Review code for bugs, security, performance, or style",
-        "arguments": [
-            {"name": "code", "description": "The code to review", "required": True},
-            {"name": "language", "description": "Programming language", "required": True},
-            {"name": "focus", "description": "Focus: security, performance, style, or all", "required": False}
-        ]
-    },
-    "summarize": {
-        "name": "summarize",
-        "description": "Summarize text in various formats",
-        "arguments": [
-            {"name": "text", "description": "Text to summarize", "required": True},
-            {"name": "style", "description": "Style: paragraph, bullets, tldr, executive", "required": False},
-            {"name": "max_length", "description": "Maximum sentences", "required": False}
-        ]
-    },
-    "explain-code": {
-        "name": "explain-code",
-        "description": "Explain code for different audience levels",
-        "arguments": [
-            {"name": "code", "description": "Code to explain", "required": True},
-            {"name": "audience", "description": "Audience: beginner, developer, expert", "required": False},
-            {"name": "include_examples", "description": "Include examples: true/false", "required": False}
-        ]
-    },
-    "git-commit": {
-        "name": "git-commit",
-        "description": "Generate a commit message from a diff",
-        "arguments": [
-            {"name": "diff", "description": "Git diff output", "required": True},
-            {"name": "style", "description": "Style: conventional, detailed, simple", "required": False}
-        ]
+def handle_initialize(params: dict) -> dict:
+    """Handle the initialize request."""
+    return {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {"prompts": {}},
+        "serverInfo": {"name": "prompts-server", "version": "1.0.0"}
     }
-}
-
-# Prompt generators (as defined above)
-# ... include all the generate_* functions here ...
 
 
-def handle_prompts_list(params):
+def handle_prompts_list(params: dict) -> dict:
     """List all available prompts."""
     return {"prompts": list(PROMPTS.values())}
 
 
-def handle_prompts_get(params):
+def handle_prompts_get(params: dict) -> dict:
     """Get and expand a specific prompt."""
     name = params.get("name")
     arguments = params.get("arguments", {})
@@ -374,44 +398,53 @@ def handle_prompts_get(params):
         if arg.get("required") and arg["name"] not in arguments:
             raise ValueError(f"Missing required argument: {arg['name']}")
 
-    # Route to appropriate generator
-    generators = {
-        "code-review": generate_code_review,
-        "summarize": generate_summarize,
-        "explain-code": generate_explain_code,
-        "git-commit": generate_git_commit,
-    }
-
-    generator = generators.get(name)
+    # Get the generator function
+    generator = GENERATORS.get(name)
     if not generator:
         raise ValueError(f"No generator for prompt: {name}")
 
-    return generator(arguments)
+    return generator(arguments)</code></pre>
+                    </div>
 
+                    <!-- Section 4 -->
+                    <h2>Section 4: HTTP Handler</h2>
+                    <p>Add the HTTP request handler class.</p>
+
+                    <h3>Edit: <code>prompts_server.py</code></h3>
+                    <p><strong>Add</strong> the following after the method handlers:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# HTTP Handler
+# =============================================================================
 
 class MCPHandler(BaseHTTPRequestHandler):
     """HTTP handler for MCP requests."""
 
-    def log_message(self, format, *args):
-        pass  # Suppress logging
+    def log_message(self, format: str, *args) -> None:
+        pass  # Suppress default logging
 
-    def do_POST(self):
+    def do_POST(self) -> None:
+        """Handle POST requests."""
         length = int(self.headers.get("Content-Length", 0))
         body = json.loads(self.rfile.read(length).decode())
 
         method = body.get("method")
         params = body.get("params", {})
-        request_id = body.get("id")
+        request_id = cast(int | str | None, body.get("id"))
 
         try:
             if method == "initialize":
-                result = {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {"prompts": {}},
-                    "serverInfo": {"name": "prompts-server", "version": "1.0.0"}
-                }
+                result = handle_initialize(params)
             elif method == "notifications/initialized":
-                return  # No response for notifications
+                # Notification - no response needed
+                self.send_response(202)
+                self.end_headers()
+                return
             elif method == "prompts/list":
                 result = handle_prompts_list(params)
             elif method == "prompts/get":
@@ -427,27 +460,161 @@ class MCPHandler(BaseHTTPRequestHandler):
         except Exception as e:
             self.send_error_response(request_id, -32603, f"Internal error: {e}")
 
-    def send_json(self, data):
+    def send_json(self, data: dict) -> None:
+        """Send a JSON response."""
         body = json.dumps(data, indent=2).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", len(body))
+        self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
 
-    def send_error_response(self, request_id, code, message):
+    def send_error_response(self, request_id: Any, code: int, message: str) -> None:
+        """Send an error response."""
         self.send_json({
             "jsonrpc": "2.0",
             "id": request_id,
             "error": {"code": code, "message": message}
-        })
+        })</code></pre>
+                    </div>
+
+                    <!-- Section 5 -->
+                    <h2>Section 5: Main Entry Point</h2>
+                    <p>Add the main function to start the server.</p>
+
+                    <h3>Edit: <code>prompts_server.py</code></h3>
+                    <p><strong>Add</strong> the following at the end of the file:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Main Entry Point
+# =============================================================================
+
+def main() -> None:
+    """Start the prompts server."""
+    host = "localhost"
+    port = 8080
+
+    server = HTTPServer((host, port), MCPHandler)
+    print(f"Prompts server running on http://{host}:{port}")
+    print("Available prompts: code-review, summarize, explain-code, git-commit")
+    print("Press Ctrl+C to stop")
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nShutting down...")
+        server.shutdown()
 
 
 if __name__ == "__main__":
-    server = HTTPServer(("localhost", 8080), MCPHandler)
-    print("Prompts server running on http://localhost:8080")
-    print("Available prompts: code-review, summarize, explain-code, git-commit")
-    server.serve_forever()</code></pre>
+    main()</code></pre>
+                    </div>
+
+                    <h2>Try It</h2>
+                    <p>Start the server:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">python prompts_server.py</code></pre>
+                    </div>
+
+                    <h3>Expected Output</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Prompts server running on http://localhost:8080
+Available prompts: code-review, summarize, explain-code, git-commit
+Press Ctrl+C to stop</code></pre>
+                    </div>
+
+                    <h3>Test 1: List Prompts</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "prompts/list"}'</code></pre>
+                    </div>
+
+                    <h3>Test 2: Get a Code Review Prompt</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "prompts/get",
+    "params": {
+      "name": "code-review",
+      "arguments": {
+        "code": "def add(a, b):\n    return a + b",
+        "language": "python",
+        "focus": "style"
+      }
+    }
+  }'</code></pre>
+                    </div>
+
+                    <h3>Expected Response</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "description": "Code review for python (style)",
+    "messages": [
+      {
+        "role": "user",
+        "content": {
+          "type": "text",
+          "text": "Please review the following python code:\n\n```python\ndef add(a, b):\n    return a + b\n```\n\nFocus your review on code style..."
+        }
+      }
+    ]
+  }
+}</code></pre>
+                    </div>
+
+                    <h3>Test 3: Get a Summarize Prompt</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "prompts/get",
+    "params": {
+      "name": "summarize",
+      "arguments": {
+        "text": "MCP is a protocol that enables AI assistants to access external tools, resources, and prompts.",
+        "style": "tldr"
+      }
+    }
+  }'</code></pre>
                     </div>
 
                     <div class="info-box tip">
