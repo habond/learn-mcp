@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP/SSE Transport - Step 3 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 8</div>
+                    <div class="lesson-info-title">HTTP/SSE Transport</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 50%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-08.html" class="toc-link completed"><span class="toc-number">1</span><span>Streamable HTTP Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Server-Sent Events Basics</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-3.html" class="toc-link active"><span class="toc-number">3</span><span>Handling POST Requests</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-4.html" class="toc-link"><span class="toc-number">4</span><span>SSE Response Streaming</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-5.html" class="toc-link"><span class="toc-number">5</span><span>Session Management</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-6.html" class="toc-link"><span class="toc-number">6</span><span>Complete HTTP Server</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link current">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 8 - Step 3 of 6</span>
+                    <h1 class="step-title">Handling POST Requests</h1>
+                    <p class="step-description">Parse JSON-RPC requests from HTTP POST bodies.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The MCP POST Endpoint</h2>
+                    <p>
+                        All MCP requests arrive as HTTP POST requests to a single endpoint
+                        (typically <code>/mcp</code>). The request body contains a JSON-RPC
+                        message that we need to parse and route.
+                    </p>
+
+                    <h2>Basic POST Handler</h2>
+                    <p>
+                        Let's build a POST handler using Python's built-in <code>http.server</code>:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+mcp_http_handler.py - HTTP handler for MCP requests.
+"""
+
+import json
+from http.server import BaseHTTPRequestHandler
+
+
+class MCPHTTPHandler(BaseHTTPRequestHandler):
+    """Handle HTTP requests for MCP protocol."""
+
+    def log_message(self, format, *args):
+        """Custom logging - suppress default HTTP logs."""
+        pass
+
+    def read_request_body(self):
+        """Read and decode the request body."""
+        content_length = int(self.headers.get("Content-Length", 0))
+        if content_length == 0:
+            return None
+        body = self.rfile.read(content_length)
+        return body.decode("utf-8")
+
+    def parse_json_rpc(self, body):
+        """Parse JSON-RPC request from body string."""
+        try:
+            request = json.loads(body)
+        except json.JSONDecodeError as e:
+            return None, {
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32700,
+                    "message": f"Parse error: {e}"
+                }
+            }
+
+        # Validate JSON-RPC structure
+        if not isinstance(request, dict):
+            return None, {
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32600,
+                    "message": "Invalid Request: expected object"
+                }
+            }
+
+        if request.get("jsonrpc") != "2.0":
+            return None, {
+                "jsonrpc": "2.0",
+                "id": request.get("id"),
+                "error": {
+                    "code": -32600,
+                    "message": "Invalid Request: jsonrpc must be '2.0'"
+                }
+            }
+
+        if "method" not in request:
+            return None, {
+                "jsonrpc": "2.0",
+                "id": request.get("id"),
+                "error": {
+                    "code": -32600,
+                    "message": "Invalid Request: missing 'method'"
+                }
+            }
+
+        return request, None
+
+    def do_POST(self):
+        """Handle POST requests containing JSON-RPC messages."""
+        # Check the endpoint
+        if self.path != "/mcp":
+            self.send_error(404, "Not Found")
+            return
+
+        # Validate Content-Type
+        content_type = self.headers.get("Content-Type", "")
+        if "application/json" not in content_type:
+            self.send_error(415, "Unsupported Media Type")
+            return
+
+        # Read and parse the request
+        body = self.read_request_body()
+        if body is None:
+            self.send_error(400, "Empty request body")
+            return
+
+        request, error = self.parse_json_rpc(body)
+        if error:
+            self.send_json_response(error, status=400)
+            return
+
+        # Route the request to appropriate handler
+        response = self.handle_mcp_request(request)
+        self.send_json_response(response)
+
+    def handle_mcp_request(self, request):
+        """Route MCP request to appropriate handler."""
+        method = request.get("method")
+        request_id = request.get("id")
+        params = request.get("params", {})
+
+        # TODO: Add method routing here
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {
+                "code": -32601,
+                "message": f"Method not found: {method}"
+            }
+        }
+
+    def send_json_response(self, data, status=200):
+        """Send a JSON response."""
+        body = json.dumps(data).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)</code></pre>
+                    </div>
+
+                    <h2>JSON-RPC Error Codes</h2>
+                    <p>
+                        The JSON-RPC 2.0 specification defines standard error codes. Use these
+                        when reporting errors:
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Code</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Message</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Meaning</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>-32700</code></td>
+                                <td style="padding: 0.75rem;">Parse error</td>
+                                <td style="padding: 0.75rem;">Invalid JSON received</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>-32600</code></td>
+                                <td style="padding: 0.75rem;">Invalid Request</td>
+                                <td style="padding: 0.75rem;">JSON is not a valid request</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>-32601</code></td>
+                                <td style="padding: 0.75rem;">Method not found</td>
+                                <td style="padding: 0.75rem;">Method does not exist</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>-32602</code></td>
+                                <td style="padding: 0.75rem;">Invalid params</td>
+                                <td style="padding: 0.75rem;">Invalid method parameters</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>-32603</code></td>
+                                <td style="padding: 0.75rem;">Internal error</td>
+                                <td style="padding: 0.75rem;">Server internal error</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Request Validation</h2>
+                    <p>
+                        Before processing a request, validate all required fields:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def validate_mcp_request(self, request):
+    """Validate an MCP request has all required fields."""
+    errors = []
+
+    # Check jsonrpc version
+    if request.get("jsonrpc") != "2.0":
+        errors.append("jsonrpc must be '2.0'")
+
+    # Check method
+    method = request.get("method")
+    if not method:
+        errors.append("method is required")
+    elif not isinstance(method, str):
+        errors.append("method must be a string")
+
+    # Check id (required for requests, absent for notifications)
+    request_id = request.get("id")
+    if request_id is not None:
+        if not isinstance(request_id, (str, int)):
+            errors.append("id must be a string or integer")
+
+    # Check params (optional, but must be object if present)
+    params = request.get("params")
+    if params is not None and not isinstance(params, dict):
+        errors.append("params must be an object")
+
+    return errors</code></pre>
+                    </div>
+
+                    <h2>Testing the POST Handler</h2>
+                    <p>Test your handler with curl:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Valid JSON-RPC request
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "clientInfo": {"name": "test-client", "version": "1.0.0"}
+    }
+  }'
+
+# Invalid JSON
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d 'not valid json'
+
+# Missing method
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 1}'</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Best Practice</div>
+                        <p>
+                            Always return a JSON-RPC error response (not just HTTP errors) when
+                            the request body is malformed. This helps clients handle errors
+                            consistently using the JSON-RPC error structure.
+                        </p>
+                    </div>
+
+                    <h2>Handling the Accept Header</h2>
+                    <p>
+                        MCP clients indicate their preference for SSE responses using the
+                        <code>Accept</code> header:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def client_accepts_sse(self):
+    """Check if client accepts SSE responses."""
+    accept = self.headers.get("Accept", "")
+    return "text/event-stream" in accept
+
+def do_POST(self):
+    """Handle POST with SSE awareness."""
+    # ... validation code ...
+
+    request, error = self.parse_json_rpc(body)
+    if error:
+        self.send_json_response(error, status=400)
+        return
+
+    # Decide response format based on Accept header
+    if self.client_accepts_sse():
+        self.handle_sse_response(request)
+    else:
+        response = self.handle_mcp_request(request)
+        self.send_json_response(response)</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Next Step</div>
+                        <p>
+                            Now let's implement SSE response streaming to send real-time
+                            updates back to the client.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-08-2.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Server-Sent Events Basics</span></span>
+                    </a>
+                    <a href="lesson-08-4.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>SSE Response Streaming</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

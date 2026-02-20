@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <title>JSON-RPC 2.0 Essentials - Step 1 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 3</div>
+                    <div class="lesson-info-title">JSON-RPC 2.0 Essentials</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 20%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-03.html" class="toc-link active"><span class="toc-number">1</span><span>Protocol Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-2.html" class="toc-link"><span class="toc-number">2</span><span>Request & Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-3.html" class="toc-link"><span class="toc-number">3</span><span>Error Handling</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-4.html" class="toc-link"><span class="toc-number">4</span><span>Notifications</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-5.html" class="toc-link"><span class="toc-number">5</span><span>Building a Router</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link current">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 3 - Step 1 of 5</span>
+                    <h1 class="step-title">Protocol Overview</h1>
+                    <p class="step-description">Understand JSON-RPC 2.0, the foundation of MCP communication.</p>
+                </header>
+
+                <div class="content">
+                    <h2>What is JSON-RPC?</h2>
+                    <p>
+                        <strong>JSON-RPC</strong> is a lightweight remote procedure call (RPC) protocol
+                        that uses JSON for data encoding. MCP uses JSON-RPC 2.0 for all communication
+                        between clients and servers.
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Why JSON-RPC?</div>
+                        <p>
+                            JSON-RPC is simple, transport-agnostic, and well-established. It works equally
+                            well over HTTP, WebSockets, or stdin/stdout &mdash; perfect for MCP's dual transport model.
+                        </p>
+                    </div>
+
+                    <h2>Message Types</h2>
+                    <p>JSON-RPC 2.0 has three message types:</p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Type</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Has ID?</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Expects Response?</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Request</strong></td>
+                                <td style="padding: 0.75rem;">Yes</td>
+                                <td style="padding: 0.75rem;">Yes</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Response</strong></td>
+                                <td style="padding: 0.75rem;">Yes (matching)</td>
+                                <td style="padding: 0.75rem;">No</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><strong>Notification</strong></td>
+                                <td style="padding: 0.75rem;">No</td>
+                                <td style="padding: 0.75rem;">No</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Request Structure</h2>
+                    <p>Every request must have these fields:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",        // Required: Must be exactly "2.0"
+    "id": 1,                 // Required: Unique identifier (string or int)
+    "method": "tools/list",  // Required: Method name to call
+    "params": {}             // Optional: Parameters for the method
+}</code></pre>
+                    </div>
+
+                    <h2>Response Structure</h2>
+                    <p>Responses match requests by ID:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">// Success response
+{
+    "jsonrpc": "2.0",
+    "id": 1,                 // Must match the request ID
+    "result": {              // The method's return value
+        "tools": []
+    }
+}
+
+// Error response
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "error": {               // Error object (instead of result)
+        "code": -32601,
+        "message": "Method not found"
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>The ID Field</h2>
+                    <p>The <code>id</code> field connects requests to responses:</p>
+                    <ul>
+                        <li>Client generates a unique ID for each request</li>
+                        <li>Server includes the same ID in the response</li>
+                        <li>Client matches responses to pending requests by ID</li>
+                        <li>ID can be a string or integer (not null)</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Client                              Server
+  |                                    |
+  |--- Request (id: 1) --------------->|
+  |--- Request (id: 2) --------------->|
+  |                                    |
+  |<-------------- Response (id: 2) ---|  (responses can arrive
+  |<-------------- Response (id: 1) ---|   out of order)</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">MCP Convention</div>
+                        <p>
+                            MCP typically uses incrementing integers for IDs (1, 2, 3, ...).
+                            The ID must be unique within a session but doesn't need to be globally unique.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-02-5.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous Lesson</span><span>Building an Echo Server</span></span>
+                    </a>
+                    <a href="lesson-03-2.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Request & Response</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

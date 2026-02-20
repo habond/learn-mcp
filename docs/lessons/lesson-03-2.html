@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON-RPC 2.0 Essentials - Step 2 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 3</div>
+                    <div class="lesson-info-title">JSON-RPC 2.0 Essentials</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 40%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-03.html" class="toc-link completed"><span class="toc-number">1</span><span>Protocol Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-2.html" class="toc-link active"><span class="toc-number">2</span><span>Request & Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-3.html" class="toc-link"><span class="toc-number">3</span><span>Error Handling</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-4.html" class="toc-link"><span class="toc-number">4</span><span>Notifications</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-5.html" class="toc-link"><span class="toc-number">5</span><span>Building a Router</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link current">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 3 - Step 2 of 5</span>
+                    <h1 class="step-title">Request & Response</h1>
+                    <p class="step-description">Learn to create valid JSON-RPC requests and match responses by ID.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Anatomy of a Request</h2>
+                    <p>
+                        A JSON-RPC 2.0 request has four fields. Let's examine each one in detail
+                        and understand how to construct valid requests in Python.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def create_request(method: str, params: dict = None, request_id: int = None) -> dict:
+    """
+    Create a valid JSON-RPC 2.0 request.
+
+    Args:
+        method: The method name to call (e.g., "tools/list")
+        params: Optional parameters for the method
+        request_id: Unique identifier for matching responses
+
+    Returns:
+        A properly formatted JSON-RPC request dict
+    """
+    request = {
+        "jsonrpc": "2.0",  # Always exactly "2.0"
+        "method": method,   # Required: the method to call
+    }
+
+    # ID is required for requests (not notifications)
+    if request_id is not None:
+        request["id"] = request_id
+
+    # Params are optional
+    if params is not None:
+        request["params"] = params
+
+    return request
+
+
+# Example usage
+request = create_request(
+    method="tools/call",
+    params={"name": "calculator", "arguments": {"expression": "2 + 2"}},
+    request_id=1
+)
+
+print(request)
+# {
+#     "jsonrpc": "2.0",
+#     "id": 1,
+#     "method": "tools/call",
+#     "params": {"name": "calculator", "arguments": {"expression": "2 + 2"}}
+# }</code></pre>
+                    </div>
+
+                    <h2>Generating Request IDs</h2>
+                    <p>
+                        Request IDs must be unique within a session. Here's a robust way to generate them:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import threading
+
+
+class RequestIdGenerator:
+    """Thread-safe request ID generator."""
+
+    def __init__(self):
+        self._counter = 0
+        self._lock = threading.Lock()
+
+    def next_id(self) -> int:
+        """Generate the next unique request ID."""
+        with self._lock:
+            self._counter += 1
+            return self._counter
+
+
+# Usage
+id_generator = RequestIdGenerator()
+
+request1 = create_request("tools/list", request_id=id_generator.next_id())
+request2 = create_request("resources/list", request_id=id_generator.next_id())
+
+print(request1["id"])  # 1
+print(request2["id"])  # 2</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">ID Types</div>
+                        <p>
+                            JSON-RPC allows IDs to be strings, integers, or null. MCP conventionally
+                            uses incrementing integers, but UUIDs or other string identifiers also work.
+                        </p>
+                    </div>
+
+                    <h2>Building Success Responses</h2>
+                    <p>
+                        When a request succeeds, the server responds with a <code>result</code> field.
+                        The <code>id</code> must match the request's ID exactly.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def create_success_response(request_id, result: dict) -> dict:
+    """
+    Create a success response for a JSON-RPC request.
+
+    Args:
+        request_id: The ID from the original request (must match exactly)
+        result: The result data to return
+
+    Returns:
+        A properly formatted JSON-RPC success response
+    """
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,  # Must match the request ID
+        "result": result
+    }
+
+
+# Example: responding to a tools/list request
+response = create_success_response(
+    request_id=1,
+    result={
+        "tools": [
+            {
+                "name": "calculator",
+                "description": "Performs math calculations",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "expression": {"type": "string"}
+                    }
+                }
+            }
+        ]
+    }
+)
+
+print(response)
+# {
+#     "jsonrpc": "2.0",
+#     "id": 1,
+#     "result": {
+#         "tools": [...]
+#     }
+# }</code></pre>
+                    </div>
+
+                    <h2>Matching Responses to Requests</h2>
+                    <p>
+                        In asynchronous systems, responses may arrive out of order. Use a pending
+                        request registry to match responses back to their original requests.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import asyncio
+from typing import Any
+
+
+class PendingRequests:
+    """Track pending requests and match them to responses."""
+
+    def __init__(self):
+        self._pending: dict[int, asyncio.Future] = {}
+        self._id_generator = RequestIdGenerator()
+
+    def create_request(self, method: str, params: dict = None) -> tuple[dict, asyncio.Future]:
+        """
+        Create a request and register it as pending.
+
+        Returns:
+            A tuple of (request_dict, future_for_response)
+        """
+        request_id = self._id_generator.next_id()
+
+        # Create a future to hold the eventual response
+        future = asyncio.get_event_loop().create_future()
+        self._pending[request_id] = future
+
+        request = create_request(method, params, request_id)
+        return request, future
+
+    def resolve(self, response: dict) -> bool:
+        """
+        Match a response to its pending request.
+
+        Returns:
+            True if the response was matched, False otherwise
+        """
+        request_id = response.get("id")
+
+        if request_id not in self._pending:
+            return False  # Unknown ID - possibly a late response
+
+        future = self._pending.pop(request_id)
+
+        # Check if it's an error response
+        if "error" in response:
+            future.set_exception(
+                JsonRpcError(response["error"]["code"], response["error"]["message"])
+            )
+        else:
+            future.set_result(response.get("result"))
+
+        return True
+
+
+class JsonRpcError(Exception):
+    """Represents a JSON-RPC error response."""
+
+    def __init__(self, code: int, message: str, data=None):
+        self.code = code
+        self.message = message
+        self.data = data
+        super().__init__(f"JSON-RPC Error {code}: {message}")</code></pre>
+                    </div>
+
+                    <h2>Complete Request/Response Flow</h2>
+                    <p>
+                        Here's a complete example showing how requests and responses flow through
+                        a client-server interaction:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import json
+
+
+class JsonRpcClient:
+    """A simple JSON-RPC client demonstrating request/response matching."""
+
+    def __init__(self):
+        self._pending = PendingRequests()
+
+    async def call(self, method: str, params: dict = None) -> Any:
+        """
+        Make a JSON-RPC call and wait for the response.
+
+        Args:
+            method: The method to call
+            params: Optional parameters
+
+        Returns:
+            The result from the server
+
+        Raises:
+            JsonRpcError: If the server returns an error
+        """
+        # Create request and get future for response
+        request, future = self._pending.create_request(method, params)
+
+        # Send the request (in real code, this would go over HTTP/stdio)
+        print(f"Sending: {json.dumps(request)}")
+        await self._send(request)
+
+        # Wait for the response
+        result = await future
+        return result
+
+    async def _send(self, request: dict):
+        """Send request to server. Override in subclass."""
+        pass
+
+    def handle_response(self, response: dict):
+        """Process an incoming response from the server."""
+        if not self._pending.resolve(response):
+            print(f"Warning: Received response for unknown ID: {response.get('id')}")
+
+
+# Example usage (pseudocode)
+async def example():
+    client = JsonRpcClient()
+
+    # Make concurrent requests
+    tools_future = client.call("tools/list")
+    resources_future = client.call("resources/list")
+
+    # Both requests sent, now wait for responses
+    # They can arrive in any order!
+    tools = await tools_future
+    resources = await resources_future
+
+    print(f"Got {len(tools['tools'])} tools")
+    print(f"Got {len(resources['resources'])} resources")</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Why IDs Matter</div>
+                        <p>
+                            Without IDs, concurrent requests would be impossible. The client wouldn't
+                            know which response belongs to which request. IDs enable:
+                        </p>
+                        <ul>
+                            <li>Concurrent (parallel) requests</li>
+                            <li>Out-of-order response handling</li>
+                            <li>Request timeouts and cancellation</li>
+                            <li>Error attribution to specific requests</li>
+                        </ul>
+                    </div>
+
+                    <h2>Validation Rules</h2>
+                    <p>
+                        Always validate incoming requests and responses. Here's a validation function:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def validate_request(request: dict) -> tuple[bool, str]:
+    """
+    Validate a JSON-RPC request.
+
+    Returns:
+        A tuple of (is_valid, error_message)
+    """
+    if not isinstance(request, dict):
+        return False, "Request must be a JSON object"
+
+    if request.get("jsonrpc") != "2.0":
+        return False, "jsonrpc field must be exactly '2.0'"
+
+    if "method" not in request:
+        return False, "Missing required 'method' field"
+
+    if not isinstance(request["method"], str):
+        return False, "method must be a string"
+
+    # ID validation (required for requests, absent for notifications)
+    if "id" in request:
+        id_val = request["id"]
+        if not isinstance(id_val, (str, int)) or id_val is None:
+            return False, "id must be a string or integer, not null"
+
+    # Params must be object or array if present
+    if "params" in request:
+        params = request["params"]
+        if not isinstance(params, (dict, list)):
+            return False, "params must be an object or array"
+
+    return True, ""
+
+
+def validate_response(response: dict) -> tuple[bool, str]:
+    """
+    Validate a JSON-RPC response.
+
+    Returns:
+        A tuple of (is_valid, error_message)
+    """
+    if not isinstance(response, dict):
+        return False, "Response must be a JSON object"
+
+    if response.get("jsonrpc") != "2.0":
+        return False, "jsonrpc field must be exactly '2.0'"
+
+    if "id" not in response:
+        return False, "Response must have an 'id' field"
+
+    # Must have either result or error, not both
+    has_result = "result" in response
+    has_error = "error" in response
+
+    if has_result and has_error:
+        return False, "Response cannot have both 'result' and 'error'"
+
+    if not has_result and not has_error:
+        return False, "Response must have either 'result' or 'error'"
+
+    return True, ""</code></pre>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-03.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Protocol Overview</span></span>
+                    </a>
+                    <a href="lesson-03-3.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Error Handling</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building an MCP Client - Step 5 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 10</div>
+                    <div class="lesson-info-title">Building an MCP Client</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 83%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-10.html" class="toc-link completed"><span class="toc-number">1</span><span>Client Architecture</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-2.html" class="toc-link completed"><span class="toc-number">2</span><span>STDIO Client</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Initialization Flow</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-4.html" class="toc-link completed"><span class="toc-number">4</span><span>Calling Methods</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-5.html" class="toc-link active"><span class="toc-number">5</span><span>Listing Primitives</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-6.html" class="toc-link"><span class="toc-number">6</span><span>Interactive Testing</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link current">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 10 - Step 5 of 6</span>
+                    <h1 class="step-title">Listing Primitives</h1>
+                    <p class="step-description">Implement list_tools(), list_resources(), and list_prompts() methods.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Discovering Server Capabilities</h2>
+                    <p>
+                        After initialization, you'll want to discover what the server offers.
+                        MCP provides three "list" methods for the three primitive types:
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Method</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Returns</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Use For</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>tools/list</code></td>
+                                <td style="padding: 0.75rem;">List of tools</td>
+                                <td style="padding: 0.75rem;">Functions the server can execute</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>resources/list</code></td>
+                                <td style="padding: 0.75rem;">List of resources</td>
+                                <td style="padding: 0.75rem;">Data the server can provide</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>prompts/list</code></td>
+                                <td style="padding: 0.75rem;">List of prompts</td>
+                                <td style="padding: 0.75rem;">Templates for AI interactions</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Listing Tools</h2>
+                    <p>
+                        The <code>tools/list</code> method returns all available tools:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from dataclasses import dataclass
+from typing import List, Optional, Any
+
+@dataclass
+class Tool:
+    """Represents an MCP tool."""
+    name: str
+    description: str
+    input_schema: dict
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Tool":
+        return cls(
+            name=data["name"],
+            description=data.get("description", ""),
+            input_schema=data.get("inputSchema", {})
+        )
+
+
+def list_tools(self) -> List[Tool]:
+    """
+    List all tools available on the server.
+
+    Returns:
+        List of Tool objects
+    """
+    if not self.has_tools():
+        return []
+
+    result = self.call("tools/list")
+    tools_data = result.get("tools", [])
+
+    return [Tool.from_dict(t) for t in tools_data]</code></pre>
+                    </div>
+
+                    <h3>Tool Response Example</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "tools": [
+        {
+            "name": "get_weather",
+            "description": "Get current weather for a city",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "city": {
+                        "type": "string",
+                        "description": "City name"
+                    }
+                },
+                "required": ["city"]
+            }
+        }
+    ]
+}</code></pre>
+                    </div>
+
+                    <h2>Listing Resources</h2>
+                    <p>
+                        Resources are data that the server can provide:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">@dataclass
+class Resource:
+    """Represents an MCP resource."""
+    uri: str
+    name: str
+    description: str
+    mime_type: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Resource":
+        return cls(
+            uri=data["uri"],
+            name=data.get("name", data["uri"]),
+            description=data.get("description", ""),
+            mime_type=data.get("mimeType")
+        )
+
+
+def list_resources(self) -> List[Resource]:
+    """
+    List all resources available on the server.
+
+    Returns:
+        List of Resource objects
+    """
+    if not self.has_resources():
+        return []
+
+    result = self.call("resources/list")
+    resources_data = result.get("resources", [])
+
+    return [Resource.from_dict(r) for r in resources_data]</code></pre>
+                    </div>
+
+                    <h3>Resource Response Example</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "resources": [
+        {
+            "uri": "file:///config/settings.json",
+            "name": "Application Settings",
+            "description": "Current application configuration",
+            "mimeType": "application/json"
+        },
+        {
+            "uri": "db://users/schema",
+            "name": "User Schema",
+            "description": "Database schema for users table",
+            "mimeType": "application/json"
+        }
+    ]
+}</code></pre>
+                    </div>
+
+                    <h2>Listing Prompts</h2>
+                    <p>
+                        Prompts are templates that can be filled with arguments:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">@dataclass
+class PromptArgument:
+    """Represents a prompt argument."""
+    name: str
+    description: str
+    required: bool = False
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "PromptArgument":
+        return cls(
+            name=data["name"],
+            description=data.get("description", ""),
+            required=data.get("required", False)
+        )
+
+
+@dataclass
+class Prompt:
+    """Represents an MCP prompt."""
+    name: str
+    description: str
+    arguments: List[PromptArgument]
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Prompt":
+        args = data.get("arguments", [])
+        return cls(
+            name=data["name"],
+            description=data.get("description", ""),
+            arguments=[PromptArgument.from_dict(a) for a in args]
+        )
+
+
+def list_prompts(self) -> List[Prompt]:
+    """
+    List all prompts available on the server.
+
+    Returns:
+        List of Prompt objects
+    """
+    if not self.has_prompts():
+        return []
+
+    result = self.call("prompts/list")
+    prompts_data = result.get("prompts", [])
+
+    return [Prompt.from_dict(p) for p in prompts_data]</code></pre>
+                    </div>
+
+                    <h2>Displaying Server Inventory</h2>
+                    <p>
+                        Here's a utility function to display everything a server offers:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def print_server_inventory(client):
+    """Print a summary of what the server offers."""
+    print(f"\n{'='*60}")
+    print(f"Server: {client.server_info.get('name', 'Unknown')}")
+    print(f"Version: {client.server_info.get('version', 'Unknown')}")
+    print(f"{'='*60}\n")
+
+    # Tools
+    if client.has_tools():
+        tools = client.list_tools()
+        print(f"TOOLS ({len(tools)}):")
+        for tool in tools:
+            print(f"  - {tool.name}: {tool.description}")
+        print()
+    else:
+        print("TOOLS: None\n")
+
+    # Resources
+    if client.has_resources():
+        resources = client.list_resources()
+        print(f"RESOURCES ({len(resources)}):")
+        for resource in resources:
+            print(f"  - {resource.uri}")
+            print(f"    {resource.description}")
+        print()
+    else:
+        print("RESOURCES: None\n")
+
+    # Prompts
+    if client.has_prompts():
+        prompts = client.list_prompts()
+        print(f"PROMPTS ({len(prompts)}):")
+        for prompt in prompts:
+            args = ", ".join(a.name for a in prompt.arguments)
+            print(f"  - {prompt.name}({args})")
+            print(f"    {prompt.description}")
+        print()
+    else:
+        print("PROMPTS: None\n")</code></pre>
+                    </div>
+
+                    <h2>Example Output</h2>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>============================================================
+Server: weather-server
+Version: 1.0.0
+============================================================
+
+TOOLS (2):
+  - get_weather: Get current weather for a city
+  - get_forecast: Get 5-day weather forecast
+
+RESOURCES (1):
+  - file:///config/api_key.txt
+    API key configuration file
+
+PROMPTS (1):
+  - weather_report(city, units)
+    Generate a detailed weather report</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Caching Lists</div>
+                        <p>
+                            For performance, consider caching the results of list methods.
+                            The server will send a <code>notifications/tools/list_changed</code>
+                            notification if the list changes (if it supports that capability).
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-10-4.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Calling Methods</span></span>
+                    </a>
+                    <a href="lesson-10-6.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Interactive Testing</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

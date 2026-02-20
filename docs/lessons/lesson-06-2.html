@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Resources - Step 2 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 6</div>
+                    <div class="lesson-info-title">Implementing Resources</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 40%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-06.html" class="toc-link completed"><span class="toc-number">1</span><span>What are MCP Resources?</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-2.html" class="toc-link active"><span class="toc-number">2</span><span>Resource Definition</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-3.html" class="toc-link"><span class="toc-number">3</span><span>The resources/list Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-4.html" class="toc-link"><span class="toc-number">4</span><span>The resources/read Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-5.html" class="toc-link"><span class="toc-number">5</span><span>Building File Resources</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link current">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 6 - Step 2 of 5</span>
+                    <h1 class="step-title">Resource Definition</h1>
+                    <p class="step-description">Learn the required and optional fields for defining MCP resources.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Resource Object Structure</h2>
+                    <p>
+                        Every resource in MCP is defined by an object with specific fields.
+                        Some are required, others are optional but recommended.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "uri": "file:///project/config.json",      // Required
+    "name": "config.json",                      // Required
+    "description": "Application configuration", // Optional
+    "mimeType": "application/json"              // Optional
+}</code></pre>
+                    </div>
+
+                    <h2>Required Fields</h2>
+
+                    <h3>uri (string)</h3>
+                    <p>
+                        The unique identifier for the resource. Must be a valid URI that the server
+                        can use to locate and retrieve the resource content.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Valid URI examples
+uri = "file:///home/user/documents/report.pdf"
+uri = "db://postgres/users/42"
+uri = "http://api.example.com/config"
+uri = "git://repo/main/src/app.py"</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">URI Must Be Unique</div>
+                        <p>
+                            Each resource must have a unique URI within the server. The URI is how
+                            clients identify which resource they want to read.
+                        </p>
+                    </div>
+
+                    <h3>name (string)</h3>
+                    <p>
+                        A human-readable name for the resource. This is what gets displayed
+                        in client UIs (like file browsers or resource pickers).
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Good names are descriptive but concise
+name = "config.json"           # Filename for files
+name = "User #42"              # Descriptive for database records
+name = "API Configuration"     # Human-friendly for abstract resources</code></pre>
+                    </div>
+
+                    <h2>Optional Fields</h2>
+
+                    <h3>description (string)</h3>
+                    <p>
+                        A longer description explaining what the resource contains and why
+                        it might be useful. This helps users and AI understand the resource's purpose.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Descriptions should explain the content and purpose
+description = "Main application configuration including database settings and API keys"
+description = "User profile data including name, email, and preferences"
+description = "README with project setup instructions and architecture overview"</code></pre>
+                    </div>
+
+                    <h3>mimeType (string)</h3>
+                    <p>
+                        The MIME type of the resource content. This helps clients know how to
+                        display or process the data.
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Content Type</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">MIME Type</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">Plain text</td>
+                                <td style="padding: 0.75rem;"><code>text/plain</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">JSON</td>
+                                <td style="padding: 0.75rem;"><code>application/json</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">Markdown</td>
+                                <td style="padding: 0.75rem;"><code>text/markdown</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">HTML</td>
+                                <td style="padding: 0.75rem;"><code>text/html</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">Python</td>
+                                <td style="padding: 0.75rem;"><code>text/x-python</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">JavaScript</td>
+                                <td style="padding: 0.75rem;"><code>text/javascript</code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;">Binary/Image</td>
+                                <td style="padding: 0.75rem;"><code>image/png</code>, <code>image/jpeg</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Defining Resources in Python</h2>
+                    <p>Here's how to define resources in your MCP server:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+resources.py - Defining MCP resources
+"""
+
+# Define resources as a list of dictionaries
+RESOURCES = [
+    {
+        "uri": "file:///project/config.json",
+        "name": "config.json",
+        "description": "Application configuration with database and API settings",
+        "mimeType": "application/json"
+    },
+    {
+        "uri": "file:///project/README.md",
+        "name": "README.md",
+        "description": "Project documentation and setup instructions",
+        "mimeType": "text/markdown"
+    },
+    {
+        "uri": "db://app/settings",
+        "name": "Application Settings",
+        "description": "Runtime settings stored in the database",
+        "mimeType": "application/json"
+    }
+]
+
+
+def get_resource_by_uri(uri: str) -> dict | None:
+    """Find a resource by its URI."""
+    for resource in RESOURCES:
+        if resource["uri"] == uri:
+            return resource
+    return None
+
+
+def list_resources() -> list[dict]:
+    """Return all available resources."""
+    return RESOURCES</code></pre>
+                    </div>
+
+                    <h2>Using Dataclasses for Type Safety</h2>
+                    <p>For better type safety, you can use Python dataclasses:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+resources_typed.py - Type-safe resource definitions
+"""
+
+from dataclasses import dataclass, asdict
+from typing import Optional
+
+
+@dataclass
+class Resource:
+    """Represents an MCP resource."""
+    uri: str
+    name: str
+    description: Optional[str] = None
+    mimeType: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary, excluding None values."""
+        return {k: v for k, v in asdict(self).items() if v is not None}
+
+
+# Define resources with type checking
+resources = [
+    Resource(
+        uri="file:///project/config.json",
+        name="config.json",
+        description="Application configuration",
+        mimeType="application/json"
+    ),
+    Resource(
+        uri="file:///project/README.md",
+        name="README.md",
+        description="Project documentation",
+        mimeType="text/markdown"
+    )
+]
+
+
+def list_resources() -> list[dict]:
+    """Return all resources as dictionaries."""
+    return [r.to_dict() for r in resources]</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Best Practices</div>
+                        <ul>
+                            <li>Always include <code>mimeType</code> when you know it &mdash; it helps clients render content correctly</li>
+                            <li>Write clear descriptions &mdash; they help the AI understand when a resource is relevant</li>
+                            <li>Use consistent URI schemes within your server</li>
+                            <li>Keep names short but descriptive</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-06.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>What are MCP Resources?</span></span>
+                    </a>
+                    <a href="lesson-06-3.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>The resources/list Method</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

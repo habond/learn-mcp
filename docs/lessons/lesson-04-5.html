@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The MCP Handshake - Step 5 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 4</div>
+                    <div class="lesson-info-title">The MCP Handshake</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 83%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-04.html" class="toc-link completed"><span class="toc-number">1</span><span>MCP Lifecycle Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-2.html" class="toc-link completed"><span class="toc-number">2</span><span>The Initialize Request</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Server Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-4.html" class="toc-link completed"><span class="toc-number">4</span><span>Capability Negotiation</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-5.html" class="toc-link active"><span class="toc-number">5</span><span>The Initialized Notification</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-6.html" class="toc-link"><span class="toc-number">6</span><span>Building the Handshake</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link current">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 4 - Step 5 of 6</span>
+                    <h1 class="step-title">The Initialized Notification</h1>
+                    <p class="step-description">Learn about the final step of the handshake where the client confirms it is ready.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Completing the Handshake</h2>
+                    <p>
+                        After the server responds to the initialize request, the client sends one more
+                        message: the <code>notifications/initialized</code> notification. This confirms
+                        the client has processed the server's capabilities and is ready for normal operation.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "method": "notifications/initialized"
+}</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">This is a Notification</div>
+                        <p>
+                            Notice there's no <code>id</code> field. This is a JSON-RPC <strong>notification</strong>,
+                            not a request. The server should NOT send a response. It's a one-way "I'm ready" signal.
+                        </p>
+                    </div>
+
+                    <h2>The Complete Handshake Flow</h2>
+                    <p>
+                        Here's the full handshake sequence:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Client                                              Server
+   │                                                    │
+   │  1. initialize request                             │
+   │    {jsonrpc, id:1, method:"initialize", params}    │
+   │ ─────────────────────────────────────────────────► │
+   │                                                    │
+   │  2. initialize response                            │
+   │    {jsonrpc, id:1, result: {capabilities, ...}}    │
+   │ ◄───────────────────────────────────────────────── │
+   │                                                    │
+   │  3. initialized notification                       │
+   │    {jsonrpc, method:"notifications/initialized"}   │
+   │ ─────────────────────────────────────────────────► │
+   │                                                    │
+   │           ═══ HANDSHAKE COMPLETE ═══               │
+   │                                                    │
+   │  4. Normal operation begins                        │
+   │    {jsonrpc, id:2, method:"tools/list"}            │
+   │ ─────────────────────────────────────────────────► │
+   │                                                    │</code></pre>
+                    </div>
+
+                    <h2>Why the Extra Step?</h2>
+                    <p>
+                        You might wonder why this notification is necessary. Several reasons:
+                    </p>
+
+                    <ul>
+                        <li>
+                            <strong>Confirmation</strong> &mdash; The server knows the client received and
+                            processed its capabilities
+                        </li>
+                        <li>
+                            <strong>Timing</strong> &mdash; The server can wait for this before accepting
+                            other requests
+                        </li>
+                        <li>
+                            <strong>Setup opportunity</strong> &mdash; The client might need time to configure
+                            itself based on server capabilities
+                        </li>
+                    </ul>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+Why initialized matters - a timing example.
+"""
+
+class MCPClient:
+    def __init__(self):
+        self.server_capabilities = None
+        self.ready = False
+
+    async def connect(self, server):
+        # Step 1: Send initialize
+        response = await server.send({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "test", "version": "1.0"}
+            }
+        })
+
+        # Step 2: Process server response
+        self.server_capabilities = response["result"]["capabilities"]
+
+        # Configure ourselves based on server capabilities
+        if "tools" in self.server_capabilities:
+            self.setup_tool_handling()
+        if "resources" in self.server_capabilities:
+            self.setup_resource_handling()
+
+        # Step 3: NOW we're ready - tell the server
+        await server.send({
+            "jsonrpc": "2.0",
+            "method": "notifications/initialized"
+        })
+
+        self.ready = True
+
+    def setup_tool_handling(self):
+        """Configure tool-related features."""
+        print("Setting up tool UI elements...")
+
+    def setup_resource_handling(self):
+        """Configure resource-related features."""
+        print("Setting up resource browser...")</code></pre>
+                    </div>
+
+                    <h2>Handling the Notification</h2>
+                    <p>
+                        Your server should handle this notification to transition to the ready state:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from enum import Enum
+
+class ConnectionState(Enum):
+    DISCONNECTED = "disconnected"
+    INITIALIZING = "initializing"
+    READY = "ready"
+
+class MCPServer:
+    def __init__(self):
+        self.state = ConnectionState.DISCONNECTED
+        self.client_info = None
+        self.client_capabilities = None
+
+    def handle_message(self, message: dict) -> dict | None:
+        """Handle incoming JSON-RPC message.
+
+        Returns response dict for requests, None for notifications.
+        """
+        method = message.get("method")
+        is_notification = "id" not in message
+
+        if method == "initialize":
+            return self.handle_initialize(message)
+
+        elif method == "notifications/initialized":
+            self.handle_initialized_notification()
+            return None  # No response for notifications!
+
+        else:
+            # All other methods require ready state
+            if self.state != ConnectionState.READY:
+                if is_notification:
+                    return None  # Can't respond to notifications
+                return {
+                    "jsonrpc": "2.0",
+                    "id": message.get("id"),
+                    "error": {
+                        "code": -32002,
+                        "message": "Server not initialized"
+                    }
+                }
+
+            return self.handle_request(message)
+
+    def handle_initialize(self, message: dict) -> dict:
+        """Handle initialize request."""
+        if self.state != ConnectionState.DISCONNECTED:
+            return {
+                "jsonrpc": "2.0",
+                "id": message.get("id"),
+                "error": {
+                    "code": -32600,
+                    "message": "Already initialized"
+                }
+            }
+
+        params = message.get("params", {})
+        self.client_info = params.get("clientInfo", {})
+        self.client_capabilities = params.get("capabilities", {})
+
+        # Move to initializing state
+        self.state = ConnectionState.INITIALIZING
+
+        return {
+            "jsonrpc": "2.0",
+            "id": message.get("id"),
+            "result": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {"tools": {}},
+                "serverInfo": {"name": "my-server", "version": "1.0.0"}
+            }
+        }
+
+    def handle_initialized_notification(self):
+        """Handle initialized notification."""
+        if self.state != ConnectionState.INITIALIZING:
+            # Log warning but don't error - it's a notification
+            print("Warning: Received initialized in unexpected state")
+            return
+
+        # Transition to ready!
+        self.state = ConnectionState.READY
+        print(f"Handshake complete! Client: {self.client_info.get('name')}")
+
+    def handle_request(self, message: dict) -> dict:
+        """Handle normal operational requests."""
+        method = message.get("method")
+        # ... route to appropriate handler
+        return {
+            "jsonrpc": "2.0",
+            "id": message.get("id"),
+            "result": {}
+        }</code></pre>
+                    </div>
+
+                    <h2>State Transitions</h2>
+                    <p>
+                        Here's a state diagram for the handshake:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>┌──────────────┐
+│ DISCONNECTED │
+└──────┬───────┘
+       │
+       │ Receive "initialize" request
+       │ Send response
+       ▼
+┌──────────────┐
+│ INITIALIZING │
+└──────┬───────┘
+       │
+       │ Receive "notifications/initialized"
+       │ (no response sent)
+       ▼
+┌──────────────┐
+│    READY     │ ◄─── Normal operations
+└──────────────┘</code></pre>
+                    </div>
+
+                    <h2>Error Cases</h2>
+                    <p>
+                        Handle these edge cases gracefully:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def handle_message(self, message: dict) -> dict | None:
+    """Handle incoming message with edge case handling."""
+    method = message.get("method")
+    msg_id = message.get("id")  # None for notifications
+    is_notification = msg_id is None
+
+    # Case 1: Initialize when already initialized
+    if method == "initialize" and self.state != ConnectionState.DISCONNECTED:
+        return {
+            "jsonrpc": "2.0",
+            "id": msg_id,
+            "error": {
+                "code": -32600,
+                "message": "Invalid Request: already initialized"
+            }
+        }
+
+    # Case 2: Initialized notification at wrong time
+    if method == "notifications/initialized":
+        if self.state == ConnectionState.DISCONNECTED:
+            # Got initialized before initialize - ignore it
+            print("Warning: notifications/initialized before initialize")
+            return None
+        if self.state == ConnectionState.READY:
+            # Already ready - ignore duplicate
+            print("Warning: duplicate notifications/initialized")
+            return None
+        # Normal case - transition to ready
+        self.state = ConnectionState.READY
+        return None
+
+    # Case 3: Other requests before ready
+    if self.state != ConnectionState.READY and method != "initialize":
+        if is_notification:
+            print(f"Warning: notification {method} before ready")
+            return None
+        return {
+            "jsonrpc": "2.0",
+            "id": msg_id,
+            "error": {
+                "code": -32002,
+                "message": "Server not initialized. Send initialize first."
+            }
+        }
+
+    # Normal request handling
+    return self.route_request(method, message)</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Be Lenient with Notifications</div>
+                        <p>
+                            Since notifications don't expect responses, be lenient when receiving them
+                            at unexpected times. Log a warning but don't crash. The client won't know
+                            if something went wrong anyway.
+                        </p>
+                    </div>
+
+                    <h2>Testing the Handshake</h2>
+                    <p>
+                        Here's a simple test to verify your handshake handling:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def test_handshake():
+    """Test the complete handshake sequence."""
+    server = MCPServer()
+
+    # Should start disconnected
+    assert server.state == ConnectionState.DISCONNECTED
+
+    # Step 1: Send initialize
+    response = server.handle_message({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "test", "version": "1.0"}
+        }
+    })
+
+    # Should get success response
+    assert "result" in response
+    assert response["id"] == 1
+    assert server.state == ConnectionState.INITIALIZING
+
+    # Step 2: Try to call tools/list - should fail
+    response = server.handle_message({
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "tools/list"
+    })
+    assert "error" in response
+    assert response["error"]["code"] == -32002  # Not initialized
+
+    # Step 3: Send initialized notification
+    response = server.handle_message({
+        "jsonrpc": "2.0",
+        "method": "notifications/initialized"
+    })
+
+    # Should be None (no response to notifications)
+    assert response is None
+    assert server.state == ConnectionState.READY
+
+    # Step 4: Now tools/list should work
+    response = server.handle_message({
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "tools/list"
+    })
+    assert "result" in response
+
+    print("Handshake test passed!")
+
+if __name__ == "__main__":
+    test_handshake()</code></pre>
+                    </div>
+
+                    <h2>Key Takeaways</h2>
+                    <ul>
+                        <li><code>notifications/initialized</code> is a notification, not a request</li>
+                        <li>The server must NOT respond to this message</li>
+                        <li>It signals the handshake is complete and normal operation can begin</li>
+                        <li>Track connection state to reject requests before initialization</li>
+                        <li>Be lenient with notification timing - log warnings but don't crash</li>
+                    </ul>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-04-4.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Capability Negotiation</span></span>
+                    </a>
+                    <a href="lesson-04-6.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Building the Handshake</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

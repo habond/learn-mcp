@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building an MCP Client - Step 4 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 10</div>
+                    <div class="lesson-info-title">Building an MCP Client</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 67%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-10.html" class="toc-link completed"><span class="toc-number">1</span><span>Client Architecture</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-2.html" class="toc-link completed"><span class="toc-number">2</span><span>STDIO Client</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Initialization Flow</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-4.html" class="toc-link active"><span class="toc-number">4</span><span>Calling Methods</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-5.html" class="toc-link"><span class="toc-number">5</span><span>Listing Primitives</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-6.html" class="toc-link"><span class="toc-number">6</span><span>Interactive Testing</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link current">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 10 - Step 4 of 6</span>
+                    <h1 class="step-title">Calling Methods</h1>
+                    <p class="step-description">Build a generic call method with request ID tracking.</p>
+                </header>
+
+                <div class="content">
+                    <h2>A Generic Call Method</h2>
+                    <p>
+                        Instead of writing separate code for each MCP method, we can create a
+                        generic <code>call</code> method that handles all the common logic:
+                        ID generation, request formatting, and response parsing.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from typing import Any, Optional
+
+class MCPClientError(Exception):
+    """Base exception for MCP client errors."""
+    pass
+
+class MCPProtocolError(MCPClientError):
+    """Error in the MCP protocol (JSON-RPC error from server)."""
+    def __init__(self, code: int, message: str, data: Any = None):
+        self.code = code
+        self.message = message
+        self.data = data
+        super().__init__(f"MCP Error {code}: {message}")
+
+
+def call(self, method: str, params: Optional[dict] = None) -> Any:
+    """
+    Call an MCP method and return the result.
+
+    Args:
+        method: The MCP method name (e.g., "tools/list")
+        params: Optional parameters for the method
+
+    Returns:
+        The result from the server response
+
+    Raises:
+        MCPProtocolError: If the server returns an error
+        RuntimeError: If not connected or initialized
+    """
+    if not self.initialized:
+        raise RuntimeError("Client not initialized. Call initialize() first.")
+
+    # Send request and get response
+    response = self.send_request(method, params)
+
+    # Check for error response
+    if "error" in response:
+        error = response["error"]
+        raise MCPProtocolError(
+            code=error.get("code", -1),
+            message=error.get("message", "Unknown error"),
+            data=error.get("data")
+        )
+
+    # Return the result
+    return response.get("result")</code></pre>
+                    </div>
+
+                    <h2>Request ID Management</h2>
+                    <p>
+                        Each request needs a unique ID to match with its response. Here's a
+                        robust ID tracker:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import threading
+from typing import Dict, Optional
+from dataclasses import dataclass, field
+from datetime import datetime
+
+@dataclass
+class PendingRequest:
+    """Track a pending request."""
+    id: int
+    method: str
+    sent_at: datetime = field(default_factory=datetime.now)
+    params: Optional[dict] = None
+
+
+class RequestTracker:
+    """Thread-safe request ID tracker."""
+
+    def __init__(self):
+        self._next_id = 1
+        self._pending: Dict[int, PendingRequest] = {}
+        self._lock = threading.Lock()
+
+    def next_id(self) -> int:
+        """Get the next request ID."""
+        with self._lock:
+            request_id = self._next_id
+            self._next_id += 1
+            return request_id
+
+    def track(self, request_id: int, method: str, params: Optional[dict] = None):
+        """Track a pending request."""
+        with self._lock:
+            self._pending[request_id] = PendingRequest(
+                id=request_id,
+                method=method,
+                params=params
+            )
+
+    def resolve(self, request_id: int) -> Optional[PendingRequest]:
+        """Mark a request as resolved and return its info."""
+        with self._lock:
+            return self._pending.pop(request_id, None)
+
+    def pending_count(self) -> int:
+        """Return the number of pending requests."""
+        with self._lock:
+            return len(self._pending)</code></pre>
+                    </div>
+
+                    <h2>Adding Timeouts</h2>
+                    <p>
+                        Requests should timeout if the server doesn't respond:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import select
+import time
+
+class TimeoutError(MCPClientError):
+    """Request timed out."""
+    pass
+
+
+def call_with_timeout(self, method: str, params: Optional[dict] = None,
+                      timeout: float = 30.0) -> Any:
+    """
+    Call an MCP method with a timeout.
+
+    Args:
+        method: The MCP method name
+        params: Optional parameters
+        timeout: Timeout in seconds (default 30)
+
+    Returns:
+        The result from the server
+
+    Raises:
+        TimeoutError: If the request times out
+    """
+    if not self.initialized:
+        raise RuntimeError("Client not initialized")
+
+    # Create and send request
+    request_id = self.tracker.next_id()
+    request = {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "method": method,
+    }
+    if params:
+        request["params"] = params
+
+    self.tracker.track(request_id, method, params)
+
+    # Send request
+    message = json.dumps(request) + "\n"
+    self.process.stdin.write(message)
+    self.process.stdin.flush()
+
+    # Wait for response with timeout
+    start_time = time.time()
+    while True:
+        # Check timeout
+        elapsed = time.time() - start_time
+        if elapsed >= timeout:
+            self.tracker.resolve(request_id)
+            raise TimeoutError(f"Request {method} timed out after {timeout}s")
+
+        # Check if data available (Unix only - use threads for Windows)
+        remaining = timeout - elapsed
+        readable, _, _ = select.select(
+            [self.process.stdout], [], [], min(remaining, 0.1)
+        )
+
+        if readable:
+            line = self.process.stdout.readline()
+            if line:
+                response = json.loads(line.strip())
+                if response.get("id") == request_id:
+                    self.tracker.resolve(request_id)
+                    if "error" in response:
+                        error = response["error"]
+                        raise MCPProtocolError(
+                            error.get("code", -1),
+                            error.get("message", "Unknown error"),
+                            error.get("data")
+                        )
+                    return response.get("result")</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Platform Considerations</div>
+                        <p>
+                            The <code>select</code> module works differently on Windows.
+                            For cross-platform code, consider using threads or async I/O.
+                        </p>
+                    </div>
+
+                    <h2>High-Level Method Wrappers</h2>
+                    <p>
+                        With a generic <code>call</code> method, you can create convenient wrappers
+                        for specific MCP methods:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def call_tool(self, name: str, arguments: Optional[dict] = None) -> Any:
+    """
+    Call a tool on the server.
+
+    Args:
+        name: The tool name
+        arguments: Arguments to pass to the tool
+
+    Returns:
+        The tool's result content
+    """
+    result = self.call("tools/call", {
+        "name": name,
+        "arguments": arguments or {}
+    })
+    return result.get("content", [])
+
+
+def read_resource(self, uri: str) -> Any:
+    """
+    Read a resource from the server.
+
+    Args:
+        uri: The resource URI
+
+    Returns:
+        The resource contents
+    """
+    result = self.call("resources/read", {"uri": uri})
+    return result.get("contents", [])
+
+
+def get_prompt(self, name: str, arguments: Optional[dict] = None) -> Any:
+    """
+    Get a prompt from the server.
+
+    Args:
+        name: The prompt name
+        arguments: Arguments for the prompt
+
+    Returns:
+        The prompt messages
+    """
+    result = self.call("prompts/get", {
+        "name": name,
+        "arguments": arguments or {}
+    })
+    return result.get("messages", [])</code></pre>
+                    </div>
+
+                    <h2>Error Handling Best Practices</h2>
+                    <p>
+                        Handle different types of errors appropriately:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">try:
+    result = client.call_tool("get_weather", {"city": "London"})
+    print(f"Weather: {result}")
+
+except MCPProtocolError as e:
+    if e.code == -32601:
+        print("Method not found - server doesn't support this")
+    elif e.code == -32602:
+        print(f"Invalid params: {e.message}")
+    else:
+        print(f"Server error: {e.message}")
+
+except TimeoutError:
+    print("Request timed out - server may be overloaded")
+
+except RuntimeError as e:
+    print(f"Connection error: {e}")</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Standard JSON-RPC Error Codes</div>
+                        <p>
+                            <code>-32700</code>: Parse error<br>
+                            <code>-32600</code>: Invalid request<br>
+                            <code>-32601</code>: Method not found<br>
+                            <code>-32602</code>: Invalid params<br>
+                            <code>-32603</code>: Internal error
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-10-3.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Initialization Flow</span></span>
+                    </a>
+                    <a href="lesson-10-5.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Listing Primitives</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

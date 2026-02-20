@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <title>Your First HTTP Server - Step 1 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo">
+                    <span>&#9889;</span>
+                    <span>MCP Learning Guide</span>
+                </a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 2</div>
+                    <div class="lesson-info-title">Your First HTTP Server</div>
+                    <div class="lesson-info-meta">
+                        <span>~2 hours</span>
+                        <span>5 steps</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 20%"></div>
+                </div>
+            </div>
+
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-02.html" class="toc-link active"><span class="toc-number">1</span><span>HTTP Fundamentals</span></a></li>
+                    <li class="toc-item"><a href="lesson-02-2.html" class="toc-link"><span class="toc-number">2</span><span>Python's http.server</span></a></li>
+                    <li class="toc-item"><a href="lesson-02-3.html" class="toc-link"><span class="toc-number">3</span><span>Handling POST Requests</span></a></li>
+                    <li class="toc-item"><a href="lesson-02-4.html" class="toc-link"><span class="toc-number">4</span><span>JSON Request/Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-02-5.html" class="toc-link"><span class="toc-number">5</span><span>Building an Echo Server</span></a></li>
+                </ol>
+            </nav>
+
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link current">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 2 - Step 1 of 5</span>
+                    <h1 class="step-title">HTTP Fundamentals</h1>
+                    <p class="step-description">Understand the basics of HTTP before building a server.</p>
+                </header>
+
+                <div class="content">
+                    <h2>What You're Building</h2>
+                    <p>
+                        In this lesson, you'll build a simple HTTP server using Python's built-in
+                        <code>http.server</code> module. This server will handle JSON requests and
+                        responses &mdash; the foundation for MCP's HTTP/SSE transport.
+                    </p>
+
+                    <h2>HTTP in 60 Seconds</h2>
+                    <p>
+                        HTTP (HyperText Transfer Protocol) is how clients and servers communicate on the web.
+                        For MCP, you need to understand just a few key concepts:
+                    </p>
+
+                    <h3>Request Structure</h3>
+                    <p>Every HTTP request has:</p>
+                    <ul>
+                        <li><strong>Method</strong> &mdash; What action to take (GET, POST, etc.)</li>
+                        <li><strong>Path</strong> &mdash; The URL path (<code>/mcp</code>, <code>/api/tools</code>)</li>
+                        <li><strong>Headers</strong> &mdash; Metadata (Content-Type, Authorization)</li>
+                        <li><strong>Body</strong> &mdash; The actual data (for POST/PUT requests)</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">http</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>POST /mcp HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+Content-Length: 45
+
+{"jsonrpc": "2.0", "method": "tools/list"}</code></pre>
+                    </div>
+
+                    <h3>Response Structure</h3>
+                    <p>Every HTTP response has:</p>
+                    <ul>
+                        <li><strong>Status Code</strong> &mdash; Success (200), error (400, 500), etc.</li>
+                        <li><strong>Headers</strong> &mdash; Metadata about the response</li>
+                        <li><strong>Body</strong> &mdash; The actual response data</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">http</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 52
+
+{"jsonrpc": "2.0", "id": 1, "result": {"tools": []}}</code></pre>
+                    </div>
+
+                    <h2>HTTP Methods for MCP</h2>
+                    <p>MCP's HTTP transport uses just a few methods:</p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Method</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">MCP Usage</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>POST</code></td>
+                                <td style="padding: 0.75rem;">Send JSON-RPC requests to the server</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>GET</code></td>
+                                <td style="padding: 0.75rem;">Open SSE stream for server-initiated messages</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>DELETE</code></td>
+                                <td style="padding: 0.75rem;">Close a session (optional)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Important Headers</h2>
+                    <p>These headers matter for MCP:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code># Request headers
+Content-Type: application/json       # We're sending JSON
+Accept: application/json, text/event-stream  # We accept JSON or SSE
+MCP-Protocol-Version: 2025-11-25    # MCP version
+
+# Response headers
+Content-Type: application/json       # For single responses
+Content-Type: text/event-stream     # For SSE streaming</code></pre>
+                    </div>
+
+                    <h2>Status Codes to Know</h2>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Code</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Meaning</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">When to Use</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>200</code></td>
+                                <td style="padding: 0.75rem;">OK</td>
+                                <td style="padding: 0.75rem;">Request succeeded</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>400</code></td>
+                                <td style="padding: 0.75rem;">Bad Request</td>
+                                <td style="padding: 0.75rem;">Invalid JSON or malformed request</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>404</code></td>
+                                <td style="padding: 0.75rem;">Not Found</td>
+                                <td style="padding: 0.75rem;">Session doesn't exist</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>500</code></td>
+                                <td style="padding: 0.75rem;">Server Error</td>
+                                <td style="padding: 0.75rem;">Something went wrong on the server</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Key Takeaway</div>
+                        <p>
+                            For MCP's HTTP transport, you mainly need to handle POST requests that
+                            contain JSON bodies and respond with JSON (or SSE streams). That's it!
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-01-5.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Previous Lesson</span>
+                            <span>Message Flow & Lifecycle</span>
+                        </span>
+                    </a>
+                    <a href="lesson-02-2.html" class="nav-button next">
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Next</span>
+                            <span>Python's http.server</span>
+                        </span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

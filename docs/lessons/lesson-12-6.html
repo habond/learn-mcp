@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capstone Project - Step 6 | MCP Learning Guide</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 12</div>
+                    <div class="lesson-info-title">Capstone Project</div>
+                    <div class="lesson-info-meta"><span>~3 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 100%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-12.html" class="toc-link completed"><span class="toc-number">1</span><span>Project Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Planning Your Server</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Implementing Core Features</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-4.html" class="toc-link completed"><span class="toc-number">4</span><span>Adding Resources and Prompts</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-5.html" class="toc-link completed"><span class="toc-number">5</span><span>Testing and Debugging</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-6.html" class="toc-link active"><span class="toc-number">6</span><span>Next Steps</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link current">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 12 - Step 6 of 6</span>
+                    <h1 class="step-title">Next Steps</h1>
+                    <p class="step-description">Ideas for extending your server and continuing your MCP journey.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Congratulations!</h2>
+                    <p>
+                        You have completed the MCP Learning Guide! You have built a complete
+                        MCP server from scratch, implementing tools, resources, and prompts.
+                        You understand the protocol deeply and can now create powerful
+                        integrations for AI assistants.
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">What You Have Accomplished</div>
+                        <p>
+                            Through this course, you have learned to build MCP servers using
+                            both STDIO and HTTP transports, implement the three core primitives
+                            (tools, resources, prompts), create your own client, and integrate
+                            with Claude Desktop. These skills enable you to extend AI assistants
+                            with any capability you can imagine.
+                        </p>
+                    </div>
+
+                    <h2>Ideas for Extending Your Server</h2>
+                    <p>
+                        Here are some ideas to continue developing your Notes MCP Server:
+                    </p>
+
+                    <h3>Feature Enhancements</h3>
+                    <ul>
+                        <li><strong>Note Categories</strong> - Add hierarchical categories beyond flat tags</li>
+                        <li><strong>Note Links</strong> - Allow notes to reference each other with <code>[[note-id]]</code> syntax</li>
+                        <li><strong>Attachments</strong> - Support for attaching files to notes</li>
+                        <li><strong>Versioning</strong> - Keep history of note changes</li>
+                        <li><strong>Export/Import</strong> - Export notes to Markdown or import from other formats</li>
+                    </ul>
+
+                    <h3>Technical Improvements</h3>
+                    <ul>
+                        <li><strong>SQLite Storage</strong> - Replace JSON with SQLite for better performance</li>
+                        <li><strong>Full-Text Search</strong> - Implement proper search indexing</li>
+                        <li><strong>HTTP Transport</strong> - Add HTTP/SSE transport alongside STDIO</li>
+                        <li><strong>Resource Subscriptions</strong> - Notify clients when notes change</li>
+                        <li><strong>Authentication</strong> - Add API key or token authentication</li>
+                    </ul>
+
+                    <h3>Additional Prompts</h3>
+                    <ul>
+                        <li><strong>Weekly Review</strong> - Prompt for summarizing notes from the past week</li>
+                        <li><strong>Action Extractor</strong> - Prompt for finding action items across notes</li>
+                        <li><strong>Note Connector</strong> - Prompt for finding related notes</li>
+                        <li><strong>Research Template</strong> - Prompt for creating research notes</li>
+                    </ul>
+
+                    <h2>Other MCP Server Ideas</h2>
+                    <p>
+                        Apply your MCP knowledge to build other useful servers:
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Server Idea</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>File System</strong></td>
+                                <td style="padding: 0.75rem;">Browse, read, and write files with AI assistance</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Database Query</strong></td>
+                                <td style="padding: 0.75rem;">Natural language queries to SQL databases</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>API Gateway</strong></td>
+                                <td style="padding: 0.75rem;">Expose REST APIs as MCP tools</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Git Integration</strong></td>
+                                <td style="padding: 0.75rem;">Commit, branch, and manage repositories</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Calendar</strong></td>
+                                <td style="padding: 0.75rem;">Manage events and scheduling</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Email Client</strong></td>
+                                <td style="padding: 0.75rem;">Read and compose emails</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Smart Home</strong></td>
+                                <td style="padding: 0.75rem;">Control IoT devices and home automation</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><strong>Code Analyzer</strong></td>
+                                <td style="padding: 0.75rem;">Analyze codebases and suggest improvements</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Resources for Continued Learning</h2>
+
+                    <h3>Official Documentation</h3>
+                    <ul>
+                        <li><strong>MCP Specification</strong> - The complete protocol specification at modelcontextprotocol.io</li>
+                        <li><strong>MCP SDKs</strong> - Official SDKs for Python, TypeScript, and other languages</li>
+                        <li><strong>Claude Desktop Docs</strong> - Integration guides for Claude Desktop</li>
+                    </ul>
+
+                    <h3>Community Resources</h3>
+                    <ul>
+                        <li><strong>MCP GitHub</strong> - Example servers and community contributions</li>
+                        <li><strong>Discord Communities</strong> - Connect with other MCP developers</li>
+                        <li><strong>Blog Posts</strong> - Tutorials and case studies from the community</li>
+                    </ul>
+
+                    <h3>Related Technologies</h3>
+                    <ul>
+                        <li><strong>JSON-RPC 2.0</strong> - Deep dive into the underlying protocol</li>
+                        <li><strong>Server-Sent Events</strong> - Learn more about SSE for real-time updates</li>
+                        <li><strong>WebSockets</strong> - Alternative real-time communication</li>
+                        <li><strong>OpenAPI/Swagger</strong> - API design and documentation</li>
+                    </ul>
+
+                    <h2>Best Practices Recap</h2>
+                    <p>
+                        As you continue building MCP servers, remember these best practices:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>1. CLEAR TOOL DESCRIPTIONS
+   Write descriptions that help AI understand when to use each tool.
+
+2. PROPER ERROR HANDLING
+   Return meaningful error messages with appropriate error codes.
+
+3. INPUT VALIDATION
+   Validate all inputs and provide helpful error messages.
+
+4. CONSISTENT RESPONSES
+   Follow the MCP response format strictly.
+
+5. COMPREHENSIVE SCHEMAS
+   Include descriptions for all parameters in your JSON schemas.
+
+6. THOUGHTFUL PROMPTS
+   Design prompts that guide AI toward useful outputs.
+
+7. RESOURCE ORGANIZATION
+   Use logical URI schemes for resources.
+
+8. DOCUMENTATION
+   Document your server's capabilities for users.
+
+9. TESTING
+   Test all methods before deployment.
+
+10. SECURITY
+    Never expose sensitive data without authentication.</code></pre>
+                    </div>
+
+                    <h2>Your MCP Journey</h2>
+                    <p>
+                        You have come a long way from understanding basic HTTP servers to building
+                        complete MCP implementations. Here is what you have learned:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Phase 1: Foundations
+  - HTTP servers and request handling
+  - JSON-RPC 2.0 protocol
+  - MCP initialization handshake
+
+Phase 2: Core Primitives
+  - Tools for actions
+  - Resources for data
+  - Prompts for templates
+
+Phase 3: Transports
+  - STDIO for local processes
+  - HTTP/SSE for network servers
+
+Phase 4: Advanced
+  - Building clients
+  - Claude Desktop integration
+  - Complete capstone project</code></pre>
+                    </div>
+
+                    <h2>Thank You!</h2>
+                    <p>
+                        Thank you for completing the MCP Learning Guide. You now have the knowledge
+                        and skills to build powerful AI integrations. Go forth and create amazing
+                        MCP servers!
+                    </p>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Share Your Creations</div>
+                        <p>
+                            Built something cool with MCP? Share it with the community! Your
+                            servers could help others and inspire new ideas. Consider
+                            open-sourcing your projects or writing about what you have learned.
+                        </p>
+                    </div>
+
+                    <h2>Final Challenge</h2>
+                    <p>
+                        Here is a final challenge: Take the Notes MCP Server you built and
+                        add one significant feature of your choice. It could be any of the
+                        suggestions above or something entirely new. The best way to solidify
+                        your learning is to keep building!
+                    </p>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-12-5.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Testing and Debugging</span></span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

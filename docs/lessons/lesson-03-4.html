@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON-RPC 2.0 Essentials - Step 4 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 3</div>
+                    <div class="lesson-info-title">JSON-RPC 2.0 Essentials</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 80%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-03.html" class="toc-link completed"><span class="toc-number">1</span><span>Protocol Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Request & Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Error Handling</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-4.html" class="toc-link active"><span class="toc-number">4</span><span>Notifications</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-5.html" class="toc-link"><span class="toc-number">5</span><span>Building a Router</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link current">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 3 - Step 4 of 5</span>
+                    <h1 class="step-title">Notifications</h1>
+                    <p class="step-description">Learn about fire-and-forget messages that don't expect responses.</p>
+                </header>
+
+                <div class="content">
+                    <h2>What is a Notification?</h2>
+                    <p>
+                        A <strong>notification</strong> is a JSON-RPC message that doesn't expect a response.
+                        The key difference from a request is the <em>absence of an ID field</em>.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">// Request (expects response)
+{
+    "jsonrpc": "2.0",
+    "id": 1,              // Has ID - expects response
+    "method": "tools/list",
+    "params": {}
+}
+
+// Notification (no response expected)
+{
+    "jsonrpc": "2.0",
+                          // No ID field!
+    "method": "notifications/initialized",
+    "params": {}
+}</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Fire and Forget</div>
+                        <p>
+                            Notifications are "fire and forget" &mdash; the sender doesn't wait for or expect
+                            any response. The server should NOT send a response to a notification, even if
+                            processing fails.
+                        </p>
+                    </div>
+
+                    <h2>When to Use Notifications</h2>
+                    <p>
+                        Notifications are ideal for these scenarios:
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Use Case</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Example</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Status updates</strong></td>
+                                <td style="padding: 0.75rem;">"I'm done initializing"</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Progress reports</strong></td>
+                                <td style="padding: 0.75rem;">"50% complete"</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Log messages</strong></td>
+                                <td style="padding: 0.75rem;">"Warning: disk space low"</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Resource changes</strong></td>
+                                <td style="padding: 0.75rem;">"File X was modified"</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><strong>Cancellation</strong></td>
+                                <td style="padding: 0.75rem;">"Cancel request #5"</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>MCP Notifications</h2>
+                    <p>
+                        MCP uses several notifications for lifecycle and event management:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""Common MCP notifications and their purposes."""
+
+# Client -> Server: "I've finished initializing"
+INITIALIZED_NOTIFICATION = {
+    "jsonrpc": "2.0",
+    "method": "notifications/initialized"
+}
+
+# Server -> Client: "My tools have changed, re-fetch them"
+TOOLS_CHANGED_NOTIFICATION = {
+    "jsonrpc": "2.0",
+    "method": "notifications/tools/list_changed"
+}
+
+# Server -> Client: "My resources have changed"
+RESOURCES_CHANGED_NOTIFICATION = {
+    "jsonrpc": "2.0",
+    "method": "notifications/resources/list_changed"
+}
+
+# Client -> Server: "Cancel this request"
+CANCEL_NOTIFICATION = {
+    "jsonrpc": "2.0",
+    "method": "notifications/cancelled",
+    "params": {
+        "requestId": 5,
+        "reason": "User cancelled operation"
+    }
+}
+
+# Bidirectional: "Here's a progress update"
+PROGRESS_NOTIFICATION = {
+    "jsonrpc": "2.0",
+    "method": "notifications/progress",
+    "params": {
+        "progressToken": "task-123",
+        "progress": 50,
+        "total": 100
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Creating Notifications</h2>
+                    <p>
+                        Here's a helper function for creating notifications:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from typing import Optional
+
+
+def create_notification(method: str, params: dict = None) -> dict:
+    """
+    Create a JSON-RPC notification (no ID, no response expected).
+
+    Args:
+        method: The notification method name
+        params: Optional parameters
+
+    Returns:
+        A properly formatted JSON-RPC notification
+    """
+    notification = {
+        "jsonrpc": "2.0",
+        "method": method
+    }
+
+    if params is not None:
+        notification["params"] = params
+
+    return notification
+
+
+# Example usage
+init_notification = create_notification("notifications/initialized")
+# {"jsonrpc": "2.0", "method": "notifications/initialized"}
+
+progress_notification = create_notification(
+    "notifications/progress",
+    {"progressToken": "download-1", "progress": 75, "total": 100}
+)
+# {"jsonrpc": "2.0", "method": "notifications/progress", "params": {...}}</code></pre>
+                    </div>
+
+                    <h2>Detecting Notifications</h2>
+                    <p>
+                        When processing incoming messages, you need to distinguish between
+                        requests (need response) and notifications (no response):
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def is_notification(message: dict) -> bool:
+    """
+    Check if a message is a notification.
+
+    A notification is a valid JSON-RPC message without an ID field.
+    """
+    # Must have jsonrpc and method
+    if message.get("jsonrpc") != "2.0":
+        return False
+
+    if "method" not in message:
+        return False
+
+    # Key distinction: no ID field
+    return "id" not in message
+
+
+def is_request(message: dict) -> bool:
+    """
+    Check if a message is a request.
+
+    A request is a valid JSON-RPC message WITH an ID field.
+    """
+    if message.get("jsonrpc") != "2.0":
+        return False
+
+    if "method" not in message:
+        return False
+
+    # Has ID field
+    return "id" in message
+
+
+def is_response(message: dict) -> bool:
+    """
+    Check if a message is a response.
+
+    A response has an ID and either result or error (no method).
+    """
+    if message.get("jsonrpc") != "2.0":
+        return False
+
+    if "id" not in message:
+        return False
+
+    # Has result or error, but not method
+    has_result_or_error = "result" in message or "error" in message
+    has_method = "method" in message
+
+    return has_result_or_error and not has_method</code></pre>
+                    </div>
+
+                    <h2>Handling Notifications</h2>
+                    <p>
+                        Process notifications silently &mdash; never send a response:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from typing import Optional
+
+
+class MessageHandler:
+    """Handle incoming JSON-RPC messages."""
+
+    def __init__(self):
+        self.notification_handlers = {
+            "notifications/initialized": self._on_initialized,
+            "notifications/cancelled": self._on_cancelled,
+            "notifications/progress": self._on_progress,
+        }
+
+        self.request_handlers = {
+            "initialize": self._handle_initialize,
+            "tools/list": self._handle_tools_list,
+        }
+
+    def process_message(self, message: dict) -> Optional[dict]:
+        """
+        Process an incoming message and return response if needed.
+
+        Returns:
+            Response dict for requests, None for notifications
+        """
+        if is_notification(message):
+            # Handle notification - NEVER return a response
+            self._handle_notification(message)
+            return None
+
+        elif is_request(message):
+            # Handle request - ALWAYS return a response
+            return self._handle_request(message)
+
+        elif is_response(message):
+            # Handle response from server (if we're a client)
+            self._handle_response(message)
+            return None
+
+        else:
+            # Invalid message structure
+            return create_error_response(
+                request_id=message.get("id"),
+                code=JsonRpcErrorCode.INVALID_REQUEST,
+                message="Invalid message structure"
+            )
+
+    def _handle_notification(self, notification: dict):
+        """Process a notification silently."""
+        method = notification.get("method", "")
+        params = notification.get("params", {})
+
+        handler = self.notification_handlers.get(method)
+        if handler:
+            try:
+                handler(params)
+            except Exception as e:
+                # Log but don't respond
+                print(f"Error handling notification {method}: {e}")
+        else:
+            # Unknown notification - log but don't respond
+            print(f"Unknown notification: {method}")
+
+    def _handle_request(self, request: dict) -> dict:
+        """Process a request and return a response."""
+        request_id = request.get("id")
+        method = request.get("method", "")
+        params = request.get("params", {})
+
+        handler = self.request_handlers.get(method)
+        if not handler:
+            return create_error_response(
+                request_id=request_id,
+                code=JsonRpcErrorCode.METHOD_NOT_FOUND,
+                data={"method": method}
+            )
+
+        try:
+            result = handler(params)
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": result
+            }
+        except JsonRpcError as e:
+            return e.to_response(request_id)
+
+    # Notification handlers (no return value)
+    def _on_initialized(self, params: dict):
+        print("Client has finished initializing")
+
+    def _on_cancelled(self, params: dict):
+        request_id = params.get("requestId")
+        print(f"Client cancelled request {request_id}")
+
+    def _on_progress(self, params: dict):
+        token = params.get("progressToken")
+        progress = params.get("progress", 0)
+        total = params.get("total", 100)
+        print(f"Progress {token}: {progress}/{total}")
+
+    # Request handlers (return result)
+    def _handle_initialize(self, params: dict) -> dict:
+        return {"protocolVersion": "2024-11-05", "capabilities": {}}
+
+    def _handle_tools_list(self, params: dict) -> dict:
+        return {"tools": []}</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Important: No Response!</div>
+                        <p>
+                            Never send a response to a notification, even if processing fails.
+                            If you send a response, clients may be confused by receiving a response
+                            they didn't expect. Log errors server-side instead.
+                        </p>
+                    </div>
+
+                    <h2>Sending Notifications</h2>
+                    <p>
+                        From either client or server, notifications are sent without waiting:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import json
+
+
+class NotificationSender:
+    """Helper class for sending notifications."""
+
+    def __init__(self, send_func):
+        """
+        Args:
+            send_func: Function that sends raw JSON string
+        """
+        self._send = send_func
+
+    def notify(self, method: str, params: dict = None):
+        """Send a notification (fire and forget)."""
+        notification = create_notification(method, params)
+        self._send(json.dumps(notification))
+        # Don't wait for response - there won't be one
+
+    def notify_initialized(self):
+        """Notify that initialization is complete."""
+        self.notify("notifications/initialized")
+
+    def notify_tools_changed(self):
+        """Notify that the tools list has changed."""
+        self.notify("notifications/tools/list_changed")
+
+    def notify_progress(self, token: str, progress: int, total: int):
+        """Send a progress notification."""
+        self.notify("notifications/progress", {
+            "progressToken": token,
+            "progress": progress,
+            "total": total
+        })
+
+    def notify_cancelled(self, request_id: int, reason: str = None):
+        """Notify that a request was cancelled."""
+        params = {"requestId": request_id}
+        if reason:
+            params["reason"] = reason
+        self.notify("notifications/cancelled", params)
+
+
+# Usage example
+def send_to_client(data: str):
+    print(f"Sending: {data}")
+
+sender = NotificationSender(send_to_client)
+sender.notify_progress("upload-1", 50, 100)
+# Sending: {"jsonrpc": "2.0", "method": "notifications/progress", "params": {...}}</code></pre>
+                    </div>
+
+                    <h2>Request vs Notification Decision Tree</h2>
+                    <p>
+                        Use this guide to decide whether to use a request or notification:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Do you need a response?
+    |
+    +-- YES --> Use a Request (include ID)
+    |           Examples: tools/list, tools/call, initialize
+    |
+    +-- NO --> Use a Notification (no ID)
+               |
+               +-- Is it a status update? --> notifications/initialized
+               +-- Is it a change event? --> notifications/tools/list_changed
+               +-- Is it progress info? --> notifications/progress
+               +-- Is it cancellation? --> notifications/cancelled</code></pre>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-03-3.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Error Handling</span></span>
+                    </a>
+                    <a href="lesson-03-5.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Building a Router</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

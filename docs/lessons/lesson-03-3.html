@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON-RPC 2.0 Essentials - Step 3 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 3</div>
+                    <div class="lesson-info-title">JSON-RPC 2.0 Essentials</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 60%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-03.html" class="toc-link completed"><span class="toc-number">1</span><span>Protocol Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Request & Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-3.html" class="toc-link active"><span class="toc-number">3</span><span>Error Handling</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-4.html" class="toc-link"><span class="toc-number">4</span><span>Notifications</span></a></li>
+                    <li class="toc-item"><a href="lesson-03-5.html" class="toc-link"><span class="toc-number">5</span><span>Building a Router</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link current">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 3 - Step 3 of 5</span>
+                    <h1 class="step-title">Error Handling</h1>
+                    <p class="step-description">Master JSON-RPC error codes and build robust error responses.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Error Response Structure</h2>
+                    <p>
+                        When a request fails, the server returns an error response instead of a result.
+                        The error object has three fields:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "error": {
+        "code": -32601,           // Required: numeric error code
+        "message": "Method not found",  // Required: short description
+        "data": {                 // Optional: additional error details
+            "method": "unknown/method",
+            "suggestion": "Did you mean 'tools/list'?"
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Never Both!</div>
+                        <p>
+                            A response must have either <code>result</code> OR <code>error</code>, never both.
+                            If you include both, clients may behave unpredictably.
+                        </p>
+                    </div>
+
+                    <h2>Standard Error Codes</h2>
+                    <p>
+                        JSON-RPC 2.0 defines these standard error codes. The range -32000 to -32099
+                        is reserved for implementation-defined server errors.
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Code</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Name</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Meaning</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>-32700</code></td>
+                                <td style="padding: 0.75rem;">Parse error</td>
+                                <td style="padding: 0.75rem;">Invalid JSON received</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>-32600</code></td>
+                                <td style="padding: 0.75rem;">Invalid Request</td>
+                                <td style="padding: 0.75rem;">JSON is not a valid request object</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>-32601</code></td>
+                                <td style="padding: 0.75rem;">Method not found</td>
+                                <td style="padding: 0.75rem;">Method does not exist</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>-32602</code></td>
+                                <td style="padding: 0.75rem;">Invalid params</td>
+                                <td style="padding: 0.75rem;">Invalid method parameters</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>-32603</code></td>
+                                <td style="padding: 0.75rem;">Internal error</td>
+                                <td style="padding: 0.75rem;">Internal server error</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>-32000</code> to <code>-32099</code></td>
+                                <td style="padding: 0.75rem;">Server error</td>
+                                <td style="padding: 0.75rem;">Reserved for implementation errors</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Implementing Error Codes</h2>
+                    <p>
+                        Define error codes as constants for consistency across your codebase:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from enum import IntEnum
+from typing import Any, Optional
+
+
+class JsonRpcErrorCode(IntEnum):
+    """Standard JSON-RPC 2.0 error codes."""
+
+    # Standard errors
+    PARSE_ERROR = -32700
+    INVALID_REQUEST = -32600
+    METHOD_NOT_FOUND = -32601
+    INVALID_PARAMS = -32602
+    INTERNAL_ERROR = -32603
+
+    # Server errors (implementation-defined)
+    SERVER_ERROR = -32000
+    SERVER_NOT_INITIALIZED = -32002
+
+
+# Human-readable messages for each code
+ERROR_MESSAGES = {
+    JsonRpcErrorCode.PARSE_ERROR: "Parse error",
+    JsonRpcErrorCode.INVALID_REQUEST: "Invalid request",
+    JsonRpcErrorCode.METHOD_NOT_FOUND: "Method not found",
+    JsonRpcErrorCode.INVALID_PARAMS: "Invalid params",
+    JsonRpcErrorCode.INTERNAL_ERROR: "Internal error",
+    JsonRpcErrorCode.SERVER_ERROR: "Server error",
+    JsonRpcErrorCode.SERVER_NOT_INITIALIZED: "Server not initialized",
+}</code></pre>
+                    </div>
+
+                    <h2>Creating Error Responses</h2>
+                    <p>
+                        Build a helper function to create properly formatted error responses:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def create_error_response(
+    request_id: Optional[int],
+    code: JsonRpcErrorCode,
+    message: str = None,
+    data: Any = None
+) -> dict:
+    """
+    Create a JSON-RPC error response.
+
+    Args:
+        request_id: The ID from the original request (None if parse error)
+        code: The error code from JsonRpcErrorCode
+        message: Custom message (uses default if not provided)
+        data: Optional additional error data
+
+    Returns:
+        A properly formatted JSON-RPC error response
+    """
+    error = {
+        "code": int(code),
+        "message": message or ERROR_MESSAGES.get(code, "Unknown error")
+    }
+
+    if data is not None:
+        error["data"] = data
+
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,  # Can be None for parse errors
+        "error": error
+    }
+
+
+# Examples of creating error responses
+
+# Method not found
+error1 = create_error_response(
+    request_id=1,
+    code=JsonRpcErrorCode.METHOD_NOT_FOUND,
+    data={"method": "foo/bar"}
+)
+# {"jsonrpc": "2.0", "id": 1, "error": {"code": -32601, "message": "Method not found", "data": {"method": "foo/bar"}}}
+
+# Invalid params with custom message
+error2 = create_error_response(
+    request_id=2,
+    code=JsonRpcErrorCode.INVALID_PARAMS,
+    message="Missing required parameter: 'name'",
+    data={"required": ["name"], "received": []}
+)
+
+# Parse error (no request ID available)
+error3 = create_error_response(
+    request_id=None,  # Can't know the ID if JSON was invalid
+    code=JsonRpcErrorCode.PARSE_ERROR,
+    message="Unexpected token at position 42"
+)</code></pre>
+                    </div>
+
+                    <h2>Exception-Based Error Handling</h2>
+                    <p>
+                        Use custom exceptions to propagate errors through your code cleanly:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">class JsonRpcError(Exception):
+    """Base exception for JSON-RPC errors."""
+
+    def __init__(
+        self,
+        code: JsonRpcErrorCode,
+        message: str = None,
+        data: Any = None
+    ):
+        self.code = code
+        self.message = message or ERROR_MESSAGES.get(code, "Unknown error")
+        self.data = data
+        super().__init__(self.message)
+
+    def to_response(self, request_id: Optional[int]) -> dict:
+        """Convert exception to JSON-RPC error response."""
+        return create_error_response(
+            request_id=request_id,
+            code=self.code,
+            message=self.message,
+            data=self.data
+        )
+
+
+class MethodNotFoundError(JsonRpcError):
+    """Raised when the requested method doesn't exist."""
+
+    def __init__(self, method: str):
+        super().__init__(
+            code=JsonRpcErrorCode.METHOD_NOT_FOUND,
+            message=f"Method not found: {method}",
+            data={"method": method}
+        )
+
+
+class InvalidParamsError(JsonRpcError):
+    """Raised when method parameters are invalid."""
+
+    def __init__(self, message: str, details: dict = None):
+        super().__init__(
+            code=JsonRpcErrorCode.INVALID_PARAMS,
+            message=message,
+            data=details
+        )
+
+
+class InternalError(JsonRpcError):
+    """Raised for unexpected server errors."""
+
+    def __init__(self, message: str = "An internal error occurred"):
+        super().__init__(
+            code=JsonRpcErrorCode.INTERNAL_ERROR,
+            message=message
+        )</code></pre>
+                    </div>
+
+                    <h2>Error Handling in Practice</h2>
+                    <p>
+                        Here's how to use these exceptions in a request handler:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import json
+import traceback
+
+
+def handle_request(raw_json: str) -> dict:
+    """
+    Process a JSON-RPC request and return a response.
+
+    This function handles all error cases gracefully.
+    """
+    request_id = None
+
+    try:
+        # Step 1: Parse JSON
+        try:
+            request = json.loads(raw_json)
+        except json.JSONDecodeError as e:
+            raise JsonRpcError(
+                code=JsonRpcErrorCode.PARSE_ERROR,
+                message=f"Invalid JSON: {e}"
+            )
+
+        # Step 2: Validate request structure
+        if not isinstance(request, dict):
+            raise JsonRpcError(
+                code=JsonRpcErrorCode.INVALID_REQUEST,
+                message="Request must be a JSON object"
+            )
+
+        request_id = request.get("id")
+
+        if request.get("jsonrpc") != "2.0":
+            raise JsonRpcError(
+                code=JsonRpcErrorCode.INVALID_REQUEST,
+                message="jsonrpc must be '2.0'"
+            )
+
+        method = request.get("method")
+        if not method or not isinstance(method, str):
+            raise JsonRpcError(
+                code=JsonRpcErrorCode.INVALID_REQUEST,
+                message="Missing or invalid 'method' field"
+            )
+
+        # Step 3: Route to handler
+        result = dispatch_method(method, request.get("params", {}))
+
+        # Step 4: Return success response
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": result
+        }
+
+    except JsonRpcError as e:
+        # Known error - return proper error response
+        return e.to_response(request_id)
+
+    except Exception as e:
+        # Unexpected error - log and return internal error
+        print(f"Unexpected error: {traceback.format_exc()}")
+        return create_error_response(
+            request_id=request_id,
+            code=JsonRpcErrorCode.INTERNAL_ERROR,
+            message="An unexpected error occurred"
+        )
+
+
+def dispatch_method(method: str, params: dict) -> dict:
+    """Dispatch to the appropriate method handler."""
+    handlers = {
+        "tools/list": handle_tools_list,
+        "tools/call": handle_tools_call,
+    }
+
+    if method not in handlers:
+        raise MethodNotFoundError(method)
+
+    return handlers[method](params)
+
+
+def handle_tools_list(params: dict) -> dict:
+    """Handle tools/list method."""
+    return {"tools": []}
+
+
+def handle_tools_call(params: dict) -> dict:
+    """Handle tools/call method."""
+    if "name" not in params:
+        raise InvalidParamsError(
+            "Missing required parameter: 'name'",
+            {"required": ["name"], "received": list(params.keys())}
+        )
+    return {"content": [{"type": "text", "text": "Tool result"}]}</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Security Tip</div>
+                        <p>
+                            Never expose internal error details (stack traces, file paths, database queries)
+                            to clients. Log them server-side for debugging, but return generic messages to clients.
+                        </p>
+                    </div>
+
+                    <h2>Testing Error Responses</h2>
+                    <p>
+                        Test each error path to ensure robust error handling:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Test parse error
+result = handle_request("not valid json{{{")
+assert result["error"]["code"] == -32700
+
+# Test invalid request
+result = handle_request('{"jsonrpc": "1.0", "method": "test"}')
+assert result["error"]["code"] == -32600
+
+# Test method not found
+result = handle_request('{"jsonrpc": "2.0", "id": 1, "method": "unknown"}')
+assert result["error"]["code"] == -32601
+assert result["id"] == 1  # ID should be preserved
+
+# Test invalid params
+result = handle_request('{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {}}')
+assert result["error"]["code"] == -32602
+
+print("All error handling tests passed!")</code></pre>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-03-2.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Request & Response</span></span>
+                    </a>
+                    <a href="lesson-03-4.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Notifications</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

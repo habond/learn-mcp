@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Desktop Integration - Step 1 | MCP Learning Guide</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 11</div>
+                    <div class="lesson-info-title">Claude Desktop Integration</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 20%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-11.html" class="toc-link active"><span class="toc-number">1</span><span>Introduction to Claude Desktop</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-2.html" class="toc-link"><span class="toc-number">2</span><span>Configuration File</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-3.html" class="toc-link"><span class="toc-number">3</span><span>Adding Your Server</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-4.html" class="toc-link"><span class="toc-number">4</span><span>Testing Integration</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-5.html" class="toc-link"><span class="toc-number">5</span><span>Debugging Tips</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link current">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 11 - Step 1 of 5</span>
+                    <h1 class="step-title">Introduction to Claude Desktop</h1>
+                    <p class="step-description">Learn what Claude Desktop is and how it connects to MCP servers.</p>
+                </header>
+
+                <div class="content">
+                    <h2>What is Claude Desktop?</h2>
+                    <p>
+                        Claude Desktop is Anthropic's official desktop application for interacting
+                        with Claude. Unlike the web interface, Claude Desktop can connect to
+                        <strong>local MCP servers</strong>, giving Claude access to your local
+                        files, databases, APIs, and custom tools.
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Real-World Integration</div>
+                        <p>
+                            This lesson brings everything together. The MCP servers you've built
+                            throughout this course can now be connected to a real AI assistant,
+                            making your tools available to Claude.
+                        </p>
+                    </div>
+
+                    <h2>How Claude Desktop Uses MCP</h2>
+                    <p>
+                        Claude Desktop acts as an MCP client. When you configure it to use your
+                        server, it will:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>┌──────────────────────────────────────────────────────────────┐
+│                     CLAUDE DESKTOP                            │
+│                                                               │
+│   ┌─────────────┐     ┌─────────────────────────────────┐   │
+│   │   Claude    │     │      MCP Client Manager          │   │
+│   │   (LLM)     │◄───►│                                  │   │
+│   └─────────────┘     │   - Reads config file            │   │
+│                       │   - Launches servers             │   │
+│                       │   - Manages connections          │   │
+│                       └────────────┬────────────────────┘   │
+│                                    │                         │
+└────────────────────────────────────│─────────────────────────┘
+                                     │ STDIO
+                    ┌────────────────┼────────────────┐
+                    │                │                │
+                    ▼                ▼                ▼
+            ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+            │ MCP Server  │  │ MCP Server  │  │ MCP Server  │
+            │ (Weather)   │  │ (Files)     │  │ (Database)  │
+            └─────────────┘  └─────────────┘  └─────────────┘</code></pre>
+                    </div>
+
+                    <h2>The Connection Process</h2>
+                    <p>
+                        When Claude Desktop starts, it reads a configuration file that lists
+                        your MCP servers. For each configured server:
+                    </p>
+
+                    <ol>
+                        <li><strong>Launch</strong>: Claude Desktop spawns the server process</li>
+                        <li><strong>Connect</strong>: It establishes STDIO communication</li>
+                        <li><strong>Handshake</strong>: The MCP initialization handshake occurs</li>
+                        <li><strong>Discovery</strong>: Claude learns what tools, resources, and prompts are available</li>
+                        <li><strong>Ready</strong>: Claude can now use your server's capabilities</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Claude Desktop Startup Sequence:
+
+1. Read ~/.config/claude/claude_desktop_config.json (Linux)
+   or ~/Library/Application Support/Claude/claude_desktop_config.json (macOS)
+   or %APPDATA%\Claude\claude_desktop_config.json (Windows)
+
+2. For each server in "mcpServers":
+   └─► Spawn process with specified command and args
+   └─► Connect via STDIO (stdin/stdout)
+   └─► Send: initialize request
+   └─► Receive: initialize response
+   └─► Send: initialized notification
+   └─► Send: tools/list, resources/list, prompts/list
+   └─► Server is ready for use</code></pre>
+                    </div>
+
+                    <h2>Why STDIO?</h2>
+                    <p>
+                        Claude Desktop uses the STDIO transport (not HTTP) for local servers
+                        because:
+                    </p>
+
+                    <ul>
+                        <li><strong>Security</strong>: No network ports to expose or secure</li>
+                        <li><strong>Simplicity</strong>: No need for authentication or certificates</li>
+                        <li><strong>Lifecycle</strong>: Claude Desktop manages the server process directly</li>
+                        <li><strong>Isolation</strong>: Each server runs in its own process</li>
+                    </ul>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Your Server is Ready</div>
+                        <p>
+                            If you followed Lesson 7 (STDIO Transport), your server already
+                            supports the transport that Claude Desktop uses. You just need to
+                            configure Claude Desktop to find and run it.
+                        </p>
+                    </div>
+
+                    <h2>What Claude Sees</h2>
+                    <p>
+                        Once connected, Claude can see and use your server's capabilities
+                        naturally in conversation:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>User: "What's the weather in Tokyo?"
+
+Claude's internal process:
+  1. Recognizes this needs weather data
+  2. Sees "get_weather" tool from your MCP server
+  3. Calls: tools/call with {"name": "get_weather", "arguments": {"city": "Tokyo"}}
+  4. Receives weather data from your server
+  5. Formulates natural language response
+
+Claude: "The current weather in Tokyo is 22°C with partly cloudy skies."</code></pre>
+                    </div>
+
+                    <h2>Supported Platforms</h2>
+                    <p>
+                        Claude Desktop is available for:
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Platform</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Config Location</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>macOS</strong></td>
+                                <td style="padding: 0.75rem;"><code>~/Library/Application Support/Claude/claude_desktop_config.json</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Windows</strong></td>
+                                <td style="padding: 0.75rem;"><code>%APPDATA%\Claude\claude_desktop_config.json</code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><strong>Linux</strong></td>
+                                <td style="padding: 0.75rem;"><code>~/.config/claude/claude_desktop_config.json</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Prerequisites</div>
+                        <p>
+                            Before continuing, make sure you have Claude Desktop installed.
+                            Download it from <a href="https://claude.ai/download" target="_blank">claude.ai/download</a>.
+                            The MCP integration features require a Claude Pro or Team subscription.
+                        </p>
+                    </div>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        In the next step, we'll explore the configuration file format in detail
+                        and learn how to structure your server configurations.
+                    </p>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-10-6.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous Lesson</span><span>Building an MCP Client</span></span>
+                    </a>
+                    <a href="lesson-11-2.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Configuration File</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

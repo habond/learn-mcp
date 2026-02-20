@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STDIO Transport - Step 5 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo">
+                    <span>&#9889;</span>
+                    <span>MCP Learning Guide</span>
+                </a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 7</div>
+                    <div class="lesson-info-title">STDIO Transport</div>
+                    <div class="lesson-info-meta">
+                        <span>~1.5 hours</span>
+                        <span>5 steps</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-07.html" class="toc-link completed"><span class="toc-number">1</span><span>STDIO Transport Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Reading from stdin</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Writing to stdout</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-4.html" class="toc-link completed"><span class="toc-number">4</span><span>Logging to stderr</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-5.html" class="toc-link active"><span class="toc-number">5</span><span>Complete STDIO Server</span></a></li>
+                </ol>
+            </nav>
+
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link current">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 7 - Step 5 of 5</span>
+                    <h1 class="step-title">Complete STDIO Server</h1>
+                    <p class="step-description">Build a fully functional MCP server using STDIO transport.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Putting It All Together</h2>
+                    <p>
+                        Now let's combine everything we've learned into a complete, production-ready
+                        MCP server using STDIO transport. This server will:
+                    </p>
+                    <ul>
+                        <li>Handle the MCP initialization handshake</li>
+                        <li>Expose a simple tool for demonstration</li>
+                        <li>Use proper stdin/stdout/stderr separation</li>
+                        <li>Include comprehensive logging</li>
+                    </ul>
+
+                    <h2>The Complete Server</h2>
+                    <p>
+                        Save this as <code>stdio_server.py</code>:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">#!/usr/bin/env python3
+"""
+Complete MCP Server using STDIO Transport.
+
+This server demonstrates proper STDIO handling for MCP:
+- stdin: JSON-RPC requests from client
+- stdout: JSON-RPC responses to client
+- stderr: Debug logging
+
+Usage:
+    python stdio_server.py
+
+Or with Claude Desktop configuration:
+    {
+        "mcpServers": {
+            "my-server": {
+                "command": "python",
+                "args": ["/path/to/stdio_server.py"]
+            }
+        }
+    }
+"""
+
+import sys
+import json
+import logging
+from datetime import datetime
+
+# ============================================================================
+# Logging Setup (stderr only!)
+# ============================================================================
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[logging.StreamHandler(sys.stderr)]
+)
+logger = logging.getLogger("mcp-stdio-server")
+
+# ============================================================================
+# JSON-RPC Error Codes
+# ============================================================================
+
+class ErrorCode:
+    PARSE_ERROR = -32700
+    INVALID_REQUEST = -32600
+    METHOD_NOT_FOUND = -32601
+    INVALID_PARAMS = -32602
+    INTERNAL_ERROR = -32603
+
+# ============================================================================
+# Response Functions (stdout)
+# ============================================================================
+
+def write_response(response):
+    """Write a JSON-RPC response to stdout."""
+    json_str = json.dumps(response, separators=(',', ':'))
+    sys.stdout.write(json_str + "\n")
+    sys.stdout.flush()
+    logger.debug(f"Sent: {response.get('id', 'notification')}")
+
+def send_result(msg_id, result):
+    """Send a successful JSON-RPC response."""
+    write_response({
+        "jsonrpc": "2.0",
+        "id": msg_id,
+        "result": result
+    })
+
+def send_error(msg_id, code, message, data=None):
+    """Send a JSON-RPC error response."""
+    error = {"code": code, "message": message}
+    if data:
+        error["data"] = data
+    write_response({
+        "jsonrpc": "2.0",
+        "id": msg_id,
+        "error": error
+    })
+
+# ============================================================================
+# Tool Definitions
+# ============================================================================
+
+TOOLS = [
+    {
+        "name": "echo",
+        "description": "Echo back a message. Useful for testing.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "The message to echo back"
+                }
+            },
+            "required": ["message"]
+        }
+    },
+    {
+        "name": "get_time",
+        "description": "Get the current server time.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
+    },
+    {
+        "name": "add_numbers",
+        "description": "Add two numbers together.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "number",
+                    "description": "First number"
+                },
+                "b": {
+                    "type": "number",
+                    "description": "Second number"
+                }
+            },
+            "required": ["a", "b"]
+        }
+    }
+]
+
+def execute_tool(name, arguments):
+    """Execute a tool and return the result."""
+    logger.info(f"Executing tool: {name} with args: {arguments}")
+
+    if name == "echo":
+        message = arguments.get("message", "")
+        return {"type": "text", "text": message}
+
+    elif name == "get_time":
+        current_time = datetime.now().isoformat()
+        return {"type": "text", "text": f"Current time: {current_time}"}
+
+    elif name == "add_numbers":
+        a = arguments.get("a", 0)
+        b = arguments.get("b", 0)
+        result = a + b
+        return {"type": "text", "text": f"{a} + {b} = {result}"}
+
+    else:
+        raise ValueError(f"Unknown tool: {name}")
+
+# ============================================================================
+# MCP Method Handlers
+# ============================================================================
+
+def handle_initialize(msg_id, params):
+    """Handle the initialize request."""
+    client_info = params.get("clientInfo", {})
+    logger.info(f"Client connecting: {client_info.get('name', 'unknown')}")
+
+    send_result(msg_id, {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+            "tools": {}
+        },
+        "serverInfo": {
+            "name": "stdio-demo-server",
+            "version": "1.0.0"
+        }
+    })
+
+def handle_tools_list(msg_id, params):
+    """Handle the tools/list request."""
+    logger.debug("Listing tools")
+    send_result(msg_id, {"tools": TOOLS})
+
+def handle_tools_call(msg_id, params):
+    """Handle the tools/call request."""
+    tool_name = params.get("name")
+    arguments = params.get("arguments", {})
+
+    try:
+        result = execute_tool(tool_name, arguments)
+        send_result(msg_id, {
+            "content": [result]
+        })
+    except ValueError as e:
+        send_error(msg_id, ErrorCode.METHOD_NOT_FOUND, str(e))
+    except Exception as e:
+        logger.error(f"Tool execution error: {e}")
+        send_error(msg_id, ErrorCode.INTERNAL_ERROR, str(e))
+
+def handle_notification(method, params):
+    """Handle notifications (no response expected)."""
+    if method == "notifications/initialized":
+        logger.info("Client initialization complete")
+    elif method == "notifications/cancelled":
+        logger.info(f"Request cancelled: {params}")
+    else:
+        logger.warning(f"Unknown notification: {method}")
+
+# ============================================================================
+# Message Router
+# ============================================================================
+
+def handle_message(message):
+    """Route a JSON-RPC message to the appropriate handler."""
+
+    # Validate JSON-RPC version
+    if message.get("jsonrpc") != "2.0":
+        logger.error("Invalid JSON-RPC version")
+        return
+
+    method = message.get("method")
+    msg_id = message.get("id")
+    params = message.get("params", {})
+
+    # Notifications (no id)
+    if method and msg_id is None:
+        handle_notification(method, params)
+        return
+
+    # Requests (has method and id)
+    if method and msg_id is not None:
+        logger.debug(f"Request [{msg_id}]: {method}")
+
+        handlers = {
+            "initialize": handle_initialize,
+            "tools/list": handle_tools_list,
+            "tools/call": handle_tools_call,
+        }
+
+        handler = handlers.get(method)
+        if handler:
+            handler(msg_id, params)
+        else:
+            send_error(msg_id, ErrorCode.METHOD_NOT_FOUND,
+                      f"Method not found: {method}")
+        return
+
+    # Unknown message type
+    logger.warning(f"Unknown message format: {message}")
+
+# ============================================================================
+# Main Loop
+# ============================================================================
+
+def main():
+    """Main server loop - read and process messages until EOF."""
+    logger.info("STDIO MCP Server starting...")
+
+    while True:
+        try:
+            # Read one line from stdin
+            line = sys.stdin.readline()
+
+            # EOF - client disconnected
+            if not line:
+                logger.info("EOF received, shutting down")
+                break
+
+            # Skip empty lines
+            line = line.strip()
+            if not line:
+                continue
+
+            # Parse JSON
+            try:
+                message = json.loads(line)
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON parse error: {e}")
+                logger.error(f"Raw input: {repr(line)}")
+                continue
+
+            # Handle the message
+            handle_message(message)
+
+        except KeyboardInterrupt:
+            logger.info("Interrupted, shutting down")
+            break
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}", exc_info=True)
+
+    logger.info("Server shutdown complete")
+
+if __name__ == "__main__":
+    main()</code></pre>
+                    </div>
+
+                    <h2>Testing the Server</h2>
+                    <p>
+                        You can test the server by sending JSON-RPC messages through stdin:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Test the initialize handshake
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | python stdio_server.py
+
+# Test listing tools (need to send initialize first)
+(
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+) | python stdio_server.py
+
+# Test calling a tool
+(
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arguments":{"message":"Hello, MCP!"}}}'
+) | python stdio_server.py</code></pre>
+                    </div>
+
+                    <h2>Claude Desktop Configuration</h2>
+                    <p>
+                        To use this server with Claude Desktop, add it to your configuration file:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "mcpServers": {
+        "stdio-demo": {
+            "command": "python",
+            "args": ["/absolute/path/to/stdio_server.py"]
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Configuration File Location</div>
+                        <p>
+                            <strong>macOS:</strong> <code>~/Library/Application Support/Claude/claude_desktop_config.json</code><br>
+                            <strong>Windows:</strong> <code>%APPDATA%\Claude\claude_desktop_config.json</code><br>
+                            <strong>Linux:</strong> <code>~/.config/Claude/claude_desktop_config.json</code>
+                        </p>
+                    </div>
+
+                    <h2>Key Implementation Details</h2>
+
+                    <h3>1. Clean Stream Separation</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Logging goes to stderr ONLY
+logging.basicConfig(handlers=[logging.StreamHandler(sys.stderr)])
+
+# Responses go to stdout ONLY
+sys.stdout.write(json_str + "\n")
+sys.stdout.flush()</code></pre>
+                    </div>
+
+                    <h3>2. Always Flush Output</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Every write to stdout must be flushed
+sys.stdout.write(json_str + "\n")
+sys.stdout.flush()  # Never forget this!</code></pre>
+                    </div>
+
+                    <h3>3. Graceful EOF Handling</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">line = sys.stdin.readline()
+if not line:  # Empty string = EOF
+    logger.info("EOF received, shutting down")
+    break</code></pre>
+                    </div>
+
+                    <h3>4. Error Recovery</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Don't crash on bad JSON - log and continue
+try:
+    message = json.loads(line)
+except json.JSONDecodeError as e:
+    logger.error(f"JSON parse error: {e}")
+    continue  # Keep processing</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Common Mistakes to Avoid</div>
+                        <ul>
+                            <li>Using <code>print()</code> anywhere (it goes to stdout!)</li>
+                            <li>Forgetting to call <code>flush()</code> after writing</li>
+                            <li>Pretty-printing JSON responses (breaks line-based protocol)</li>
+                            <li>Not handling EOF properly (server hangs)</li>
+                            <li>Importing libraries that print to stdout</li>
+                        </ul>
+                    </div>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        Congratulations! You've built a complete STDIO-based MCP server. You now understand:
+                    </p>
+                    <ul>
+                        <li>How STDIO transport works in MCP</li>
+                        <li>Reading JSON-RPC messages from stdin</li>
+                        <li>Writing responses to stdout correctly</li>
+                        <li>Using stderr for debug logging</li>
+                        <li>Building a complete, production-ready server</li>
+                    </ul>
+
+                    <p>
+                        In the next lesson, we'll explore HTTP/SSE transport, which enables remote
+                        MCP servers and web-based clients.
+                    </p>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Extend Your Server</div>
+                        <p>
+                            Try adding more tools to your server! Some ideas:
+                        </p>
+                        <ul>
+                            <li>A <code>read_file</code> tool that reads local files</li>
+                            <li>A <code>run_command</code> tool that executes shell commands</li>
+                            <li>A <code>weather</code> tool that fetches weather data from an API</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-07-4.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Previous</span>
+                            <span>Logging to stderr</span>
+                        </span>
+                    </a>
+                    <a href="lesson-08.html" class="nav-button next">
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Next Lesson</span>
+                            <span>HTTP/SSE Transport</span>
+                        </span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

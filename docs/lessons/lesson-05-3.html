@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Tools - Step 3 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 5</div>
+                    <div class="lesson-info-title">Implementing Tools</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 50%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-05.html" class="toc-link completed"><span class="toc-number">1</span><span>What are MCP Tools?</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Tool Definition Structure</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-3.html" class="toc-link active"><span class="toc-number">3</span><span>The tools/list Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-4.html" class="toc-link"><span class="toc-number">4</span><span>The tools/call Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-5.html" class="toc-link"><span class="toc-number">5</span><span>Tool Result Format</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-6.html" class="toc-link"><span class="toc-number">6</span><span>Building Calculator Tools</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link current">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 5 - Step 3 of 6</span>
+                    <h1 class="step-title">The tools/list Method</h1>
+                    <p class="step-description">Learn how to handle tools/list requests and return your available tools.</p>
+                </header>
+
+                <div class="content">
+                    <h2>How Clients Discover Tools</h2>
+                    <p>
+                        When a client connects to your MCP server, one of the first things it does
+                        (after initialization) is request a list of available tools. This is done
+                        via the <code>tools/list</code> method.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Client                              Server
+  |                                    |
+  |--- initialize ------------------>  |
+  |<-- initialize response ----------  |
+  |--- notifications/initialized --->  |
+  |                                    |
+  |--- tools/list ------------------>  |  &lt;-- Client requests tools
+  |<-- list of tools ----------------  |
+  |                                    |</code></pre>
+                    </div>
+
+                    <h2>The tools/list Request</h2>
+                    <p>
+                        The request is simple &mdash; it has no required parameters:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/list",
+    "params": {}
+}</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Optional: Pagination</div>
+                        <p>
+                            The <code>tools/list</code> method supports an optional <code>cursor</code>
+                            parameter for pagination. This is useful if you have many tools, but most
+                            servers can return all tools in a single response.
+                        </p>
+                    </div>
+
+                    <h2>The tools/list Response</h2>
+                    <p>
+                        Your server must respond with a <code>tools</code> array containing all
+                        available tool definitions:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+        "tools": [
+            {
+                "name": "add",
+                "description": "Add two numbers together",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "a": {"type": "number", "description": "First number"},
+                        "b": {"type": "number", "description": "Second number"}
+                    },
+                    "required": ["a", "b"]
+                }
+            },
+            {
+                "name": "subtract",
+                "description": "Subtract the second number from the first",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "a": {"type": "number", "description": "Number to subtract from"},
+                        "b": {"type": "number", "description": "Number to subtract"}
+                    },
+                    "required": ["a", "b"]
+                }
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Implementing tools/list in Python</h2>
+                    <p>
+                        Here's how to implement the <code>tools/list</code> handler in your MCP server:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+mcp_server.py - MCP server with tools/list implementation.
+"""
+
+import json
+
+# Define your tools
+TOOLS = [
+    {
+        "name": "add",
+        "description": "Add two numbers together and return the sum",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {"type": "number", "description": "First number"},
+                "b": {"type": "number", "description": "Second number"}
+            },
+            "required": ["a", "b"]
+        }
+    },
+    {
+        "name": "subtract",
+        "description": "Subtract the second number from the first",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {"type": "number", "description": "Number to subtract from"},
+                "b": {"type": "number", "description": "Number to subtract"}
+            },
+            "required": ["a", "b"]
+        }
+    },
+    {
+        "name": "multiply",
+        "description": "Multiply two numbers and return the product",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {"type": "number", "description": "First number"},
+                "b": {"type": "number", "description": "Second number"}
+            },
+            "required": ["a", "b"]
+        }
+    }
+]
+
+
+def handle_tools_list(request_id, params):
+    """
+    Handle the tools/list method.
+
+    Args:
+        request_id: The JSON-RPC request ID
+        params: Request parameters (may contain cursor for pagination)
+
+    Returns:
+        JSON-RPC response with list of tools
+    """
+    # For simple servers, ignore pagination and return all tools
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "result": {
+            "tools": TOOLS
+        }
+    }
+
+
+def handle_request(request):
+    """Route incoming requests to the appropriate handler."""
+    method = request.get("method")
+    request_id = request.get("id")
+    params = request.get("params", {})
+
+    if method == "tools/list":
+        return handle_tools_list(request_id, params)
+
+    # ... handle other methods ...
+
+    # Method not found
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {
+            "code": -32601,
+            "message": f"Method not found: {method}"
+        }
+    }</code></pre>
+                    </div>
+
+                    <h2>Pagination Support (Optional)</h2>
+                    <p>
+                        If you have many tools, you can implement pagination using cursors:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import base64
+
+def handle_tools_list_paginated(request_id, params):
+    """
+    Handle tools/list with pagination support.
+    """
+    PAGE_SIZE = 10
+
+    # Decode cursor to get starting index
+    cursor = params.get("cursor")
+    if cursor:
+        try:
+            start_index = int(base64.b64decode(cursor).decode())
+        except:
+            start_index = 0
+    else:
+        start_index = 0
+
+    # Get page of tools
+    end_index = start_index + PAGE_SIZE
+    page_tools = TOOLS[start_index:end_index]
+
+    # Create next cursor if there are more tools
+    next_cursor = None
+    if end_index < len(TOOLS):
+        next_cursor = base64.b64encode(str(end_index).encode()).decode()
+
+    result = {"tools": page_tools}
+    if next_cursor:
+        result["nextCursor"] = next_cursor
+
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "result": result
+    }</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Keep It Simple</div>
+                        <p>
+                            Most MCP servers have fewer than 100 tools. Unless you're building a
+                            server with many tools, you can skip pagination and return all tools
+                            in a single response.
+                        </p>
+                    </div>
+
+                    <h2>Testing tools/list</h2>
+                    <p>
+                        You can test your implementation with curl:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list",
+    "params": {}
+  }'</code></pre>
+                    </div>
+
+                    <p>Expected response:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "add",
+        "description": "Add two numbers together and return the sum",
+        "inputSchema": { ... }
+      },
+      ...
+    ]
+  }
+}</code></pre>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-05-2.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Tool Definition Structure</span></span>
+                    </a>
+                    <a href="lesson-05-4.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>The tools/call Method</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

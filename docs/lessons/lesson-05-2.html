@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Tools - Step 2 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 5</div>
+                    <div class="lesson-info-title">Implementing Tools</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 33%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-05.html" class="toc-link completed"><span class="toc-number">1</span><span>What are MCP Tools?</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-2.html" class="toc-link active"><span class="toc-number">2</span><span>Tool Definition Structure</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-3.html" class="toc-link"><span class="toc-number">3</span><span>The tools/list Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-4.html" class="toc-link"><span class="toc-number">4</span><span>The tools/call Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-5.html" class="toc-link"><span class="toc-number">5</span><span>Tool Result Format</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-6.html" class="toc-link"><span class="toc-number">6</span><span>Building Calculator Tools</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link current">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 5 - Step 2 of 6</span>
+                    <h1 class="step-title">Tool Definition Structure</h1>
+                    <p class="step-description">Learn the complete structure of tool definitions including name, description, and inputSchema.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The Tool Object</h2>
+                    <p>
+                        Every tool in MCP is defined by a <strong>Tool</strong> object with three
+                        required fields. Let's examine each in detail.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "name": "tool_name",
+    "description": "What the tool does",
+    "inputSchema": {
+        "type": "object",
+        "properties": { ... },
+        "required": [ ... ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>The name Field</h2>
+                    <p>
+                        The <code>name</code> is a unique identifier for the tool. It's used when
+                        calling the tool via <code>tools/call</code>.
+                    </p>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Naming Conventions</div>
+                        <p>
+                            Use <code>snake_case</code> for tool names. Keep names descriptive but concise.
+                            Good: <code>get_weather</code>, <code>send_email</code>, <code>calculate_sum</code>.
+                            Avoid: <code>doThing</code>, <code>x</code>, <code>my-tool-1</code>.
+                        </p>
+                    </div>
+
+                    <h2>The description Field</h2>
+                    <p>
+                        The <code>description</code> tells the AI model what the tool does. This is
+                        crucial &mdash; the model uses this to decide when to use the tool.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">// Good description - specific and actionable
+{
+    "name": "search_files",
+    "description": "Search for files matching a pattern in a directory. Returns a list of matching file paths. Use this when you need to find files by name or extension."
+}
+
+// Bad description - vague and unhelpful
+{
+    "name": "search_files",
+    "description": "Searches files"
+}</code></pre>
+                    </div>
+
+                    <h2>The inputSchema Field</h2>
+                    <p>
+                        The <code>inputSchema</code> defines what arguments the tool accepts using
+                        <strong>JSON Schema</strong>. This is a standard format for describing JSON data structures.
+                    </p>
+
+                    <h3>Basic JSON Schema Structure</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "type": "object",
+    "properties": {
+        "param1": {
+            "type": "string",
+            "description": "What this parameter does"
+        },
+        "param2": {
+            "type": "number",
+            "description": "Another parameter"
+        }
+    },
+    "required": ["param1"]
+}</code></pre>
+                    </div>
+
+                    <h3>Common JSON Schema Types</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Type</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Example</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>string</code></td>
+                                <td style="padding: 0.75rem;">Text values</td>
+                                <td style="padding: 0.75rem;"><code>"hello"</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>number</code></td>
+                                <td style="padding: 0.75rem;">Any numeric value</td>
+                                <td style="padding: 0.75rem;"><code>42</code>, <code>3.14</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>integer</code></td>
+                                <td style="padding: 0.75rem;">Whole numbers only</td>
+                                <td style="padding: 0.75rem;"><code>42</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>boolean</code></td>
+                                <td style="padding: 0.75rem;">True or false</td>
+                                <td style="padding: 0.75rem;"><code>true</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>array</code></td>
+                                <td style="padding: 0.75rem;">List of items</td>
+                                <td style="padding: 0.75rem;"><code>[1, 2, 3]</code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>object</code></td>
+                                <td style="padding: 0.75rem;">Nested structure</td>
+                                <td style="padding: 0.75rem;"><code>{"key": "value"}</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Advanced Schema Features</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "type": "object",
+    "properties": {
+        "query": {
+            "type": "string",
+            "description": "Search query",
+            "minLength": 1,
+            "maxLength": 100
+        },
+        "limit": {
+            "type": "integer",
+            "description": "Max results to return",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10
+        },
+        "format": {
+            "type": "string",
+            "description": "Output format",
+            "enum": ["json", "csv", "xml"]
+        },
+        "tags": {
+            "type": "array",
+            "description": "Filter by tags",
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": ["query"]
+}</code></pre>
+                    </div>
+
+                    <h2>Defining Tools in Python</h2>
+                    <p>
+                        Here's how to define tools as Python dictionaries that can be serialized to JSON:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+tools.py - Tool definitions for an MCP server.
+"""
+
+# Define your tools as dictionaries
+TOOLS = [
+    {
+        "name": "add",
+        "description": "Add two numbers together and return the sum",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "number",
+                    "description": "First number"
+                },
+                "b": {
+                    "type": "number",
+                    "description": "Second number"
+                }
+            },
+            "required": ["a", "b"]
+        }
+    },
+    {
+        "name": "multiply",
+        "description": "Multiply two numbers and return the product",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "number",
+                    "description": "First number"
+                },
+                "b": {
+                    "type": "number",
+                    "description": "Second number"
+                }
+            },
+            "required": ["a", "b"]
+        }
+    }
+]
+
+# Function to get all tool definitions
+def get_tools():
+    """Return all available tools."""
+    return TOOLS
+
+# Function to find a tool by name
+def get_tool(name):
+    """Find a tool by name, returns None if not found."""
+    for tool in TOOLS:
+        if tool["name"] == name:
+            return tool
+    return None</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Schema Validation</div>
+                        <p>
+                            While MCP doesn't require servers to validate arguments against the schema,
+                            it's good practice to do so. Libraries like <code>jsonschema</code> can help
+                            validate arguments before executing tools.
+                        </p>
+                    </div>
+
+                    <h2>Complete Tool Example</h2>
+                    <p>Here's a more complete example with a file search tool:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">FILE_SEARCH_TOOL = {
+    "name": "search_files",
+    "description": (
+        "Search for files in a directory matching a pattern. "
+        "Returns a list of file paths that match. Useful for finding "
+        "files by name, extension, or pattern."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "directory": {
+                "type": "string",
+                "description": "Directory path to search in"
+            },
+            "pattern": {
+                "type": "string",
+                "description": "Glob pattern to match (e.g., '*.py', 'test_*.txt')"
+            },
+            "recursive": {
+                "type": "boolean",
+                "description": "Search subdirectories recursively",
+                "default": False
+            },
+            "max_results": {
+                "type": "integer",
+                "description": "Maximum number of results to return",
+                "minimum": 1,
+                "maximum": 1000,
+                "default": 100
+            }
+        },
+        "required": ["directory", "pattern"]
+    }
+}</code></pre>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-05.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>What are MCP Tools?</span></span>
+                    </a>
+                    <a href="lesson-05-3.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>The tools/list Method</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

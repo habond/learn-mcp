@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The MCP Handshake - Step 1 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 4</div>
+                    <div class="lesson-info-title">The MCP Handshake</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 17%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-04.html" class="toc-link active"><span class="toc-number">1</span><span>MCP Lifecycle Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-2.html" class="toc-link"><span class="toc-number">2</span><span>The Initialize Request</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-3.html" class="toc-link"><span class="toc-number">3</span><span>Server Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-4.html" class="toc-link"><span class="toc-number">4</span><span>Capability Negotiation</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-5.html" class="toc-link"><span class="toc-number">5</span><span>The Initialized Notification</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-6.html" class="toc-link"><span class="toc-number">6</span><span>Building the Handshake</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link current">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 4 - Step 1 of 6</span>
+                    <h1 class="step-title">MCP Lifecycle Overview</h1>
+                    <p class="step-description">Understand the three phases of an MCP connection: Initialization, Operation, and Shutdown.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The Three Phases of MCP</h2>
+                    <p>
+                        Every MCP connection follows a strict lifecycle with three distinct phases.
+                        Understanding this lifecycle is essential before building a working MCP server.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                     MCP CONNECTION LIFECYCLE                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  PHASE 1: INITIALIZATION                                  │   │
+│  │  ─────────────────────────────────────────────────────── │   │
+│  │  Client ──► initialize request (capabilities, version)   │   │
+│  │  Server ◄── initialize response (capabilities, version)  │   │
+│  │  Client ──► notifications/initialized                     │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  PHASE 2: OPERATION                                       │   │
+│  │  ─────────────────────────────────────────────────────── │   │
+│  │  Client ──► tools/list, tools/call                        │   │
+│  │  Client ──► resources/list, resources/read                │   │
+│  │  Client ──► prompts/list, prompts/get                     │   │
+│  │  ... (normal MCP operations)                              │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  PHASE 3: SHUTDOWN                                        │   │
+│  │  ─────────────────────────────────────────────────────── │   │
+│  │  Client closes connection or server terminates            │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘</code></pre>
+                    </div>
+
+                    <h2>Phase 1: Initialization (The Handshake)</h2>
+                    <p>
+                        The <strong>initialization phase</strong> is the handshake between client and server.
+                        No other operations can happen until this completes successfully.
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Step</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Direction</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">1</td>
+                                <td style="padding: 0.75rem;">Client &rarr; Server</td>
+                                <td style="padding: 0.75rem;"><code>initialize</code> request</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">2</td>
+                                <td style="padding: 0.75rem;">Server &rarr; Client</td>
+                                <td style="padding: 0.75rem;"><code>initialize</code> response</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;">3</td>
+                                <td style="padding: 0.75rem;">Client &rarr; Server</td>
+                                <td style="padding: 0.75rem;"><code>notifications/initialized</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Initialization is Required</div>
+                        <p>
+                            A server MUST reject any requests (except <code>initialize</code>) until the
+                            handshake completes. Attempting to call <code>tools/list</code> before
+                            initialization will result in an error.
+                        </p>
+                    </div>
+
+                    <h2>Phase 2: Operation</h2>
+                    <p>
+                        Once initialized, the client and server can exchange messages freely. This is
+                        where the real work happens:
+                    </p>
+                    <ul>
+                        <li><strong>Tool discovery</strong> &mdash; Client queries available tools</li>
+                        <li><strong>Tool execution</strong> &mdash; Client invokes tools with arguments</li>
+                        <li><strong>Resource access</strong> &mdash; Client reads available resources</li>
+                        <li><strong>Prompt retrieval</strong> &mdash; Client fetches prompt templates</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">// Example: Client lists available tools
+{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/list"
+}
+
+// Server responds with tool definitions
+{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+        "tools": [
+            {
+                "name": "get_weather",
+                "description": "Get current weather for a location",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "city": {"type": "string"}
+                    },
+                    "required": ["city"]
+                }
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Phase 3: Shutdown</h2>
+                    <p>
+                        The shutdown phase occurs when either party terminates the connection:
+                    </p>
+                    <ul>
+                        <li>Client closes the connection gracefully</li>
+                        <li>Server process terminates</li>
+                        <li>Network connection drops</li>
+                        <li>Timeout occurs</li>
+                    </ul>
+
+                    <p>
+                        For STDIO transport, shutdown typically means the server process exits.
+                        For HTTP/SSE transport, the client simply stops sending requests.
+                    </p>
+
+                    <h2>Why the Handshake Matters</h2>
+                    <p>
+                        The initialization handshake serves several critical purposes:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>1. VERSION NEGOTIATION
+   Client: "I support protocol version 2024-11-05"
+   Server: "I also support 2024-11-05, let's use that"
+
+2. CAPABILITY DISCOVERY
+   Client: "I can do sampling"
+   Server: "I provide tools and resources"
+
+3. IDENTITY EXCHANGE
+   Client: "I am Claude Desktop v1.0.0"
+   Server: "I am weather-server v2.1.0"</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Building Trust</div>
+                        <p>
+                            The handshake lets both parties know exactly what to expect from each other.
+                            A client won't try to call tools on a server that doesn't support them,
+                            and a server knows what features the client can handle.
+                        </p>
+                    </div>
+
+                    <h2>State Machine View</h2>
+                    <p>
+                        Your MCP server should track its connection state:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from enum import Enum
+
+class ConnectionState(Enum):
+    """MCP connection states."""
+    DISCONNECTED = "disconnected"    # No connection
+    INITIALIZING = "initializing"    # Received initialize, not yet confirmed
+    READY = "ready"                  # Handshake complete, operational
+    SHUTDOWN = "shutdown"            # Closing down
+
+class MCPServer:
+    def __init__(self):
+        self.state = ConnectionState.DISCONNECTED
+
+    def handle_initialize(self, params):
+        """Handle initialize request."""
+        if self.state != ConnectionState.DISCONNECTED:
+            raise Exception("Already initialized")
+        self.state = ConnectionState.INITIALIZING
+        # ... process initialize
+        return initialize_response
+
+    def handle_initialized_notification(self):
+        """Handle initialized notification."""
+        if self.state != ConnectionState.INITIALIZING:
+            raise Exception("Invalid state for initialized")
+        self.state = ConnectionState.READY
+
+    def handle_request(self, method, params):
+        """Handle normal requests."""
+        if self.state != ConnectionState.READY:
+            raise Exception("Server not initialized")
+        # ... handle the request</code></pre>
+                    </div>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        In the following steps, we'll examine each part of the handshake in detail:
+                    </p>
+                    <ul>
+                        <li>Step 2: The initialize request from the client</li>
+                        <li>Step 3: The server's response with capabilities</li>
+                        <li>Step 4: Understanding capability negotiation</li>
+                        <li>Step 5: The initialized notification</li>
+                        <li>Step 6: Building the complete handshake in Python</li>
+                    </ul>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-03-5.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous Lesson</span><span>Building a Router</span></span>
+                    </a>
+                    <a href="lesson-04-2.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>The Initialize Request</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

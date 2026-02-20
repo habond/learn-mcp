@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STDIO Transport - Step 1 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo">
+                    <span>&#9889;</span>
+                    <span>MCP Learning Guide</span>
+                </a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 7</div>
+                    <div class="lesson-info-title">STDIO Transport</div>
+                    <div class="lesson-info-meta">
+                        <span>~1.5 hours</span>
+                        <span>5 steps</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 20%"></div>
+                </div>
+            </div>
+
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-07.html" class="toc-link active"><span class="toc-number">1</span><span>STDIO Transport Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-2.html" class="toc-link"><span class="toc-number">2</span><span>Reading from stdin</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-3.html" class="toc-link"><span class="toc-number">3</span><span>Writing to stdout</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-4.html" class="toc-link"><span class="toc-number">4</span><span>Logging to stderr</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-5.html" class="toc-link"><span class="toc-number">5</span><span>Complete STDIO Server</span></a></li>
+                </ol>
+            </nav>
+
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link current">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 7 - Step 1 of 5</span>
+                    <h1 class="step-title">STDIO Transport Overview</h1>
+                    <p class="step-description">Understand how MCP communicates through standard input and output streams.</p>
+                </header>
+
+                <div class="content">
+                    <h2>What is STDIO Transport?</h2>
+                    <p>
+                        <strong>STDIO (Standard Input/Output) Transport</strong> is one of the two primary
+                        transport mechanisms in MCP. It uses the process's standard input (<code>stdin</code>)
+                        and standard output (<code>stdout</code>) streams for communication.
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Why STDIO?</div>
+                        <p>
+                            STDIO transport is simple, secure, and universally available. Every process has
+                            stdin/stdout, making it perfect for local MCP servers that run as child processes
+                            of the client application.
+                        </p>
+                    </div>
+
+                    <h2>How It Works</h2>
+                    <p>
+                        In STDIO transport, the MCP client spawns your server as a subprocess and
+                        communicates by writing to your stdin and reading from your stdout:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    MCP Client (Parent Process)              │
+│                                                             │
+│  Writes JSON-RPC ──────────► Child's stdin                  │
+│  Reads JSON-RPC  ◄────────── Child's stdout                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                    (subprocess pipe)
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                    MCP Server (Child Process)               │
+│                                                             │
+│  sys.stdin  ◄──── Receives JSON-RPC requests                │
+│  sys.stdout ────► Sends JSON-RPC responses                  │
+│  sys.stderr ────► Debug logging (not parsed by client)      │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+                    </div>
+
+                    <h2>Message Format</h2>
+                    <p>
+                        Each JSON-RPC message is sent as a <strong>single line</strong> terminated by a newline
+                        character (<code>\n</code>). This is critical for proper message parsing:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>{"jsonrpc":"2.0","id":1,"method":"initialize","params":{...}}\n
+{"jsonrpc":"2.0","id":1,"result":{...}}\n
+{"jsonrpc":"2.0","id":2,"method":"tools/list"}\n
+{"jsonrpc":"2.0","id":2,"result":{"tools":[...]}}\n</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Critical: One Message Per Line</div>
+                        <p>
+                            Each JSON message must be on a <strong>single line</strong> with no embedded newlines.
+                            The newline character marks the end of the message. Pretty-printing JSON will break
+                            the protocol!
+                        </p>
+                    </div>
+
+                    <h2>STDIO vs HTTP Transport</h2>
+                    <p>Understanding when to use each transport:</p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Feature</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">STDIO</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">HTTP/SSE</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Deployment</strong></td>
+                                <td style="padding: 0.75rem;">Local subprocess</td>
+                                <td style="padding: 0.75rem;">Local or remote server</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Setup</strong></td>
+                                <td style="padding: 0.75rem;">Simpler</td>
+                                <td style="padding: 0.75rem;">More complex</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Security</strong></td>
+                                <td style="padding: 0.75rem;">Process isolation</td>
+                                <td style="padding: 0.75rem;">Requires auth/TLS</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Multiple Clients</strong></td>
+                                <td style="padding: 0.75rem;">No (1:1)</td>
+                                <td style="padding: 0.75rem;">Yes (1:many)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><strong>Use Case</strong></td>
+                                <td style="padding: 0.75rem;">Desktop apps, CLI tools</td>
+                                <td style="padding: 0.75rem;">Web services, shared servers</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>The Three Streams</h2>
+                    <p>Every process has three standard streams. In MCP STDIO transport, each has a specific purpose:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import sys
+
+# stdin - READ incoming JSON-RPC messages from client
+request = sys.stdin.readline()
+
+# stdout - WRITE JSON-RPC responses to client
+sys.stdout.write(response + "\n")
+sys.stdout.flush()
+
+# stderr - Debug logging ONLY (client ignores this)
+sys.stderr.write("Debug: Processing request...\n")</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Golden Rule</div>
+                        <p>
+                            <strong>stdout</strong> is sacred! Only write valid JSON-RPC messages to stdout.
+                            Any debug output, print statements, or logging must go to <strong>stderr</strong>.
+                            Polluting stdout will break the protocol.
+                        </p>
+                    </div>
+
+                    <h2>What You'll Learn</h2>
+                    <p>In this lesson, you'll master STDIO transport:</p>
+                    <ul>
+                        <li><strong>Step 2:</strong> Reading JSON-RPC messages from stdin</li>
+                        <li><strong>Step 3:</strong> Writing responses to stdout correctly</li>
+                        <li><strong>Step 4:</strong> Using stderr for debug logging</li>
+                        <li><strong>Step 5:</strong> Building a complete STDIO MCP server</li>
+                    </ul>
+
+                    <p>
+                        By the end of this lesson, you'll have a fully functional STDIO-based MCP server
+                        that can be used with Claude Desktop or any MCP client.
+                    </p>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-06-5.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Previous Lesson</span>
+                            <span>Implementing Resources</span>
+                        </span>
+                    </a>
+                    <a href="lesson-07-2.html" class="nav-button next">
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Next</span>
+                            <span>Reading from stdin</span>
+                        </span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

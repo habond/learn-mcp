@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Desktop Integration - Step 2 | MCP Learning Guide</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 11</div>
+                    <div class="lesson-info-title">Claude Desktop Integration</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 40%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-11.html" class="toc-link completed"><span class="toc-number">1</span><span>Introduction to Claude Desktop</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-2.html" class="toc-link active"><span class="toc-number">2</span><span>Configuration File</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-3.html" class="toc-link"><span class="toc-number">3</span><span>Adding Your Server</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-4.html" class="toc-link"><span class="toc-number">4</span><span>Testing Integration</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-5.html" class="toc-link"><span class="toc-number">5</span><span>Debugging Tips</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link current">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 11 - Step 2 of 5</span>
+                    <h1 class="step-title">Configuration File</h1>
+                    <p class="step-description">Understand the claude_desktop_config.json file format and location.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The Configuration File</h2>
+                    <p>
+                        Claude Desktop uses a JSON configuration file to know which MCP servers
+                        to connect to. This file is called <code>claude_desktop_config.json</code>
+                        and lives in a platform-specific location.
+                    </p>
+
+                    <h2>File Location</h2>
+                    <p>
+                        Find or create the configuration file at:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># macOS
+~/Library/Application Support/Claude/claude_desktop_config.json
+
+# Windows
+%APPDATA%\Claude\claude_desktop_config.json
+
+# Linux
+~/.config/claude/claude_desktop_config.json</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Quick Access on macOS</div>
+                        <p>
+                            Open Terminal and run: <code>open ~/Library/Application\ Support/Claude/</code>
+                            to open the folder in Finder. You may need to create the file if it
+                            doesn't exist.
+                        </p>
+                    </div>
+
+                    <h2>Basic File Structure</h2>
+                    <p>
+                        The configuration file has a simple structure with an <code>mcpServers</code>
+                        object that maps server names to their configurations:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "mcpServers": {
+    "server-name": {
+      "command": "path/to/executable",
+      "args": ["arg1", "arg2"],
+      "env": {
+        "ENV_VAR": "value"
+      }
+    }
+  }
+}</code></pre>
+                    </div>
+
+                    <h2>Configuration Options</h2>
+                    <p>
+                        Each server configuration supports the following fields:
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Field</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Required</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>command</code></td>
+                                <td style="padding: 0.75rem;">Yes</td>
+                                <td style="padding: 0.75rem;">The executable to run (e.g., "python", "node", "/usr/bin/my-server")</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>args</code></td>
+                                <td style="padding: 0.75rem;">No</td>
+                                <td style="padding: 0.75rem;">Array of command-line arguments</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>env</code></td>
+                                <td style="padding: 0.75rem;">No</td>
+                                <td style="padding: 0.75rem;">Object of environment variables to set</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Example: Python Server</h2>
+                    <p>
+                        Here's how to configure a Python-based MCP server:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "mcpServers": {
+    "weather": {
+      "command": "python3",
+      "args": ["/Users/you/projects/mcp-weather/server.py"],
+      "env": {
+        "WEATHER_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}</code></pre>
+                    </div>
+
+                    <h2>Example: Node.js Server</h2>
+                    <p>
+                        For a Node.js-based server:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "mcpServers": {
+    "filesystem": {
+      "command": "node",
+      "args": ["/Users/you/projects/mcp-filesystem/index.js"],
+      "env": {
+        "ALLOWED_PATHS": "/Users/you/Documents,/Users/you/Projects"
+      }
+    }
+  }
+}</code></pre>
+                    </div>
+
+                    <h2>Example: Multiple Servers</h2>
+                    <p>
+                        You can configure multiple servers that will all be available to Claude:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "mcpServers": {
+    "weather": {
+      "command": "python3",
+      "args": ["/path/to/weather_server.py"]
+    },
+    "database": {
+      "command": "python3",
+      "args": ["/path/to/db_server.py"],
+      "env": {
+        "DATABASE_URL": "postgresql://localhost/mydb"
+      }
+    },
+    "github": {
+      "command": "node",
+      "args": ["/path/to/github_server.js"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_xxxxxxxxxxxx"
+      }
+    }
+  }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Security Note</div>
+                        <p>
+                            The configuration file may contain sensitive information like API keys.
+                            Make sure this file has appropriate permissions and is not committed
+                            to version control. Consider using environment variable references
+                            where possible.
+                        </p>
+                    </div>
+
+                    <h2>Using Absolute Paths</h2>
+                    <p>
+                        Always use <strong>absolute paths</strong> in your configuration. Relative
+                        paths can cause issues because Claude Desktop's working directory is not
+                        guaranteed:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">// Good - absolute path
+"args": ["/Users/you/projects/server.py"]
+
+// Bad - relative path (may not work)
+"args": ["./server.py"]
+"args": ["~/projects/server.py"]  // ~ expansion may not work</code></pre>
+                    </div>
+
+                    <h2>Python Interpreter Path</h2>
+                    <p>
+                        If you're using a virtual environment or a specific Python installation,
+                        you may need to specify the full path to the interpreter:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "mcpServers": {
+    "my-server": {
+      "command": "/Users/you/projects/mcp-server/.venv/bin/python",
+      "args": ["/Users/you/projects/mcp-server/server.py"]
+    }
+  }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Finding Python Path</div>
+                        <p>
+                            To find the path to your Python interpreter, activate your virtual
+                            environment and run <code>which python</code> (macOS/Linux) or
+                            <code>where python</code> (Windows).
+                        </p>
+                    </div>
+
+                    <h2>Server Names</h2>
+                    <p>
+                        The server name (the key in the <code>mcpServers</code> object) is how
+                        you'll identify the server in logs and potentially in Claude's responses.
+                        Choose descriptive names:
+                    </p>
+
+                    <ul>
+                        <li>Use lowercase letters, numbers, and hyphens</li>
+                        <li>Make names descriptive of the server's function</li>
+                        <li>Keep names relatively short</li>
+                        <li>Examples: "weather", "file-browser", "postgres-db", "github-api"</li>
+                    </ul>
+
+                    <h2>Configuration Schema</h2>
+                    <p>
+                        Here's the complete structure of the configuration file:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">typescript</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-typescript">interface ClaudeDesktopConfig {
+  mcpServers: {
+    [serverName: string]: {
+      command: string;      // Required: executable path or command
+      args?: string[];      // Optional: command-line arguments
+      env?: {               // Optional: environment variables
+        [key: string]: string;
+      };
+    };
+  };
+}</code></pre>
+                    </div>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        Now that you understand the configuration file format, let's add your
+                        MCP server to the configuration and connect it to Claude Desktop.
+                    </p>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-11.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Introduction to Claude Desktop</span></span>
+                    </a>
+                    <a href="lesson-11-3.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Adding Your Server</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

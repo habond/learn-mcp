@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Tools - Step 6 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 5</div>
+                    <div class="lesson-info-title">Implementing Tools</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 100%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-05.html" class="toc-link completed"><span class="toc-number">1</span><span>What are MCP Tools?</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Tool Definition Structure</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-3.html" class="toc-link completed"><span class="toc-number">3</span><span>The tools/list Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-4.html" class="toc-link completed"><span class="toc-number">4</span><span>The tools/call Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-5.html" class="toc-link completed"><span class="toc-number">5</span><span>Tool Result Format</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-6.html" class="toc-link active"><span class="toc-number">6</span><span>Building Calculator Tools</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link current">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 5 - Step 6 of 6</span>
+                    <h1 class="step-title">Building Calculator Tools</h1>
+                    <p class="step-description">Put it all together by implementing add, subtract, and multiply tools.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Complete Calculator Server</h2>
+                    <p>
+                        Let's build a complete MCP server with calculator tools. This brings together
+                        everything we've learned: tool definitions, <code>tools/list</code>,
+                        <code>tools/call</code>, and result formatting.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+calculator_server.py - MCP server with calculator tools.
+
+Run with: python calculator_server.py
+Test with: curl commands or an MCP client
+"""
+
+import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+
+# =============================================================================
+# Tool Definitions
+# =============================================================================
+
+TOOLS = [
+    {
+        "name": "add",
+        "description": "Add two numbers together and return the sum",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "number",
+                    "description": "First number to add"
+                },
+                "b": {
+                    "type": "number",
+                    "description": "Second number to add"
+                }
+            },
+            "required": ["a", "b"]
+        }
+    },
+    {
+        "name": "subtract",
+        "description": "Subtract the second number from the first and return the difference",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "number",
+                    "description": "Number to subtract from"
+                },
+                "b": {
+                    "type": "number",
+                    "description": "Number to subtract"
+                }
+            },
+            "required": ["a", "b"]
+        }
+    },
+    {
+        "name": "multiply",
+        "description": "Multiply two numbers and return the product",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "number",
+                    "description": "First number to multiply"
+                },
+                "b": {
+                    "type": "number",
+                    "description": "Second number to multiply"
+                }
+            },
+            "required": ["a", "b"]
+        }
+    }
+]
+
+
+# =============================================================================
+# Result Helpers
+# =============================================================================
+
+def text_result(text):
+    """Create a successful text result."""
+    return {
+        "content": [{"type": "text", "text": str(text)}]
+    }
+
+
+def error_result(message):
+    """Create an error result."""
+    return {
+        "content": [{"type": "text", "text": f"Error: {message}"}],
+        "isError": True
+    }
+
+
+# =============================================================================
+# Tool Implementations
+# =============================================================================
+
+def execute_add(arguments):
+    """Add two numbers."""
+    a = arguments.get("a")
+    b = arguments.get("b")
+
+    if a is None or b is None:
+        return error_result("Both 'a' and 'b' arguments are required")
+
+    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+        return error_result("Arguments must be numbers")
+
+    result = a + b
+    return text_result(f"{a} + {b} = {result}")
+
+
+def execute_subtract(arguments):
+    """Subtract two numbers."""
+    a = arguments.get("a")
+    b = arguments.get("b")
+
+    if a is None or b is None:
+        return error_result("Both 'a' and 'b' arguments are required")
+
+    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+        return error_result("Arguments must be numbers")
+
+    result = a - b
+    return text_result(f"{a} - {b} = {result}")
+
+
+def execute_multiply(arguments):
+    """Multiply two numbers."""
+    a = arguments.get("a")
+    b = arguments.get("b")
+
+    if a is None or b is None:
+        return error_result("Both 'a' and 'b' arguments are required")
+
+    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+        return error_result("Arguments must be numbers")
+
+    result = a * b
+    return text_result(f"{a} * {b} = {result}")
+
+
+# Map tool names to handlers
+TOOL_HANDLERS = {
+    "add": execute_add,
+    "subtract": execute_subtract,
+    "multiply": execute_multiply,
+}
+
+
+# =============================================================================
+# MCP Method Handlers
+# =============================================================================
+
+def handle_initialize(request_id, params):
+    """Handle the initialize method."""
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "result": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {
+                "tools": {}
+            },
+            "serverInfo": {
+                "name": "calculator-server",
+                "version": "1.0.0"
+            }
+        }
+    }
+
+
+def handle_tools_list(request_id, params):
+    """Handle the tools/list method."""
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "result": {
+            "tools": TOOLS
+        }
+    }
+
+
+def handle_tools_call(request_id, params):
+    """Handle the tools/call method."""
+    tool_name = params.get("name")
+    arguments = params.get("arguments", {})
+
+    # Check if tool exists
+    if tool_name not in TOOL_HANDLERS:
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {
+                "code": -32602,
+                "message": f"Unknown tool: {tool_name}"
+            }
+        }
+
+    # Execute the tool
+    handler = TOOL_HANDLERS[tool_name]
+    result = handler(arguments)
+
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "result": result
+    }
+
+
+# =============================================================================
+# Request Router
+# =============================================================================
+
+def handle_request(request):
+    """Route JSON-RPC requests to appropriate handlers."""
+    method = request.get("method")
+    request_id = request.get("id")
+    params = request.get("params", {})
+
+    # Route to handler based on method
+    handlers = {
+        "initialize": handle_initialize,
+        "tools/list": handle_tools_list,
+        "tools/call": handle_tools_call,
+    }
+
+    handler = handlers.get(method)
+    if handler:
+        return handler(request_id, params)
+
+    # Handle notifications (no response needed)
+    if method == "notifications/initialized":
+        return None
+
+    # Method not found
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {
+            "code": -32601,
+            "message": f"Method not found: {method}"
+        }
+    }
+
+
+# =============================================================================
+# HTTP Server
+# =============================================================================
+
+class MCPHandler(BaseHTTPRequestHandler):
+    """HTTP handler for MCP requests."""
+
+    def log_message(self, format, *args):
+        """Custom logging."""
+        print(f"[MCP] {args[0]}")
+
+    def send_json(self, data, status=200):
+        """Send a JSON response."""
+        body = json.dumps(data, indent=2).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self):
+        """Handle POST requests."""
+        # Read and parse JSON body
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length)
+
+        try:
+            request = json.loads(body.decode("utf-8"))
+        except json.JSONDecodeError as e:
+            self.send_json({
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {"code": -32700, "message": f"Parse error: {e}"}
+            }, status=400)
+            return
+
+        # Validate JSON-RPC structure
+        if request.get("jsonrpc") != "2.0":
+            self.send_json({
+                "jsonrpc": "2.0",
+                "id": request.get("id"),
+                "error": {"code": -32600, "message": "Invalid Request: jsonrpc must be '2.0'"}
+            }, status=400)
+            return
+
+        # Handle the request
+        response = handle_request(request)
+
+        # Notifications don't get responses
+        if response is None:
+            self.send_response(204)
+            self.end_headers()
+            return
+
+        self.send_json(response)
+
+
+def run_server(host="localhost", port=8080):
+    """Start the MCP calculator server."""
+    server = HTTPServer((host, port), MCPHandler)
+    print(f"Calculator MCP Server running on http://{host}:{port}")
+    print("Available tools: add, subtract, multiply")
+    print("Press Ctrl+C to stop")
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nShutting down...")
+        server.shutdown()
+
+
+if __name__ == "__main__":
+    run_server()</code></pre>
+                    </div>
+
+                    <h2>Testing the Server</h2>
+                    <p>Start the server:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">python calculator_server.py</code></pre>
+                    </div>
+
+                    <h3>Test tools/list</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list",
+    "params": {}
+  }'</code></pre>
+                    </div>
+
+                    <h3>Test add tool</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+        "name": "add",
+        "arguments": {"a": 15, "b": 27}
+    }
+  }'
+
+# Response:
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "content": [
+      {"type": "text", "text": "15 + 27 = 42"}
+    ]
+  }
+}</code></pre>
+                    </div>
+
+                    <h3>Test subtract tool</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+        "name": "subtract",
+        "arguments": {"a": 100, "b": 37}
+    }
+  }'
+
+# Response:
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "content": [
+      {"type": "text", "text": "100 - 37 = 63"}
+    ]
+  }
+}</code></pre>
+                    </div>
+
+                    <h3>Test multiply tool</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tools/call",
+    "params": {
+        "name": "multiply",
+        "arguments": {"a": 7, "b": 8}
+    }
+  }'
+
+# Response:
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "result": {
+    "content": [
+      {"type": "text", "text": "7 * 8 = 56"}
+    ]
+  }
+}</code></pre>
+                    </div>
+
+                    <h2>What You've Built</h2>
+                    <p>Congratulations! Your calculator server now:</p>
+                    <ul>
+                        <li>Defines three tools with proper inputSchema</li>
+                        <li>Handles <code>tools/list</code> to advertise capabilities</li>
+                        <li>Handles <code>tools/call</code> to execute tools</li>
+                        <li>Returns properly formatted results</li>
+                        <li>Handles errors gracefully with <code>isError</code></li>
+                    </ul>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Extend Your Server</div>
+                        <p>
+                            Try adding more tools: <code>divide</code> (with division-by-zero handling),
+                            <code>power</code>, <code>sqrt</code>, or even <code>evaluate</code> for
+                            complex expressions!
+                        </p>
+                    </div>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        In the next lesson, we'll learn about <strong>Resources</strong> &mdash;
+                        the read-only data that MCP servers can expose. Resources are perfect
+                        for files, database records, API data, and other content the AI needs
+                        to read.
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Lesson Complete!</div>
+                        <p>
+                            You now understand how to implement MCP tools from start to finish.
+                            Tools are the most common way to extend AI capabilities with custom
+                            functionality. The patterns you've learned here apply to any tool
+                            you build.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-05-5.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Tool Result Format</span></span>
+                    </a>
+                    <a href="lesson-06.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next Lesson</span><span>Implementing Resources</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

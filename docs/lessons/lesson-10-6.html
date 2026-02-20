@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building an MCP Client - Step 6 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 10</div>
+                    <div class="lesson-info-title">Building an MCP Client</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 100%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-10.html" class="toc-link completed"><span class="toc-number">1</span><span>Client Architecture</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-2.html" class="toc-link completed"><span class="toc-number">2</span><span>STDIO Client</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Initialization Flow</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-4.html" class="toc-link completed"><span class="toc-number">4</span><span>Calling Methods</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-5.html" class="toc-link completed"><span class="toc-number">5</span><span>Listing Primitives</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-6.html" class="toc-link active"><span class="toc-number">6</span><span>Interactive Testing</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link current">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 10 - Step 6 of 6</span>
+                    <h1 class="step-title">Interactive Testing</h1>
+                    <p class="step-description">Build a REPL for exploring and testing MCP servers.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Building an MCP REPL</h2>
+                    <p>
+                        A REPL (Read-Eval-Print Loop) is an interactive shell for exploring
+                        MCP servers. It's invaluable for testing and debugging.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+mcp_repl.py - Interactive MCP client REPL.
+"""
+
+import json
+import sys
+import shlex
+from typing import Optional
+
+
+class MCPREPL:
+    """Interactive REPL for MCP servers."""
+
+    def __init__(self, client):
+        self.client = client
+        self.commands = {
+            "help": self.cmd_help,
+            "tools": self.cmd_tools,
+            "resources": self.cmd_resources,
+            "prompts": self.cmd_prompts,
+            "call": self.cmd_call,
+            "read": self.cmd_read,
+            "prompt": self.cmd_prompt,
+            "raw": self.cmd_raw,
+            "info": self.cmd_info,
+            "quit": self.cmd_quit,
+            "exit": self.cmd_quit,
+        }
+
+    def run(self):
+        """Start the REPL loop."""
+        print("\nMCP Interactive Client")
+        print("Type 'help' for commands, 'quit' to exit\n")
+
+        while True:
+            try:
+                line = input("mcp> ").strip()
+                if not line:
+                    continue
+
+                parts = shlex.split(line)
+                cmd = parts[0].lower()
+                args = parts[1:]
+
+                if cmd in self.commands:
+                    self.commands[cmd](args)
+                else:
+                    print(f"Unknown command: {cmd}")
+                    print("Type 'help' for available commands")
+
+            except KeyboardInterrupt:
+                print("\nUse 'quit' to exit")
+            except EOFError:
+                break
+            except Exception as e:
+                print(f"Error: {e}")
+
+    def cmd_help(self, args):
+        """Show help message."""
+        print("""
+Available commands:
+  help              Show this help message
+  info              Show server information
+  tools             List available tools
+  resources         List available resources
+  prompts           List available prompts
+  call <tool> [json]  Call a tool with optional JSON arguments
+  read <uri>        Read a resource
+  prompt <name> [json]  Get a prompt with optional arguments
+  raw <method> [json]   Send a raw JSON-RPC request
+  quit              Exit the REPL
+""")
+
+    def cmd_info(self, args):
+        """Show server information."""
+        print(f"\nServer: {self.client.server_info.get('name', 'Unknown')}")
+        print(f"Version: {self.client.server_info.get('version', 'Unknown')}")
+        print(f"Protocol: {self.client.protocol_version}")
+        print(f"\nCapabilities:")
+        for cap, value in self.client.server_capabilities.items():
+            print(f"  {cap}: {value}")
+        print()
+
+    def cmd_tools(self, args):
+        """List available tools."""
+        if not self.client.has_tools():
+            print("Server does not support tools")
+            return
+
+        tools = self.client.list_tools()
+        if not tools:
+            print("No tools available")
+            return
+
+        print(f"\nAvailable tools ({len(tools)}):\n")
+        for tool in tools:
+            print(f"  {tool.name}")
+            print(f"    {tool.description}")
+            if tool.input_schema.get("properties"):
+                props = tool.input_schema["properties"]
+                required = tool.input_schema.get("required", [])
+                print("    Parameters:")
+                for name, schema in props.items():
+                    req = "*" if name in required else ""
+                    desc = schema.get("description", schema.get("type", ""))
+                    print(f"      {name}{req}: {desc}")
+            print()
+
+    def cmd_resources(self, args):
+        """List available resources."""
+        if not self.client.has_resources():
+            print("Server does not support resources")
+            return
+
+        resources = self.client.list_resources()
+        if not resources:
+            print("No resources available")
+            return
+
+        print(f"\nAvailable resources ({len(resources)}):\n")
+        for resource in resources:
+            print(f"  {resource.uri}")
+            print(f"    {resource.description}")
+            if resource.mime_type:
+                print(f"    Type: {resource.mime_type}")
+            print()
+
+    def cmd_prompts(self, args):
+        """List available prompts."""
+        if not self.client.has_prompts():
+            print("Server does not support prompts")
+            return
+
+        prompts = self.client.list_prompts()
+        if not prompts:
+            print("No prompts available")
+            return
+
+        print(f"\nAvailable prompts ({len(prompts)}):\n")
+        for prompt in prompts:
+            print(f"  {prompt.name}")
+            print(f"    {prompt.description}")
+            if prompt.arguments:
+                print("    Arguments:")
+                for arg in prompt.arguments:
+                    req = "*" if arg.required else ""
+                    print(f"      {arg.name}{req}: {arg.description}")
+            print()
+
+    def cmd_call(self, args):
+        """Call a tool."""
+        if not args:
+            print("Usage: call <tool_name> [json_arguments]")
+            return
+
+        tool_name = args[0]
+        arguments = {}
+
+        if len(args) > 1:
+            try:
+                arguments = json.loads(" ".join(args[1:]))
+            except json.JSONDecodeError as e:
+                print(f"Invalid JSON: {e}")
+                return
+
+        print(f"\nCalling tool: {tool_name}")
+        print(f"Arguments: {json.dumps(arguments)}\n")
+
+        try:
+            result = self.client.call_tool(tool_name, arguments)
+            print("Result:")
+            for content in result:
+                if content.get("type") == "text":
+                    print(content.get("text", ""))
+                else:
+                    print(json.dumps(content, indent=2))
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def cmd_read(self, args):
+        """Read a resource."""
+        if not args:
+            print("Usage: read <resource_uri>")
+            return
+
+        uri = args[0]
+        print(f"\nReading resource: {uri}\n")
+
+        try:
+            result = self.client.read_resource(uri)
+            for content in result:
+                if content.get("text"):
+                    print(content["text"])
+                elif content.get("blob"):
+                    print(f"[Binary data: {len(content['blob'])} bytes]")
+                else:
+                    print(json.dumps(content, indent=2))
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def cmd_prompt(self, args):
+        """Get a prompt."""
+        if not args:
+            print("Usage: prompt <prompt_name> [json_arguments]")
+            return
+
+        prompt_name = args[0]
+        arguments = {}
+
+        if len(args) > 1:
+            try:
+                arguments = json.loads(" ".join(args[1:]))
+            except json.JSONDecodeError as e:
+                print(f"Invalid JSON: {e}")
+                return
+
+        print(f"\nGetting prompt: {prompt_name}")
+        print(f"Arguments: {json.dumps(arguments)}\n")
+
+        try:
+            messages = self.client.get_prompt(prompt_name, arguments)
+            print("Messages:")
+            for msg in messages:
+                role = msg.get("role", "unknown")
+                content = msg.get("content", {})
+                if isinstance(content, dict):
+                    text = content.get("text", str(content))
+                else:
+                    text = str(content)
+                print(f"  [{role}]: {text[:100]}...")
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def cmd_raw(self, args):
+        """Send a raw JSON-RPC request."""
+        if not args:
+            print("Usage: raw <method> [json_params]")
+            return
+
+        method = args[0]
+        params = None
+
+        if len(args) > 1:
+            try:
+                params = json.loads(" ".join(args[1:]))
+            except json.JSONDecodeError as e:
+                print(f"Invalid JSON: {e}")
+                return
+
+        print(f"\nSending: {method}")
+        if params:
+            print(f"Params: {json.dumps(params)}")
+        print()
+
+        try:
+            result = self.client.call(method, params)
+            print("Result:")
+            print(json.dumps(result, indent=2))
+        except Exception as e:
+            print(f"Error: {e}")
+
+    def cmd_quit(self, args):
+        """Exit the REPL."""
+        print("Goodbye!")
+        sys.exit(0)</code></pre>
+                    </div>
+
+                    <h2>Running the REPL</h2>
+                    <p>
+                        Create a simple main script to launch the REPL:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">#!/usr/bin/env python3
+"""
+main.py - Launch the MCP REPL.
+"""
+
+import sys
+from stdio_client import StdioClient
+from mcp_repl import MCPREPL
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python main.py <server_command> [args...]")
+        print("Example: python main.py python my_server.py")
+        sys.exit(1)
+
+    server_command = sys.argv[1:]
+    print(f"Starting server: {' '.join(server_command)}")
+
+    try:
+        with StdioClient(server_command) as client:
+            # Initialize connection
+            client.initialize()
+            print(f"Connected to {client.server_info.get('name', 'server')}")
+
+            # Start REPL
+            repl = MCPREPL(client)
+            repl.run()
+
+    except FileNotFoundError:
+        print(f"Error: Could not find command: {server_command[0]}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+                    </div>
+
+                    <h2>Example REPL Session</h2>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>$ python main.py python weather_server.py
+Starting server: python weather_server.py
+Connected to weather-server
+
+MCP Interactive Client
+Type 'help' for commands, 'quit' to exit
+
+mcp> info
+
+Server: weather-server
+Version: 1.0.0
+Protocol: 2024-11-05
+
+Capabilities:
+  tools: {}
+  resources: {'subscribe': False}
+
+mcp> tools
+
+Available tools (2):
+
+  get_weather
+    Get current weather for a city
+    Parameters:
+      city*: City name
+      units: Temperature units (celsius/fahrenheit)
+
+  get_forecast
+    Get 5-day weather forecast
+    Parameters:
+      city*: City name
+
+mcp> call get_weather {"city": "Tokyo", "units": "celsius"}
+
+Calling tool: get_weather
+Arguments: {"city": "Tokyo", "units": "celsius"}
+
+Result:
+Tokyo: 22C, Partly Cloudy
+
+mcp> quit
+Goodbye!</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Debugging Tip</div>
+                        <p>
+                            The REPL is excellent for debugging servers. Use the <code>raw</code>
+                            command to send arbitrary JSON-RPC requests and see exactly what
+                            the server returns.
+                        </p>
+                    </div>
+
+                    <h2>What You've Built</h2>
+                    <p>
+                        Congratulations! You now have a complete MCP client that can:
+                    </p>
+                    <ul>
+                        <li>Launch and connect to STDIO-based MCP servers</li>
+                        <li>Perform the MCP initialization handshake</li>
+                        <li>Track requests and match responses</li>
+                        <li>List tools, resources, and prompts</li>
+                        <li>Call tools, read resources, and get prompts</li>
+                        <li>Interactively explore servers via REPL</li>
+                    </ul>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        In the next lesson, we'll integrate MCP servers with Claude Desktop,
+                        seeing how real AI applications use the protocol you've mastered.
+                    </p>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-10-5.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Listing Primitives</span></span>
+                    </a>
+                    <a href="lesson-11.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next Lesson</span><span>Claude Desktop Integration</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

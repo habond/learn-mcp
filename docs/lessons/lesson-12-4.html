@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capstone Project - Step 4 | MCP Learning Guide</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 12</div>
+                    <div class="lesson-info-title">Capstone Project</div>
+                    <div class="lesson-info-meta"><span>~3 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 67%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-12.html" class="toc-link completed"><span class="toc-number">1</span><span>Project Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Planning Your Server</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Implementing Core Features</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-4.html" class="toc-link active"><span class="toc-number">4</span><span>Adding Resources and Prompts</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-5.html" class="toc-link"><span class="toc-number">5</span><span>Testing and Debugging</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-6.html" class="toc-link"><span class="toc-number">6</span><span>Next Steps</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link current">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 12 - Step 4 of 6</span>
+                    <h1 class="step-title">Adding Resources and Prompts</h1>
+                    <p class="step-description">Complete the server with resources and prompt templates.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Completing the Server</h2>
+                    <p>
+                        With tools implemented, let us add resources and prompts to make our
+                        server fully featured. Resources expose notes as readable data, and
+                        prompts provide Claude with helpful templates.
+                    </p>
+
+                    <h2>Resources Implementation</h2>
+                    <p>
+                        Add these methods to your <code>NotesServer</code> class:
+                    </p>
+
+                    <h3>Resources List Handler</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">    def handle_resources_list(self, params: dict) -> dict:
+        """Return list of available resources."""
+        # Start with static resources
+        resources = [
+            {
+                "uri": "notes://list",
+                "name": "All Notes",
+                "description": "List of all notes with metadata",
+                "mimeType": "application/json",
+            },
+            {
+                "uri": "notes://tags",
+                "name": "All Tags",
+                "description": "List of all unique tags",
+                "mimeType": "application/json",
+            },
+        ]
+
+        # Add dynamic resources for each note
+        for note in self.storage.notes:
+            resources.append({
+                "uri": f"notes://{note.id}",
+                "name": note.title,
+                "description": f"Note: {note.title}",
+                "mimeType": "application/json",
+            })
+
+        return {"resources": resources}</code></pre>
+                    </div>
+
+                    <h3>Resources Read Handler</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">    def handle_resources_read(self, params: dict) -> dict:
+        """Read a specific resource."""
+        uri = params.get("uri", "")
+
+        if uri == "notes://list":
+            return self.resource_list_all()
+        elif uri == "notes://tags":
+            return self.resource_list_tags()
+        elif uri.startswith("notes://"):
+            note_id = uri.replace("notes://", "")
+            return self.resource_get_note(note_id)
+        else:
+            raise ValueError(f"Unknown resource: {uri}")
+
+    # -------------------------------------------------------------------------
+    # Resource Implementations
+    # -------------------------------------------------------------------------
+
+    def resource_list_all(self) -> dict:
+        """Return all notes as a resource."""
+        notes_data = []
+        for note in self.storage.notes:
+            notes_data.append({
+                "id": note.id,
+                "title": note.title,
+                "tags": note.tags,
+                "created_at": note.created_at,
+                "updated_at": note.updated_at,
+                "preview": note.content[:100] + "..." if len(note.content) > 100 else note.content,
+            })
+
+        return {
+            "contents": [{
+                "uri": "notes://list",
+                "mimeType": "application/json",
+                "text": json.dumps({"notes": notes_data, "count": len(notes_data)}, indent=2),
+            }]
+        }
+
+    def resource_list_tags(self) -> dict:
+        """Return all tags as a resource."""
+        tags = self.storage.get_all_tags()
+
+        # Count notes per tag
+        tag_counts = {}
+        for tag in tags:
+            tag_counts[tag] = len([n for n in self.storage.notes if tag in n.tags])
+
+        return {
+            "contents": [{
+                "uri": "notes://tags",
+                "mimeType": "application/json",
+                "text": json.dumps({
+                    "tags": tags,
+                    "counts": tag_counts,
+                    "total": len(tags),
+                }, indent=2),
+            }]
+        }
+
+    def resource_get_note(self, note_id: str) -> dict:
+        """Return a specific note as a resource."""
+        note = self.storage.get_by_id(note_id)
+        if not note:
+            raise ValueError(f"Note not found: {note_id}")
+
+        return {
+            "contents": [{
+                "uri": f"notes://{note_id}",
+                "mimeType": "application/json",
+                "text": json.dumps(note.to_dict(), indent=2),
+            }]
+        }</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Dynamic Resources</div>
+                        <p>
+                            Notice how we generate a resource for each note dynamically. This
+                            allows Claude to request any specific note by its ID using the
+                            <code>notes://{id}</code> URI pattern.
+                        </p>
+                    </div>
+
+                    <h2>Prompts Implementation</h2>
+                    <p>
+                        Now let us add prompts that help Claude work with notes effectively:
+                    </p>
+
+                    <h3>Prompts List Handler</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">    def handle_prompts_list(self, params: dict) -> dict:
+        """Return list of available prompts."""
+        return {
+            "prompts": [
+                {
+                    "name": "summarize_notes",
+                    "description": "Generate a summary of notes, optionally filtered by tag",
+                    "arguments": [
+                        {
+                            "name": "tag",
+                            "description": "Optional tag to filter notes",
+                            "required": False,
+                        },
+                        {
+                            "name": "style",
+                            "description": "Summary style: brief, detailed, or bullet-points",
+                            "required": False,
+                        },
+                    ],
+                },
+                {
+                    "name": "create_from_template",
+                    "description": "Generate a prompt for creating a note from a template",
+                    "arguments": [
+                        {
+                            "name": "template",
+                            "description": "Template type: meeting, todo, journal, or idea",
+                            "required": True,
+                        },
+                        {
+                            "name": "topic",
+                            "description": "Topic or subject for the note",
+                            "required": True,
+                        },
+                    ],
+                },
+            ]
+        }</code></pre>
+                    </div>
+
+                    <h3>Prompts Get Handler</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">    def handle_prompts_get(self, params: dict) -> dict:
+        """Get a specific prompt with its messages."""
+        name = params.get("name")
+        arguments = params.get("arguments", {})
+
+        if name == "summarize_notes":
+            return self.prompt_summarize_notes(arguments)
+        elif name == "create_from_template":
+            return self.prompt_create_from_template(arguments)
+        else:
+            raise ValueError(f"Unknown prompt: {name}")
+
+    # -------------------------------------------------------------------------
+    # Prompt Implementations
+    # -------------------------------------------------------------------------
+
+    def prompt_summarize_notes(self, args: dict) -> dict:
+        """Generate a summarization prompt."""
+        tag = args.get("tag")
+        style = args.get("style", "brief")
+
+        # Get relevant notes
+        if tag:
+            notes = self.storage.search(tag=tag)
+        else:
+            notes = self.storage.notes
+
+        if not notes:
+            return {
+                "messages": [{
+                    "role": "user",
+                    "content": {
+                        "type": "text",
+                        "text": "There are no notes to summarize.",
+                    },
+                }]
+            }
+
+        # Build the notes content
+        notes_text = ""
+        for note in notes:
+            notes_text += f"## {note.title}\n"
+            notes_text += f"Tags: {', '.join(note.tags) if note.tags else 'none'}\n"
+            notes_text += f"Created: {note.created_at}\n\n"
+            notes_text += f"{note.content}\n\n---\n\n"
+
+        # Style instructions
+        style_instructions = {
+            "brief": "Provide a brief 2-3 sentence summary.",
+            "detailed": "Provide a detailed summary covering all main points.",
+            "bullet-points": "Summarize using bullet points for easy scanning.",
+        }
+
+        instruction = style_instructions.get(style, style_instructions["brief"])
+
+        return {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": {
+                        "type": "text",
+                        "text": f"Please summarize the following notes. {instruction}\n\n{notes_text}",
+                    },
+                }
+            ]
+        }
+
+    def prompt_create_from_template(self, args: dict) -> dict:
+        """Generate a note creation prompt from a template."""
+        template = args.get("template", "")
+        topic = args.get("topic", "")
+
+        if not template or not topic:
+            return {
+                "messages": [{
+                    "role": "user",
+                    "content": {
+                        "type": "text",
+                        "text": "Error: Both 'template' and 'topic' are required.",
+                    },
+                }]
+            }
+
+        templates = {
+            "meeting": f"""Create a meeting notes template for: {topic}
+
+Please include:
+- Date and attendees section
+- Agenda items
+- Discussion points
+- Action items with owners
+- Next steps
+
+Format it as a structured note that I can save.""",
+
+            "todo": f"""Create a todo list for: {topic}
+
+Please include:
+- Main objectives
+- Prioritized task list with checkboxes [ ]
+- Deadlines if applicable
+- Dependencies between tasks
+
+Format it as a structured note that I can save.""",
+
+            "journal": f"""Create a journal entry template for: {topic}
+
+Please include:
+- Date header
+- Reflection prompts
+- Space for thoughts and observations
+- Gratitude section
+- Goals for tomorrow
+
+Format it as a structured note that I can save.""",
+
+            "idea": f"""Create an idea note for: {topic}
+
+Please include:
+- Core concept description
+- Problem it solves
+- Key benefits
+- Potential challenges
+- Next steps to explore
+
+Format it as a structured note that I can save.""",
+        }
+
+        template_text = templates.get(template)
+        if not template_text:
+            valid = ", ".join(templates.keys())
+            return {
+                "messages": [{
+                    "role": "user",
+                    "content": {
+                        "type": "text",
+                        "text": f"Error: Unknown template '{template}'. Valid templates: {valid}",
+                    },
+                }]
+            }
+
+        return {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": {
+                        "type": "text",
+                        "text": template_text,
+                    },
+                }
+            ]
+        }</code></pre>
+                    </div>
+
+                    <h2>Main Entry Point</h2>
+                    <p>
+                        Finally, add the main entry point at the end of your file:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Main Entry Point
+# =============================================================================
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Notes MCP Server")
+    parser.add_argument(
+        "--storage",
+        default="notes.json",
+        help="Path to notes storage file (default: notes.json)"
+    )
+    args = parser.parse_args()
+
+    server = NotesServer(storage_path=args.storage)
+    server.run()</code></pre>
+                    </div>
+
+                    <h2>Complete File Structure</h2>
+                    <p>
+                        Your <code>notes_server.py</code> should now contain:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>notes_server.py
+    |
+    +-- Imports and Data Model
+    |   +-- Note dataclass
+    |
+    +-- NotesStorage class
+    |   +-- load(), save()
+    |   +-- create(), update(), delete()
+    |   +-- search(), get_by_id(), get_all_tags()
+    |
+    +-- NotesServer class
+    |   +-- run(), send_response(), make_response(), make_error()
+    |   +-- handle_request() - router
+    |   +-- handle_initialize()
+    |   +-- handle_tools_list(), handle_tools_call()
+    |   +-- tool_create_note(), tool_update_note()
+    |   +-- tool_delete_note(), tool_search_notes()
+    |   +-- handle_resources_list(), handle_resources_read()
+    |   +-- resource_list_all(), resource_list_tags(), resource_get_note()
+    |   +-- handle_prompts_list(), handle_prompts_get()
+    |   +-- prompt_summarize_notes(), prompt_create_from_template()
+    |
+    +-- Main entry point</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Server Complete!</div>
+                        <p>
+                            Your Notes MCP Server is now complete with all primitives implemented.
+                            In the next step, we will test it thoroughly with curl and integrate
+                            it with Claude Desktop.
+                        </p>
+                    </div>
+
+                    <h2>What We Built</h2>
+                    <p>
+                        Let us review what we have accomplished:
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Component</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Count</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Tools</strong></td>
+                                <td style="padding: 0.75rem;">4</td>
+                                <td style="padding: 0.75rem;">create, update, delete, search</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Resources</strong></td>
+                                <td style="padding: 0.75rem;">3+</td>
+                                <td style="padding: 0.75rem;">list, tags, plus dynamic per-note</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Prompts</strong></td>
+                                <td style="padding: 0.75rem;">2</td>
+                                <td style="padding: 0.75rem;">summarize, create_from_template</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><strong>Storage</strong></td>
+                                <td style="padding: 0.75rem;">1</td>
+                                <td style="padding: 0.75rem;">JSON file persistence</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-12-3.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Implementing Core Features</span></span>
+                    </a>
+                    <a href="lesson-12-5.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Testing and Debugging</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

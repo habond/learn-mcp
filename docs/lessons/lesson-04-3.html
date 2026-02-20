@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The MCP Handshake - Step 3 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 4</div>
+                    <div class="lesson-info-title">The MCP Handshake</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 50%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-04.html" class="toc-link completed"><span class="toc-number">1</span><span>MCP Lifecycle Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-2.html" class="toc-link completed"><span class="toc-number">2</span><span>The Initialize Request</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-3.html" class="toc-link active"><span class="toc-number">3</span><span>Server Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-4.html" class="toc-link"><span class="toc-number">4</span><span>Capability Negotiation</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-5.html" class="toc-link"><span class="toc-number">5</span><span>The Initialized Notification</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-6.html" class="toc-link"><span class="toc-number">6</span><span>Building the Handshake</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link current">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 4 - Step 3 of 6</span>
+                    <h1 class="step-title">Server Response</h1>
+                    <p class="step-description">Learn how to build the initialize response with serverInfo, capabilities, and negotiated version.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The Initialize Response</h2>
+                    <p>
+                        After receiving the initialize request, the server must respond with its own
+                        information: the negotiated protocol version, server capabilities, and server identity.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+            "tools": {},
+            "resources": {},
+            "prompts": {}
+        },
+        "serverInfo": {
+            "name": "my-mcp-server",
+            "version": "1.0.0"
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Response Fields</h2>
+                    <p>
+                        The <code>result</code> object contains three main fields:
+                    </p>
+
+                    <h3>protocolVersion</h3>
+                    <p>
+                        The protocol version the server has chosen to use. This must be a version that
+                        both client and server support.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"protocolVersion": "2024-11-05"</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Version Negotiation</div>
+                        <p>
+                            The server should respond with the highest version it supports that is also
+                            supported by the client. If no compatible version exists, the server should
+                            return an error instead of a result.
+                        </p>
+                    </div>
+
+                    <h3>serverInfo</h3>
+                    <p>
+                        Information about your server. This helps clients identify what server they're
+                        connected to and is useful for debugging.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"serverInfo": {
+    "name": "weather-mcp-server",
+    "version": "2.1.0"
+}</code></pre>
+                    </div>
+
+                    <h3>capabilities</h3>
+                    <p>
+                        The capabilities your server provides. This tells the client what features
+                        are available.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "tools": {},
+    "resources": {
+        "subscribe": true,
+        "listChanged": true
+    },
+    "prompts": {
+        "listChanged": true
+    },
+    "logging": {}
+}</code></pre>
+                    </div>
+
+                    <h2>Server Capabilities Explained</h2>
+                    <p>
+                        Here are the main capabilities a server can advertise:
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Capability</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>tools</code></td>
+                                <td style="padding: 0.75rem;">Server provides callable tools</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>resources</code></td>
+                                <td style="padding: 0.75rem;">Server provides readable resources</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>prompts</code></td>
+                                <td style="padding: 0.75rem;">Server provides prompt templates</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>logging</code></td>
+                                <td style="padding: 0.75rem;">Server can send log messages to client</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>experimental</code></td>
+                                <td style="padding: 0.75rem;">Non-standard experimental features</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Building the Response in Python</h2>
+                    <p>
+                        Here's how to construct the initialize response:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from dataclasses import dataclass, field, asdict
+from typing import Any
+
+# Server configuration
+SERVER_NAME = "my-mcp-server"
+SERVER_VERSION = "1.0.0"
+SUPPORTED_VERSIONS = ["2024-11-05", "2024-10-07"]
+
+@dataclass
+class ServerInfo:
+    """Information about this MCP server."""
+    name: str
+    version: str
+
+@dataclass
+class ServerCapabilities:
+    """Capabilities provided by this server."""
+    tools: dict = field(default_factory=dict)
+    resources: dict = field(default_factory=dict)
+    prompts: dict = field(default_factory=dict)
+    logging: dict = field(default_factory=dict)
+
+@dataclass
+class InitializeResult:
+    """Result of the initialize request."""
+    protocolVersion: str
+    capabilities: ServerCapabilities
+    serverInfo: ServerInfo
+
+def build_initialize_response(
+    request_id: int | str,
+    client_protocol_version: str
+) -> dict:
+    """Build the initialize response.
+
+    Args:
+        request_id: The ID from the initialize request
+        client_protocol_version: Version requested by client
+
+    Returns:
+        Complete JSON-RPC response dict
+    """
+    # Negotiate protocol version
+    negotiated_version = negotiate_version(client_protocol_version)
+
+    # Build the result
+    result = InitializeResult(
+        protocolVersion=negotiated_version,
+        capabilities=ServerCapabilities(
+            tools={},           # We support tools
+            resources={},       # We support resources
+            prompts={}          # We support prompts
+        ),
+        serverInfo=ServerInfo(
+            name=SERVER_NAME,
+            version=SERVER_VERSION
+        )
+    )
+
+    # Convert to JSON-RPC response
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "result": asdict(result)
+    }
+
+def negotiate_version(client_version: str) -> str:
+    """Negotiate the protocol version.
+
+    Returns the highest mutually supported version.
+    Raises ValueError if no compatible version.
+    """
+    if client_version in SUPPORTED_VERSIONS:
+        return client_version
+
+    # Try to find any compatible version
+    # In practice, you might have more complex logic here
+    raise ValueError(f"Unsupported protocol version: {client_version}")
+
+# Example usage
+response = build_initialize_response(
+    request_id=1,
+    client_protocol_version="2024-11-05"
+)
+print(response)</code></pre>
+                    </div>
+
+                    <h2>Example Responses</h2>
+
+                    <h3>Full-Featured Server</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+            "tools": {},
+            "resources": {
+                "subscribe": true,
+                "listChanged": true
+            },
+            "prompts": {
+                "listChanged": true
+            },
+            "logging": {}
+        },
+        "serverInfo": {
+            "name": "full-featured-server",
+            "version": "3.0.0"
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>Tools-Only Server</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+            "tools": {}
+        },
+        "serverInfo": {
+            "name": "calculator-server",
+            "version": "1.0.0"
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Only Advertise What You Support</div>
+                        <p>
+                            Only include capabilities your server actually implements. If you don't
+                            have any resources, don't include <code>"resources": {}</code>. The client
+                            uses this to know what requests are valid.
+                        </p>
+                    </div>
+
+                    <h2>Error Response</h2>
+                    <p>
+                        If the server cannot complete initialization (e.g., incompatible version),
+                        return an error response instead:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "error": {
+        "code": -32602,
+        "message": "Unsupported protocol version",
+        "data": {
+            "requested": "2023-01-01",
+            "supported": ["2024-11-05", "2024-10-07"]
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Python Error Handling</h2>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def handle_initialize(request: dict) -> dict:
+    """Handle the initialize request.
+
+    Returns either a success response or error response.
+    """
+    request_id = request.get("id")
+    params = request.get("params", {})
+
+    try:
+        # Validate and parse parameters
+        client_version = params.get("protocolVersion")
+        if not client_version:
+            raise ValueError("Missing protocolVersion")
+
+        # Check version compatibility
+        if client_version not in SUPPORTED_VERSIONS:
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {
+                    "code": -32602,
+                    "message": "Unsupported protocol version",
+                    "data": {
+                        "requested": client_version,
+                        "supported": SUPPORTED_VERSIONS
+                    }
+                }
+            }
+
+        # Build success response
+        return build_initialize_response(request_id, client_version)
+
+    except Exception as e:
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {
+                "code": -32603,
+                "message": f"Internal error: {str(e)}"
+            }
+        }</code></pre>
+                    </div>
+
+                    <h2>Key Takeaways</h2>
+                    <ul>
+                        <li>The server responds with negotiated protocol version, capabilities, and server info</li>
+                        <li>Only advertise capabilities your server actually implements</li>
+                        <li>Version negotiation should find the highest mutually supported version</li>
+                        <li>Return an error if no compatible version exists</li>
+                        <li>The response ID must match the request ID</li>
+                    </ul>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-04-2.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>The Initialize Request</span></span>
+                    </a>
+                    <a href="lesson-04-4.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Capability Negotiation</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

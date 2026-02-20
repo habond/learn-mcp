@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building an MCP Client - Step 2 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 10</div>
+                    <div class="lesson-info-title">Building an MCP Client</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 33%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-10.html" class="toc-link completed"><span class="toc-number">1</span><span>Client Architecture</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-2.html" class="toc-link active"><span class="toc-number">2</span><span>STDIO Client</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-3.html" class="toc-link"><span class="toc-number">3</span><span>Initialization Flow</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-4.html" class="toc-link"><span class="toc-number">4</span><span>Calling Methods</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-5.html" class="toc-link"><span class="toc-number">5</span><span>Listing Primitives</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-6.html" class="toc-link"><span class="toc-number">6</span><span>Interactive Testing</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link current">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 10 - Step 2 of 6</span>
+                    <h1 class="step-title">STDIO Client</h1>
+                    <p class="step-description">Launch MCP servers as subprocesses and communicate via stdin/stdout.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The STDIO Transport</h2>
+                    <p>
+                        The STDIO transport is the simplest way to communicate with an MCP server.
+                        Your client launches the server as a subprocess and communicates through
+                        <strong>stdin</strong> (sending requests) and <strong>stdout</strong> (receiving responses).
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>┌──────────────────────────────────────────────────────────────┐
+│                        MCP Client                            │
+│                                                              │
+│   ┌────────────────────────────────────────────────────┐    │
+│   │              subprocess.Popen()                     │    │
+│   │                                                     │    │
+│   │   stdin  ────────────────────────►  Server stdin   │    │
+│   │          (JSON-RPC requests)                        │    │
+│   │                                                     │    │
+│   │   stdout ◄────────────────────────  Server stdout  │    │
+│   │          (JSON-RPC responses)                       │    │
+│   │                                                     │    │
+│   │   stderr ◄────────────────────────  Server stderr  │    │
+│   │          (Debug/error logs)                         │    │
+│   └────────────────────────────────────────────────────┘    │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘</code></pre>
+                    </div>
+
+                    <h2>Launching the Server</h2>
+                    <p>
+                        Use Python's <code>subprocess</code> module to spawn the MCP server:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import subprocess
+import json
+from typing import Optional, List
+
+class StdioClient:
+    """MCP client that communicates via STDIO."""
+
+    def __init__(self, command: List[str]):
+        """
+        Initialize the STDIO client.
+
+        Args:
+            command: Command to launch the server, e.g.,
+                     ["python", "my_server.py"] or
+                     ["node", "server.js"]
+        """
+        self.command = command
+        self.process: Optional[subprocess.Popen] = None
+
+    def connect(self):
+        """Launch the MCP server as a subprocess."""
+        self.process = subprocess.Popen(
+            self.command,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,  # Use text mode for easier JSON handling
+            bufsize=1,  # Line buffered
+        )
+        print(f"Started server with PID {self.process.pid}")
+
+    def disconnect(self):
+        """Terminate the server process."""
+        if self.process:
+            self.process.terminate()
+            self.process.wait(timeout=5)
+            print("Server terminated")</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Text Mode vs Binary Mode</div>
+                        <p>
+                            We use <code>text=True</code> for convenience, but be aware that this
+                            can cause issues with non-ASCII characters. For production code,
+                            consider using binary mode and explicit UTF-8 encoding.
+                        </p>
+                    </div>
+
+                    <h2>Sending Requests</h2>
+                    <p>
+                        Each JSON-RPC message is sent as a single line to the server's stdin:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def send_request(self, request: dict) -> None:
+    """Send a JSON-RPC request to the server."""
+    if not self.process or self.process.poll() is not None:
+        raise RuntimeError("Server not running")
+
+    # Serialize to JSON and add newline
+    message = json.dumps(request) + "\n"
+
+    # Write to server's stdin
+    self.process.stdin.write(message)
+    self.process.stdin.flush()
+
+    print(f"Sent: {request.get('method', 'response')}")</code></pre>
+                    </div>
+
+                    <h2>Reading Responses</h2>
+                    <p>
+                        Read one line at a time from stdout and parse as JSON:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def read_response(self) -> dict:
+    """Read a JSON-RPC response from the server."""
+    if not self.process or self.process.poll() is not None:
+        raise RuntimeError("Server not running")
+
+    # Read one line from stdout
+    line = self.process.stdout.readline()
+
+    if not line:
+        raise RuntimeError("Server closed connection")
+
+    # Parse JSON
+    response = json.loads(line.strip())
+    print(f"Received: id={response.get('id')}")
+
+    return response</code></pre>
+                    </div>
+
+                    <h2>Complete STDIO Client Class</h2>
+                    <p>
+                        Here's the complete basic client putting it all together:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+stdio_client.py - Basic STDIO MCP client.
+"""
+
+import subprocess
+import json
+from typing import Optional, List, Any
+
+
+class StdioClient:
+    """MCP client that communicates via STDIO."""
+
+    def __init__(self, command: List[str]):
+        self.command = command
+        self.process: Optional[subprocess.Popen] = None
+        self._next_id = 1
+
+    def connect(self):
+        """Launch the MCP server as a subprocess."""
+        self.process = subprocess.Popen(
+            self.command,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+        )
+
+    def disconnect(self):
+        """Terminate the server process."""
+        if self.process:
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+            self.process = None
+
+    def send_request(self, method: str, params: Optional[dict] = None) -> dict:
+        """Send a request and wait for the response."""
+        if not self.process:
+            raise RuntimeError("Not connected")
+
+        # Create request
+        request = {
+            "jsonrpc": "2.0",
+            "id": self._next_id,
+            "method": method,
+        }
+        if params:
+            request["params"] = params
+
+        self._next_id += 1
+
+        # Send request
+        message = json.dumps(request) + "\n"
+        self.process.stdin.write(message)
+        self.process.stdin.flush()
+
+        # Read response
+        line = self.process.stdout.readline()
+        if not line:
+            raise RuntimeError("Server closed connection")
+
+        return json.loads(line.strip())
+
+    def send_notification(self, method: str, params: Optional[dict] = None):
+        """Send a notification (no response expected)."""
+        if not self.process:
+            raise RuntimeError("Not connected")
+
+        notification = {
+            "jsonrpc": "2.0",
+            "method": method,
+        }
+        if params:
+            notification["params"] = params
+
+        message = json.dumps(notification) + "\n"
+        self.process.stdin.write(message)
+        self.process.stdin.flush()
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disconnect()</code></pre>
+                    </div>
+
+                    <h2>Usage Example</h2>
+                    <p>
+                        Here's how to use the client:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Using context manager
+with StdioClient(["python", "my_mcp_server.py"]) as client:
+    # Send a request
+    response = client.send_request("tools/list")
+    print(response)
+
+# Or manually
+client = StdioClient(["python", "my_mcp_server.py"])
+client.connect()
+try:
+    response = client.send_request("initialize", {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {},
+        "clientInfo": {"name": "my-client", "version": "1.0.0"}
+    })
+    print(response)
+finally:
+    client.disconnect()</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Context Manager Pattern</div>
+                        <p>
+                            The <code>__enter__</code> and <code>__exit__</code> methods let you
+                            use the client with Python's <code>with</code> statement, ensuring
+                            proper cleanup even if exceptions occur.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-10.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Client Architecture</span></span>
+                    </a>
+                    <a href="lesson-10-3.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Initialization Flow</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

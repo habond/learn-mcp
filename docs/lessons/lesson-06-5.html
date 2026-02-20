@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Resources - Step 5 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 6</div>
+                    <div class="lesson-info-title">Implementing Resources</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 100%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-06.html" class="toc-link completed"><span class="toc-number">1</span><span>What are MCP Resources?</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Resource Definition</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-3.html" class="toc-link completed"><span class="toc-number">3</span><span>The resources/list Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-4.html" class="toc-link completed"><span class="toc-number">4</span><span>The resources/read Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-5.html" class="toc-link active"><span class="toc-number">5</span><span>Building File Resources</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link current">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 6 - Step 5 of 5</span>
+                    <h1 class="step-title">Building File Resources</h1>
+                    <p class="step-description">Build a complete MCP server that exposes local files as resources.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The Complete File Resource Server</h2>
+                    <p>
+                        Let's put everything together and build a complete MCP server that exposes
+                        files from a directory as resources. This is a practical example you can
+                        extend for your own projects.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+file_resource_server.py - Complete MCP server exposing files as resources
+
+This server:
+1. Scans a directory for files
+2. Exposes them via resources/list
+3. Returns their contents via resources/read
+"""
+
+import json
+import base64
+import mimetypes
+from pathlib import Path
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+# Configuration
+PROJECT_DIR = Path("./project")  # Directory to expose
+ALLOWED_EXTENSIONS = {".py", ".js", ".json", ".md", ".txt", ".html", ".css"}
+
+
+class MCPError(Exception):
+    """Custom exception for MCP errors."""
+    def __init__(self, code: int, message: str):
+        self.code = code
+        self.message = message
+        super().__init__(message)
+
+
+def get_mime_type(file_path: Path) -> str:
+    """Get MIME type for a file."""
+    mime_type, _ = mimetypes.guess_type(str(file_path))
+    if mime_type:
+        return mime_type
+
+    # Custom mappings for common code files
+    custom_types = {
+        ".py": "text/x-python",
+        ".js": "text/javascript",
+        ".ts": "text/typescript",
+        ".jsx": "text/javascript",
+        ".tsx": "text/typescript",
+        ".md": "text/markdown",
+        ".yml": "text/yaml",
+        ".yaml": "text/yaml",
+    }
+    return custom_types.get(file_path.suffix.lower(), "text/plain")
+
+
+def is_binary_file(file_path: Path) -> bool:
+    """Check if a file is binary."""
+    binary_extensions = {".png", ".jpg", ".jpeg", ".gif", ".pdf", ".zip", ".exe"}
+    return file_path.suffix.lower() in binary_extensions
+
+
+def scan_directory(directory: Path) -> list[dict]:
+    """Scan directory and return resource definitions."""
+    resources = []
+
+    if not directory.exists():
+        return resources
+
+    for file_path in directory.rglob("*"):
+        if not file_path.is_file():
+            continue
+
+        # Skip files with disallowed extensions
+        if ALLOWED_EXTENSIONS and file_path.suffix.lower() not in ALLOWED_EXTENSIONS:
+            continue
+
+        # Skip hidden files and directories
+        if any(part.startswith(".") for part in file_path.parts):
+            continue
+
+        # Create resource definition
+        uri = f"file://{file_path.absolute()}"
+        relative_path = file_path.relative_to(directory)
+
+        resources.append({
+            "uri": uri,
+            "name": file_path.name,
+            "description": f"File: {relative_path}",
+            "mimeType": get_mime_type(file_path)
+        })
+
+    return sorted(resources, key=lambda r: r["name"])
+
+
+def read_file_resource(uri: str) -> dict:
+    """Read a file and return its content."""
+    if not uri.startswith("file://"):
+        raise MCPError(-32602, f"Invalid URI scheme: {uri}")
+
+    file_path = Path(uri[7:])  # Remove "file://" prefix
+
+    if not file_path.exists():
+        raise MCPError(-32002, f"File not found: {uri}")
+
+    if not file_path.is_file():
+        raise MCPError(-32002, f"Not a file: {uri}")
+
+    # Security check: ensure file is within allowed directory
+    try:
+        file_path.resolve().relative_to(PROJECT_DIR.resolve())
+    except ValueError:
+        raise MCPError(-32003, f"Access denied: {uri}")
+
+    mime_type = get_mime_type(file_path)
+
+    if is_binary_file(file_path):
+        # Read as binary and encode as base64
+        with open(file_path, "rb") as f:
+            content = base64.b64encode(f.read()).decode("utf-8")
+        return {
+            "uri": uri,
+            "mimeType": mime_type,
+            "blob": content
+        }
+    else:
+        # Read as text
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            # Fall back to binary if text decoding fails
+            with open(file_path, "rb") as f:
+                content = base64.b64encode(f.read()).decode("utf-8")
+            return {
+                "uri": uri,
+                "mimeType": "application/octet-stream",
+                "blob": content
+            }
+
+        return {
+            "uri": uri,
+            "mimeType": mime_type,
+            "text": content
+        }
+
+
+# MCP Method Handlers
+
+def handle_initialize(params: dict) -> dict:
+    """Handle initialize request."""
+    return {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+            "resources": {}
+        },
+        "serverInfo": {
+            "name": "file-resource-server",
+            "version": "1.0.0"
+        }
+    }
+
+
+def handle_resources_list(params: dict) -> dict:
+    """Handle resources/list request."""
+    resources = scan_directory(PROJECT_DIR)
+    return {"resources": resources}
+
+
+def handle_resources_read(params: dict) -> dict:
+    """Handle resources/read request."""
+    uri = params.get("uri")
+    if not uri:
+        raise MCPError(-32602, "Missing required parameter: uri")
+
+    content = read_file_resource(uri)
+    return {"contents": [content]}
+
+
+# Request Router
+
+def route_request(method: str, params: dict) -> dict:
+    """Route JSON-RPC requests to handlers."""
+    handlers = {
+        "initialize": handle_initialize,
+        "initialized": lambda p: {},  # Notification, no response needed
+        "resources/list": handle_resources_list,
+        "resources/read": handle_resources_read,
+    }
+
+    handler = handlers.get(method)
+    if not handler:
+        raise MCPError(-32601, f"Method not found: {method}")
+
+    return handler(params)
+
+
+# HTTP Server
+
+class MCPHandler(BaseHTTPRequestHandler):
+    """HTTP handler for MCP requests."""
+
+    def log_message(self, format, *args):
+        """Custom logging."""
+        print(f"[MCP] {args[0]}")
+
+    def send_json(self, data: dict, status: int = 200):
+        """Send JSON response."""
+        body = json.dumps(data, indent=2).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self):
+        """Handle POST requests."""
+        try:
+            # Read request
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length)
+            request = json.loads(body.decode("utf-8"))
+
+            method = request.get("method")
+            params = request.get("params", {})
+            request_id = request.get("id")
+
+            # Handle notification (no id)
+            if request_id is None:
+                route_request(method, params)
+                self.send_response(204)
+                self.end_headers()
+                return
+
+            # Handle request
+            try:
+                result = route_request(method, params)
+                self.send_json({
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": result
+                })
+            except MCPError as e:
+                self.send_json({
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {
+                        "code": e.code,
+                        "message": e.message
+                    }
+                })
+
+        except json.JSONDecodeError as e:
+            self.send_json({
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32700,
+                    "message": f"Parse error: {e}"
+                }
+            }, status=400)
+
+
+def main():
+    """Start the MCP server."""
+    # Create project directory if it doesn't exist
+    PROJECT_DIR.mkdir(exist_ok=True)
+
+    # Create some sample files
+    (PROJECT_DIR / "config.json").write_text(
+        '{\n  "debug": true,\n  "port": 8080\n}'
+    )
+    (PROJECT_DIR / "README.md").write_text(
+        "# My Project\n\nThis is a sample project."
+    )
+    (PROJECT_DIR / "main.py").write_text(
+        'def main():\n    print("Hello, World!")\n\nif __name__ == "__main__":\n    main()'
+    )
+
+    host, port = "localhost", 8080
+    server = HTTPServer((host, port), MCPHandler)
+
+    print(f"File Resource Server running on http://{host}:{port}")
+    print(f"Serving files from: {PROJECT_DIR.absolute()}")
+    print("Press Ctrl+C to stop")
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nShutting down...")
+        server.shutdown()
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+                    </div>
+
+                    <h2>Testing the Server</h2>
+                    <p>Start the server and test it with curl:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Start the server
+python file_resource_server.py
+
+# In another terminal, test initialization
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {},
+        "clientInfo": {"name": "test-client", "version": "1.0.0"}
+    }
+  }'</code></pre>
+                    </div>
+
+                    <p>Expected response:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "resources": {}
+    },
+    "serverInfo": {
+      "name": "file-resource-server",
+      "version": "1.0.0"
+    }
+  }
+}</code></pre>
+                    </div>
+
+                    <h2>List Available Resources</h2>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "resources/list",
+    "params": {}
+  }'</code></pre>
+                    </div>
+
+                    <p>Expected response:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "resources": [
+      {
+        "uri": "file:///path/to/project/README.md",
+        "name": "README.md",
+        "description": "File: README.md",
+        "mimeType": "text/markdown"
+      },
+      {
+        "uri": "file:///path/to/project/config.json",
+        "name": "config.json",
+        "description": "File: config.json",
+        "mimeType": "application/json"
+      },
+      {
+        "uri": "file:///path/to/project/main.py",
+        "name": "main.py",
+        "description": "File: main.py",
+        "mimeType": "text/x-python"
+      }
+    ]
+  }
+}</code></pre>
+                    </div>
+
+                    <h2>Read a Resource</h2>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Use the exact URI from the resources/list response
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "resources/read",
+    "params": {
+        "uri": "file:///path/to/project/config.json"
+    }
+  }'</code></pre>
+                    </div>
+
+                    <p>Expected response:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "contents": [
+      {
+        "uri": "file:///path/to/project/config.json",
+        "mimeType": "application/json",
+        "text": "{\n  \"debug\": true,\n  \"port\": 8080\n}"
+      }
+    ]
+  }
+}</code></pre>
+                    </div>
+
+                    <h2>What You've Built</h2>
+                    <p>Your file resource server now:</p>
+                    <ul>
+                        <li>Scans a directory for files with allowed extensions</li>
+                        <li>Exposes them as MCP resources with proper metadata</li>
+                        <li>Returns text content for readable files</li>
+                        <li>Returns base64-encoded blobs for binary files</li>
+                        <li>Includes security checks to prevent directory traversal</li>
+                        <li>Handles errors gracefully with proper JSON-RPC error responses</li>
+                    </ul>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Extension Ideas</div>
+                        <ul>
+                            <li>Add file watching to update resources when files change</li>
+                            <li>Implement resource subscriptions for real-time updates</li>
+                            <li>Add support for resource templates (dynamic URIs)</li>
+                            <li>Include file metadata like size and modification time</li>
+                        </ul>
+                    </div>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        In Lesson 7, we'll explore the STDIO transport &mdash; an alternative to HTTP
+                        that's perfect for local integrations. You'll learn how to build MCP servers
+                        that communicate through standard input/output, enabling seamless integration
+                        with desktop applications like Claude Desktop.
+                    </p>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-06-4.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>The resources/read Method</span></span>
+                    </a>
+                    <a href="lesson-07.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next Lesson</span><span>STDIO Transport</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

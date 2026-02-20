@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The MCP Handshake - Step 2 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 4</div>
+                    <div class="lesson-info-title">The MCP Handshake</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 33%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-04.html" class="toc-link completed"><span class="toc-number">1</span><span>MCP Lifecycle Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-2.html" class="toc-link active"><span class="toc-number">2</span><span>The Initialize Request</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-3.html" class="toc-link"><span class="toc-number">3</span><span>Server Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-4.html" class="toc-link"><span class="toc-number">4</span><span>Capability Negotiation</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-5.html" class="toc-link"><span class="toc-number">5</span><span>The Initialized Notification</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-6.html" class="toc-link"><span class="toc-number">6</span><span>Building the Handshake</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link current">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 4 - Step 2 of 6</span>
+                    <h1 class="step-title">The Initialize Request</h1>
+                    <p class="step-description">Learn what the client sends to start the MCP handshake.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The First Message</h2>
+                    <p>
+                        The <code>initialize</code> request is always the first message in an MCP session.
+                        The client sends this to tell the server who it is and what it can do.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+            "roots": {
+                "listChanged": true
+            },
+            "sampling": {}
+        },
+        "clientInfo": {
+            "name": "claude-desktop",
+            "version": "1.0.0"
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Breaking Down the Request</h2>
+                    <p>Let's examine each field in the <code>params</code> object:</p>
+
+                    <h3>protocolVersion</h3>
+                    <p>
+                        The MCP protocol version the client wants to use. This is a date-based version
+                        string following the format <code>YYYY-MM-DD</code>.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"protocolVersion": "2024-11-05"</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Protocol Versions</div>
+                        <p>
+                            MCP uses date-based versioning. The server should respond with a version
+                            it supports. If there's no compatible version, the server must reject
+                            the connection.
+                        </p>
+                    </div>
+
+                    <h3>capabilities</h3>
+                    <p>
+                        The <code>capabilities</code> object tells the server what features the client supports.
+                        This enables the server to adjust its behavior accordingly.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "roots": {
+        "listChanged": true
+    },
+    "sampling": {}
+}</code></pre>
+                    </div>
+
+                    <p>Common client capabilities include:</p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Capability</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>roots</code></td>
+                                <td style="padding: 0.75rem;">Client can provide filesystem roots to the server</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>roots.listChanged</code></td>
+                                <td style="padding: 0.75rem;">Client supports notifications when roots change</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>sampling</code></td>
+                                <td style="padding: 0.75rem;">Client supports LLM sampling requests from server</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>experimental</code></td>
+                                <td style="padding: 0.75rem;">Client supports experimental/non-standard features</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>clientInfo</h3>
+                    <p>
+                        The <code>clientInfo</code> object identifies the client application. This is useful
+                        for debugging and logging.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"clientInfo": {
+    "name": "claude-desktop",
+    "version": "1.0.0"
+}</code></pre>
+                    </div>
+
+                    <h2>Parsing the Initialize Request</h2>
+                    <p>
+                        Here's how to parse and validate the initialize request in Python:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from dataclasses import dataclass, field
+from typing import Any
+
+@dataclass
+class ClientInfo:
+    """Information about the MCP client."""
+    name: str
+    version: str
+
+@dataclass
+class ClientCapabilities:
+    """Capabilities supported by the client."""
+    roots: dict = field(default_factory=dict)
+    sampling: dict = field(default_factory=dict)
+    experimental: dict = field(default_factory=dict)
+
+@dataclass
+class InitializeParams:
+    """Parameters for the initialize request."""
+    protocolVersion: str
+    capabilities: ClientCapabilities
+    clientInfo: ClientInfo
+
+def parse_initialize_params(params: dict) -> InitializeParams:
+    """Parse and validate initialize request parameters."""
+    # Extract required fields
+    protocol_version = params.get("protocolVersion")
+    if not protocol_version:
+        raise ValueError("Missing protocolVersion")
+
+    # Parse client info
+    client_info_data = params.get("clientInfo", {})
+    client_info = ClientInfo(
+        name=client_info_data.get("name", "unknown"),
+        version=client_info_data.get("version", "unknown")
+    )
+
+    # Parse capabilities
+    caps_data = params.get("capabilities", {})
+    capabilities = ClientCapabilities(
+        roots=caps_data.get("roots", {}),
+        sampling=caps_data.get("sampling", {}),
+        experimental=caps_data.get("experimental", {})
+    )
+
+    return InitializeParams(
+        protocolVersion=protocol_version,
+        capabilities=capabilities,
+        clientInfo=client_info
+    )
+
+# Example usage
+params = {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+        "sampling": {}
+    },
+    "clientInfo": {
+        "name": "claude-desktop",
+        "version": "1.0.0"
+    }
+}
+
+init_params = parse_initialize_params(params)
+print(f"Client: {init_params.clientInfo.name} v{init_params.clientInfo.version}")
+print(f"Protocol: {init_params.protocolVersion}")
+print(f"Has sampling: {bool(init_params.capabilities.sampling)}")</code></pre>
+                    </div>
+
+                    <h2>Real-World Examples</h2>
+                    <p>
+                        Here are examples of initialize requests from popular MCP clients:
+                    </p>
+
+                    <h3>Claude Desktop</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+            "roots": {
+                "listChanged": true
+            },
+            "sampling": {}
+        },
+        "clientInfo": {
+            "name": "claude-desktop",
+            "version": "0.7.0"
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>Minimal Client</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {},
+        "clientInfo": {
+            "name": "my-test-client",
+            "version": "1.0.0"
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Empty Capabilities</div>
+                        <p>
+                            A client with empty capabilities (<code>{}</code>) is perfectly valid.
+                            It simply means the client doesn't support any optional features.
+                            The server should still work, just with reduced functionality.
+                        </p>
+                    </div>
+
+                    <h2>Validation Rules</h2>
+                    <p>
+                        When your server receives an initialize request, validate:
+                    </p>
+                    <ul>
+                        <li><strong>Method must be "initialize"</strong> &mdash; This is always the first request</li>
+                        <li><strong>protocolVersion is required</strong> &mdash; Must be a valid version string</li>
+                        <li><strong>clientInfo is recommended</strong> &mdash; Should have name and version</li>
+                        <li><strong>capabilities can be empty</strong> &mdash; An empty object is valid</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">SUPPORTED_PROTOCOL_VERSIONS = ["2024-11-05", "2024-10-07"]
+
+def validate_initialize_request(params: dict) -> tuple[bool, str]:
+    """Validate initialize request parameters.
+
+    Returns (is_valid, error_message).
+    """
+    # Check protocol version
+    version = params.get("protocolVersion")
+    if not version:
+        return False, "Missing protocolVersion"
+
+    if version not in SUPPORTED_PROTOCOL_VERSIONS:
+        return False, f"Unsupported protocol version: {version}"
+
+    # Validate clientInfo structure if present
+    client_info = params.get("clientInfo", {})
+    if client_info:
+        if not isinstance(client_info.get("name"), str):
+            return False, "clientInfo.name must be a string"
+        if not isinstance(client_info.get("version"), str):
+            return False, "clientInfo.version must be a string"
+
+    return True, ""</code></pre>
+                    </div>
+
+                    <h2>Key Takeaways</h2>
+                    <ul>
+                        <li>The <code>initialize</code> request is always the first message</li>
+                        <li>It contains protocol version, client capabilities, and client info</li>
+                        <li>Protocol version uses date-based format (YYYY-MM-DD)</li>
+                        <li>Capabilities tell the server what optional features the client supports</li>
+                        <li>The server must validate and respond appropriately</li>
+                    </ul>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-04.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>MCP Lifecycle Overview</span></span>
+                    </a>
+                    <a href="lesson-04-3.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Server Response</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

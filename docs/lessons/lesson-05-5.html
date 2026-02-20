@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Tools - Step 5 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 5</div>
+                    <div class="lesson-info-title">Implementing Tools</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 83%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-05.html" class="toc-link completed"><span class="toc-number">1</span><span>What are MCP Tools?</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Tool Definition Structure</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-3.html" class="toc-link completed"><span class="toc-number">3</span><span>The tools/list Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-4.html" class="toc-link completed"><span class="toc-number">4</span><span>The tools/call Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-5.html" class="toc-link active"><span class="toc-number">5</span><span>Tool Result Format</span></a></li>
+                    <li class="toc-item"><a href="lesson-05-6.html" class="toc-link"><span class="toc-number">6</span><span>Building Calculator Tools</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link current">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 5 - Step 5 of 6</span>
+                    <h1 class="step-title">Tool Result Format</h1>
+                    <p class="step-description">Learn about content types (text, image) and the isError flag.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The CallToolResult Structure</h2>
+                    <p>
+                        When a tool executes, it returns a <code>CallToolResult</code> object. This
+                        object contains the tool's output in a structured format that supports
+                        multiple content types.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+        "content": [
+            {
+                "type": "text",
+                "text": "The result of the tool execution"
+            }
+        ],
+        "isError": false
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Result Fields</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Field</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Type</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>content</code></td>
+                                <td style="padding: 0.75rem;">array</td>
+                                <td style="padding: 0.75rem;">Array of content items (text, image, etc.)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>isError</code></td>
+                                <td style="padding: 0.75rem;">boolean</td>
+                                <td style="padding: 0.75rem;">Optional. True if the tool execution failed</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Content Types</h2>
+                    <p>
+                        MCP supports multiple content types in tool results. The most common are
+                        <code>text</code> and <code>image</code>.
+                    </p>
+
+                    <h3>Text Content</h3>
+                    <p>
+                        The most common content type. Use for any text-based output:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "content": [
+        {
+            "type": "text",
+            "text": "The sum of 5 and 3 is 8"
+        }
+    ]
+}</code></pre>
+                    </div>
+
+                    <h3>Image Content</h3>
+                    <p>
+                        For tools that generate or return images. Images are base64-encoded:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "content": [
+        {
+            "type": "image",
+            "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ...",
+            "mimeType": "image/png"
+        }
+    ]
+}</code></pre>
+                    </div>
+
+                    <h3>Multiple Content Items</h3>
+                    <p>
+                        Tools can return multiple content items of different types:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "content": [
+        {
+            "type": "text",
+            "text": "Here is the chart you requested:"
+        },
+        {
+            "type": "image",
+            "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ...",
+            "mimeType": "image/png"
+        },
+        {
+            "type": "text",
+            "text": "The chart shows sales data for Q1 2024."
+        }
+    ]
+}</code></pre>
+                    </div>
+
+                    <h2>Python Helper Functions</h2>
+                    <p>
+                        Create helper functions to format tool results consistently:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+result_helpers.py - Helper functions for formatting tool results.
+"""
+
+import base64
+
+
+def text_result(text):
+    """
+    Create a text content result.
+
+    Args:
+        text: The text to return
+
+    Returns:
+        dict: MCP content object
+    """
+    return {
+        "content": [
+            {
+                "type": "text",
+                "text": str(text)
+            }
+        ]
+    }
+
+
+def error_result(message):
+    """
+    Create an error result.
+
+    Args:
+        message: Error message
+
+    Returns:
+        dict: MCP content object with isError flag
+    """
+    return {
+        "content": [
+            {
+                "type": "text",
+                "text": f"Error: {message}"
+            }
+        ],
+        "isError": True
+    }
+
+
+def image_result(image_bytes, mime_type="image/png", caption=None):
+    """
+    Create an image content result.
+
+    Args:
+        image_bytes: Raw image bytes
+        mime_type: MIME type of the image
+        caption: Optional text caption
+
+    Returns:
+        dict: MCP content object
+    """
+    content = []
+
+    if caption:
+        content.append({
+            "type": "text",
+            "text": caption
+        })
+
+    content.append({
+        "type": "image",
+        "data": base64.b64encode(image_bytes).decode("utf-8"),
+        "mimeType": mime_type
+    })
+
+    return {"content": content}
+
+
+def multi_result(*items):
+    """
+    Create a result with multiple content items.
+
+    Args:
+        *items: Content items (dicts with type, text/data, etc.)
+
+    Returns:
+        dict: MCP content object
+    """
+    return {"content": list(items)}</code></pre>
+                    </div>
+
+                    <h2>Using the Helpers</h2>
+                    <p>
+                        Here's how to use these helpers in your tool handlers:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def execute_add(arguments):
+    """Add two numbers."""
+    a = arguments.get("a")
+    b = arguments.get("b")
+
+    if a is None or b is None:
+        return error_result("Both 'a' and 'b' are required")
+
+    result = a + b
+    return text_result(f"The sum of {a} and {b} is {result}")
+
+
+def execute_divide(arguments):
+    """Divide two numbers."""
+    a = arguments.get("a")
+    b = arguments.get("b")
+
+    if b == 0:
+        return error_result("Cannot divide by zero")
+
+    result = a / b
+    return text_result(f"{a} / {b} = {result}")
+
+
+def execute_generate_chart(arguments):
+    """Generate a chart image."""
+    # ... chart generation logic ...
+    chart_bytes = generate_chart(arguments)
+
+    return image_result(
+        chart_bytes,
+        mime_type="image/png",
+        caption="Sales chart for the requested period"
+    )</code></pre>
+                    </div>
+
+                    <h2>The isError Flag</h2>
+                    <p>
+                        The <code>isError</code> flag indicates that the tool executed but
+                        encountered an error. This is different from a JSON-RPC error:
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">isError vs JSON-RPC Error</div>
+                        <p>
+                            Use <code>isError: true</code> when the tool ran but failed (e.g., API returned
+                            an error, file not found). Use JSON-RPC errors for request-level problems
+                            (e.g., unknown tool, invalid arguments).
+                        </p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def execute_fetch_url(arguments):
+    """Fetch content from a URL."""
+    url = arguments.get("url")
+
+    try:
+        import urllib.request
+        with urllib.request.urlopen(url, timeout=10) as response:
+            content = response.read().decode("utf-8")
+            return text_result(content[:1000])  # First 1000 chars
+
+    except urllib.error.HTTPError as e:
+        return error_result(f"HTTP {e.code}: {e.reason}")
+
+    except urllib.error.URLError as e:
+        return error_result(f"Failed to connect: {e.reason}")
+
+    except Exception as e:
+        return error_result(f"Unexpected error: {str(e)}")</code></pre>
+                    </div>
+
+                    <h2>Complete Response Examples</h2>
+
+                    <h3>Successful Text Result</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 5,
+    "result": {
+        "content": [
+            {
+                "type": "text",
+                "text": "The sum of 10 and 25 is 35"
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>Error Result</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 6,
+    "result": {
+        "content": [
+            {
+                "type": "text",
+                "text": "Error: Cannot divide by zero"
+            }
+        ],
+        "isError": true
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Best Practices</div>
+                        <p>
+                            Always return meaningful error messages. The AI model uses these to understand
+                            what went wrong and potentially retry with different arguments or inform the user.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-05-4.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>The tools/call Method</span></span>
+                    </a>
+                    <a href="lesson-05-6.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Building Calculator Tools</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

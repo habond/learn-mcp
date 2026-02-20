@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Prompts - Step 4 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 9</div>
+                    <div class="lesson-info-title">Implementing Prompts</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 80%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-09.html" class="toc-link completed"><span class="toc-number">1</span><span>What are MCP Prompts?</span></a></li>
+                    <li class="toc-item"><a href="lesson-09-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Prompt Definition</span></a></li>
+                    <li class="toc-item"><a href="lesson-09-3.html" class="toc-link completed"><span class="toc-number">3</span><span>The prompts/list Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-09-4.html" class="toc-link active"><span class="toc-number">4</span><span>The prompts/get Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-09-5.html" class="toc-link"><span class="toc-number">5</span><span>Building Useful Prompts</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link current">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 9 - Step 4 of 5</span>
+                    <h1 class="step-title">The prompts/get Method</h1>
+                    <p class="step-description">Implement prompt retrieval with argument substitution.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Understanding prompts/get</h2>
+                    <p>
+                        The <code>prompts/get</code> method retrieves a specific prompt and expands it
+                        with the user's arguments. This is where the magic happens &mdash; arguments are
+                        substituted into the prompt template to create the final messages.
+                    </p>
+
+                    <h2>Request Format</h2>
+                    <p>The client specifies which prompt to get and provides arguments:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "prompts/get",
+    "params": {
+        "name": "code-review",
+        "arguments": {
+            "code": "def add(a, b):\n    return a + b",
+            "language": "python",
+            "focus": "style"
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Response Format</h2>
+                    <p>
+                        The server returns an expanded prompt with <strong>messages</strong> that
+                        can be used in a conversation:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+        "description": "Code review for Python code focusing on style",
+        "messages": [
+            {
+                "role": "user",
+                "content": {
+                    "type": "text",
+                    "text": "Please review the following Python code, focusing on style:\n\n```python\ndef add(a, b):\n    return a + b\n```\n\nProvide specific feedback on code style, naming conventions, and readability."
+                }
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Message Structure</h2>
+                    <p>Each message in the response has:</p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Field</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Type</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>role</code></td>
+                                <td style="padding: 0.75rem;">string</td>
+                                <td style="padding: 0.75rem;">"user" or "assistant"</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>content</code></td>
+                                <td style="padding: 0.75rem;">object</td>
+                                <td style="padding: 0.75rem;">Content with type and text/data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Python Implementation</h2>
+                    <p>
+                        Here's how to implement <code>prompts/get</code> with argument substitution:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+Prompt handlers with argument substitution
+"""
+
+PROMPTS = {
+    "code-review": {
+        "name": "code-review",
+        "description": "Review code for bugs and improvements",
+        "arguments": [
+            {"name": "code", "description": "Code to review", "required": True},
+            {"name": "language", "description": "Programming language", "required": True},
+            {"name": "focus", "description": "Review focus area", "required": False}
+        ]
+    },
+    "summarize": {
+        "name": "summarize",
+        "description": "Summarize text concisely",
+        "arguments": [
+            {"name": "text", "description": "Text to summarize", "required": True},
+            {"name": "max_length", "description": "Max sentences", "required": False}
+        ]
+    },
+    "explain-code": {
+        "name": "explain-code",
+        "description": "Explain code in plain English",
+        "arguments": [
+            {"name": "code", "description": "Code to explain", "required": True},
+            {"name": "detail_level", "description": "brief/normal/detailed", "required": False}
+        ]
+    }
+}
+
+
+def handle_prompts_get(params):
+    """Handle the prompts/get method."""
+    name = params.get("name")
+    arguments = params.get("arguments", {})
+
+    # Check if prompt exists
+    if name not in PROMPTS:
+        raise ValueError(f"Unknown prompt: {name}")
+
+    prompt = PROMPTS[name]
+
+    # Validate required arguments
+    for arg in prompt.get("arguments", []):
+        if arg.get("required") and arg["name"] not in arguments:
+            raise ValueError(f"Missing required argument: {arg['name']}")
+
+    # Generate prompt messages based on the prompt type
+    if name == "code-review":
+        return generate_code_review_prompt(arguments)
+    elif name == "summarize":
+        return generate_summarize_prompt(arguments)
+    elif name == "explain-code":
+        return generate_explain_prompt(arguments)
+
+    raise ValueError(f"No handler for prompt: {name}")
+
+
+def generate_code_review_prompt(arguments):
+    """Generate a code review prompt."""
+    code = arguments.get("code", "")
+    language = arguments.get("language", "")
+    focus = arguments.get("focus", "all aspects")
+
+    text = f"""Please review the following {language} code, focusing on {focus}:
+
+```{language}
+{code}
+```
+
+Provide specific, actionable feedback on:
+- Potential bugs or errors
+- Code style and readability
+- Best practices and improvements"""
+
+    return {
+        "description": f"Code review for {language} code",
+        "messages": [
+            {
+                "role": "user",
+                "content": {
+                    "type": "text",
+                    "text": text
+                }
+            }
+        ]
+    }
+
+
+def generate_summarize_prompt(arguments):
+    """Generate a summarization prompt."""
+    text_to_summarize = arguments.get("text", "")
+    max_length = arguments.get("max_length", "3")
+
+    text = f"""Please summarize the following text in {max_length} sentences or fewer:
+
+{text_to_summarize}
+
+Provide a clear, concise summary that captures the main points."""
+
+    return {
+        "description": "Text summarization",
+        "messages": [
+            {
+                "role": "user",
+                "content": {
+                    "type": "text",
+                    "text": text
+                }
+            }
+        ]
+    }
+
+
+def generate_explain_prompt(arguments):
+    """Generate a code explanation prompt."""
+    code = arguments.get("code", "")
+    detail_level = arguments.get("detail_level", "normal")
+
+    detail_instructions = {
+        "brief": "Give a brief, one-paragraph explanation.",
+        "normal": "Explain each major component and how they work together.",
+        "detailed": "Provide a detailed line-by-line explanation."
+    }
+
+    instruction = detail_instructions.get(detail_level, detail_instructions["normal"])
+
+    text = f"""Please explain what the following code does:
+
+```
+{code}
+```
+
+{instruction}"""
+
+    return {
+        "description": f"Code explanation ({detail_level})",
+        "messages": [
+            {
+                "role": "user",
+                "content": {
+                    "type": "text",
+                    "text": text
+                }
+            }
+        ]
+    }</code></pre>
+                    </div>
+
+                    <h2>Error Handling</h2>
+                    <p>Handle common errors gracefully:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def handle_request(method, params, request_id):
+    """Route requests with error handling."""
+    try:
+        if method == "prompts/list":
+            result = {"prompts": list(PROMPTS.values())}
+        elif method == "prompts/get":
+            result = handle_prompts_get(params)
+        else:
+            return error_response(request_id, -32601, f"Method not found: {method}")
+
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": result
+        }
+
+    except ValueError as e:
+        # Invalid params (e.g., unknown prompt, missing argument)
+        return error_response(request_id, -32602, str(e))
+    except Exception as e:
+        # Internal error
+        return error_response(request_id, -32603, f"Internal error: {e}")
+
+
+def error_response(request_id, code, message):
+    """Create a JSON-RPC error response."""
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {
+            "code": code,
+            "message": message
+        }
+    }</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Error Codes</div>
+                        <p>
+                            Use standard JSON-RPC error codes: <code>-32602</code> for invalid params
+                            (unknown prompt, missing arguments) and <code>-32603</code> for internal errors.
+                        </p>
+                    </div>
+
+                    <h2>Testing prompts/get</h2>
+                    <p>Test with curl:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Get a prompt with arguments
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "prompts/get",
+    "params": {
+      "name": "code-review",
+      "arguments": {
+        "code": "print(\"hello\")",
+        "language": "python"
+      }
+    }
+  }'
+
+# Test missing required argument (should error)
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "prompts/get",
+    "params": {
+      "name": "code-review",
+      "arguments": {
+        "code": "print(\"hello\")"
+      }
+    }
+  }'
+
+# Expected error response:
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "error": {
+    "code": -32602,
+    "message": "Missing required argument: language"
+  }
+}</code></pre>
+                    </div>
+
+                    <h2>Multi-Message Prompts</h2>
+                    <p>
+                        Prompts can return multiple messages to set up a conversation context:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def generate_debug_session_prompt(arguments):
+    """Generate a debugging session with context."""
+    error_message = arguments.get("error", "")
+    code = arguments.get("code", "")
+
+    return {
+        "description": "Interactive debugging session",
+        "messages": [
+            {
+                "role": "user",
+                "content": {
+                    "type": "text",
+                    "text": f"I'm getting this error:\n\n{error_message}"
+                }
+            },
+            {
+                "role": "assistant",
+                "content": {
+                    "type": "text",
+                    "text": "I'll help you debug this. Can you share the relevant code?"
+                }
+            },
+            {
+                "role": "user",
+                "content": {
+                    "type": "text",
+                    "text": f"Here's my code:\n\n```\n{code}\n```"
+                }
+            }
+        ]
+    }</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Assistant Messages</div>
+                        <p>
+                            Including "assistant" role messages in your prompt can establish context
+                            and guide the conversation flow. The client will use these to populate
+                            the conversation history before the AI responds.
+                        </p>
+                    </div>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        Now that you can list and retrieve prompts, let's look at practical examples
+                        of useful prompts you can build for real-world use cases.
+                    </p>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-09-3.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>The prompts/list Method</span></span>
+                    </a>
+                    <a href="lesson-09-5.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Building Useful Prompts</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

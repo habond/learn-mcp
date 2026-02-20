@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Desktop Integration - Step 5 | MCP Learning Guide</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 11</div>
+                    <div class="lesson-info-title">Claude Desktop Integration</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 100%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-11.html" class="toc-link completed"><span class="toc-number">1</span><span>Introduction to Claude Desktop</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Configuration File</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Adding Your Server</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-4.html" class="toc-link completed"><span class="toc-number">4</span><span>Testing Integration</span></a></li>
+                    <li class="toc-item"><a href="lesson-11-5.html" class="toc-link active"><span class="toc-number">5</span><span>Debugging Tips</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link current">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 11 - Step 5 of 5</span>
+                    <h1 class="step-title">Debugging Tips</h1>
+                    <p class="step-description">Learn to diagnose and fix common issues with Claude Desktop integration.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Common Issues Overview</h2>
+                    <p>
+                        When things go wrong, systematic debugging helps. Here are the most
+                        common issues and how to solve them.
+                    </p>
+
+                    <h2>Issue 1: Server Not Appearing</h2>
+                    <p>
+                        <strong>Symptom:</strong> No tools icon in Claude Desktop, or your server's
+                        tools don't appear.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Checklist:
+
+1. Verify configuration file location
+   □ macOS: ~/Library/Application Support/Claude/claude_desktop_config.json
+   □ Windows: %APPDATA%\Claude\claude_desktop_config.json
+   □ Linux: ~/.config/claude/claude_desktop_config.json
+
+2. Verify JSON syntax
+   □ Run: python -m json.tool < claude_desktop_config.json
+   □ Should print formatted JSON without errors
+
+3. Verify paths are absolute
+   □ "/Users/you/project/server.py" (correct)
+   □ "./server.py" or "~/project/server.py" (incorrect)
+
+4. Verify file exists
+   □ ls -la /path/to/your/server.py
+   □ Should show the file with appropriate permissions
+
+5. Restart Claude Desktop completely
+   □ Quit (not just close window)
+   □ Reopen</code></pre>
+                    </div>
+
+                    <h2>Issue 2: Server Fails to Start</h2>
+                    <p>
+                        <strong>Symptom:</strong> Tools icon appears but no tools, or error
+                        messages about server connection.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Test server manually with exact command from config
+/path/to/python /path/to/server.py
+
+# Common errors:
+# - ModuleNotFoundError: Wrong Python or missing dependencies
+# - FileNotFoundError: Wrong path to server script
+# - PermissionError: Script not executable
+# - SyntaxError: Bug in server code</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Virtual Environment Check</div>
+                        <p>
+                            If using a virtual environment, make sure the config points to the
+                            venv's Python: <code>/path/to/project/.venv/bin/python</code>
+                        </p>
+                    </div>
+
+                    <h2>Issue 3: Handshake Fails</h2>
+                    <p>
+                        <strong>Symptom:</strong> Server starts but tools don't appear. The
+                        handshake isn't completing successfully.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Add debugging to your server's initialize handler
+
+def handle_initialize(params: dict) -> dict:
+    import sys
+    print(f"Received initialize: {params}", file=sys.stderr)
+
+    response = {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+            "tools": {}
+        },
+        "serverInfo": {
+            "name": "my-server",
+            "version": "1.0.0"
+        }
+    }
+
+    print(f"Sending response: {response}", file=sys.stderr)
+    return response</code></pre>
+                    </div>
+
+                    <p>Common handshake issues:</p>
+                    <ul>
+                        <li>Wrong <code>protocolVersion</code> (must be "2024-11-05" or compatible)</li>
+                        <li>Missing required fields in response</li>
+                        <li>Server outputting extra text to stdout (breaks JSON-RPC)</li>
+                        <li>Server not sending <code>notifications/initialized</code> acknowledgment</li>
+                    </ul>
+
+                    <h2>Issue 4: Tools Not Working</h2>
+                    <p>
+                        <strong>Symptom:</strong> Tools appear but calls fail or return errors.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># Add comprehensive error handling
+
+def handle_tool_call(name: str, arguments: dict) -> dict:
+    import sys
+    import traceback
+
+    print(f"Tool call: {name}({arguments})", file=sys.stderr)
+
+    try:
+        result = execute_tool(name, arguments)
+        print(f"Success: {result}", file=sys.stderr)
+        return {
+            "content": [{"type": "text", "text": str(result)}]
+        }
+    except Exception as e:
+        error_msg = f"Error in {name}: {e}\n{traceback.format_exc()}"
+        print(error_msg, file=sys.stderr)
+        return {
+            "content": [{"type": "text", "text": f"Error: {e}"}],
+            "isError": True
+        }</code></pre>
+                    </div>
+
+                    <h2>Issue 5: Stdout Corruption</h2>
+                    <p>
+                        <strong>Symptom:</strong> Intermittent failures, garbled responses, or
+                        "invalid JSON" errors.
+                    </p>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Critical Rule</div>
+                        <p>
+                            Never print to stdout except for JSON-RPC messages! All debug output,
+                            logs, and print statements must go to stderr.
+                        </p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import sys
+
+# BAD - corrupts STDIO protocol
+print("Starting server...")
+print(f"Processing: {data}")
+
+# GOOD - use stderr for all non-protocol output
+print("Starting server...", file=sys.stderr)
+print(f"Processing: {data}", file=sys.stderr)
+
+# Or use logging configured for stderr
+import logging
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+logger.info("Starting server...")
+logger.debug(f"Processing: {data}")</code></pre>
+                    </div>
+
+                    <h2>Viewing Claude Desktop Logs</h2>
+                    <p>
+                        Claude Desktop writes logs that can help diagnose issues:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># macOS - View Claude Desktop logs
+tail -f ~/Library/Logs/Claude/mcp*.log
+
+# Or find all log files
+ls -la ~/Library/Logs/Claude/
+
+# Windows - Logs location
+# %LOCALAPPDATA%\Claude\Logs\
+
+# Linux - Logs location
+# ~/.local/share/Claude/logs/</code></pre>
+                    </div>
+
+                    <h2>Creating a Debug Wrapper</h2>
+                    <p>
+                        Create a wrapper script that logs all communication:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">#!/usr/bin/env python3
+"""
+debug_wrapper.py - Wraps your server and logs all I/O.
+Usage: Configure Claude Desktop to run this instead of your server.
+"""
+
+import subprocess
+import sys
+import threading
+from datetime import datetime
+
+LOG_FILE = "/tmp/mcp_debug.log"
+
+def log(direction: str, data: str):
+    with open(LOG_FILE, "a") as f:
+        timestamp = datetime.now().isoformat()
+        f.write(f"[{timestamp}] {direction}: {data}\n")
+
+def forward_stderr(process):
+    """Forward server stderr to our stderr and log."""
+    for line in process.stderr:
+        log("STDERR", line)
+        sys.stderr.write(line)
+        sys.stderr.flush()
+
+def main():
+    # Start the actual server
+    server_cmd = ["/path/to/python", "/path/to/server.py"]
+    process = subprocess.Popen(
+        server_cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    # Forward stderr in background
+    stderr_thread = threading.Thread(
+        target=forward_stderr,
+        args=(process,),
+        daemon=True
+    )
+    stderr_thread.start()
+
+    # Forward stdin to server
+    def forward_stdin():
+        for line in sys.stdin:
+            log("IN", line.strip())
+            process.stdin.write(line)
+            process.stdin.flush()
+
+    stdin_thread = threading.Thread(target=forward_stdin, daemon=True)
+    stdin_thread.start()
+
+    # Forward stdout from server
+    for line in process.stdout:
+        log("OUT", line.strip())
+        sys.stdout.write(line)
+        sys.stdout.flush()
+
+if __name__ == "__main__":
+    main()</code></pre>
+                    </div>
+
+                    <h2>Testing with MCP Inspector</h2>
+                    <p>
+                        The MCP Inspector tool can help debug your server independently of
+                        Claude Desktop:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Install MCP Inspector (if available)
+npm install -g @modelcontextprotocol/inspector
+
+# Run your server with the inspector
+mcp-inspector python /path/to/server.py
+
+# This provides a web UI to:
+# - Send requests manually
+# - View responses
+# - Test tools interactively
+# - Debug protocol issues</code></pre>
+                    </div>
+
+                    <h2>Quick Reference: Debugging Checklist</h2>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>When things don't work:
+
+1. Configuration
+   □ JSON syntax valid?
+   □ Paths absolute?
+   □ File permissions OK?
+   □ Claude Desktop restarted?
+
+2. Server Basics
+   □ Server runs standalone?
+   □ All dependencies installed?
+   □ Correct Python version?
+   □ Virtual env activated (in config)?
+
+3. Protocol
+   □ Initialize response correct?
+   □ Tool definitions valid?
+   □ No stdout pollution?
+   □ Proper JSON-RPC format?
+
+4. Runtime
+   □ Error handling in place?
+   □ Logging to stderr?
+   □ No infinite loops?
+   □ Graceful shutdown?
+
+5. Environment
+   □ Required env vars set?
+   □ API keys valid?
+   □ Network accessible (if needed)?
+   □ File paths accessible?</code></pre>
+                    </div>
+
+                    <h2>Lesson Complete!</h2>
+                    <p>
+                        You've learned how to integrate your MCP server with Claude Desktop.
+                        This is a major milestone - your custom tools are now available to a
+                        production AI assistant!
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Key Takeaways</div>
+                        <p>
+                            <strong>Configuration:</strong> Use absolute paths, valid JSON, and
+                            specify the correct Python interpreter.<br><br>
+                            <strong>Debugging:</strong> Always log to stderr, never stdout. Use
+                            debug wrappers and log files to trace issues.<br><br>
+                            <strong>Testing:</strong> Test your server standalone before
+                            integrating with Claude Desktop.
+                        </p>
+                    </div>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        In the final lesson, you'll build a capstone project that combines
+                        everything you've learned into a complete, production-ready MCP server.
+                    </p>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-11-4.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Testing Integration</span></span>
+                    </a>
+                    <a href="lesson-12.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next Lesson</span><span>Capstone Project</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capstone Project - Step 5 | MCP Learning Guide</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 12</div>
+                    <div class="lesson-info-title">Capstone Project</div>
+                    <div class="lesson-info-meta"><span>~3 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 83%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-12.html" class="toc-link completed"><span class="toc-number">1</span><span>Project Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Planning Your Server</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Implementing Core Features</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-4.html" class="toc-link completed"><span class="toc-number">4</span><span>Adding Resources and Prompts</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-5.html" class="toc-link active"><span class="toc-number">5</span><span>Testing and Debugging</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-6.html" class="toc-link"><span class="toc-number">6</span><span>Next Steps</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link current">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 12 - Step 5 of 6</span>
+                    <h1 class="step-title">Testing and Debugging</h1>
+                    <p class="step-description">Test your server with curl and integrate with Claude Desktop.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Testing Your Server</h2>
+                    <p>
+                        Now that our server is complete, we need to test it thoroughly. We will
+                        use two approaches: manual testing with a test script and integration
+                        with Claude Desktop.
+                    </p>
+
+                    <h2>Manual Testing with STDIO</h2>
+                    <p>
+                        Since our server uses STDIO, we can test it by piping JSON-RPC requests
+                        directly. Create a test script <code>test_server.sh</code>:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">#!/bin/bash
+# test_server.sh - Test the Notes MCP Server
+
+# Function to send a request and display the response
+send_request() {
+    echo ">>> Sending: $1"
+    echo "$1" | python3 notes_server.py
+    echo ""
+}
+
+echo "=== Testing Notes MCP Server ==="
+echo ""
+
+# Test 1: Initialize
+echo "--- Test 1: Initialize ---"
+send_request '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+
+# Test 2: List Tools
+echo "--- Test 2: List Tools ---"
+send_request '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+
+# Test 3: Create a Note
+echo "--- Test 3: Create Note ---"
+send_request '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"create_note","arguments":{"title":"Test Note","content":"This is a test note.","tags":["test","demo"]}}}'
+
+# Test 4: List Resources
+echo "--- Test 4: List Resources ---"
+send_request '{"jsonrpc":"2.0","id":4,"method":"resources/list","params":{}}'
+
+# Test 5: Read Notes List Resource
+echo "--- Test 5: Read Notes List ---"
+send_request '{"jsonrpc":"2.0","id":5,"method":"resources/read","params":{"uri":"notes://list"}}'
+
+# Test 6: Search Notes
+echo "--- Test 6: Search Notes ---"
+send_request '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"search_notes","arguments":{"query":"test"}}}'
+
+# Test 7: List Prompts
+echo "--- Test 7: List Prompts ---"
+send_request '{"jsonrpc":"2.0","id":7,"method":"prompts/list","params":{}}'
+
+# Test 8: Get Prompt
+echo "--- Test 8: Get Summarize Prompt ---"
+send_request '{"jsonrpc":"2.0","id":8,"method":"prompts/get","params":{"name":"summarize_notes","arguments":{"style":"brief"}}}'
+
+echo "=== Tests Complete ==="</code></pre>
+                    </div>
+
+                    <p>
+                        Run the test script:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">chmod +x test_server.sh
+./test_server.sh</code></pre>
+                    </div>
+
+                    <h2>Interactive Testing</h2>
+                    <p>
+                        For interactive testing, you can run the server and send requests manually:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Start the server in interactive mode
+python3 notes_server.py
+
+# Then type JSON-RPC requests (one per line):
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}
+{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
+
+# Press Ctrl+D to exit</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Use Your Client</div>
+                        <p>
+                            If you completed Lesson 10, you can use your MCP client to test the
+                            server interactively. This provides a much better testing experience
+                            than manual JSON-RPC input.
+                        </p>
+                    </div>
+
+                    <h2>Claude Desktop Integration</h2>
+                    <p>
+                        The ultimate test is integrating with Claude Desktop. Add your server
+                        to the Claude Desktop configuration.
+                    </p>
+
+                    <h3>macOS Configuration</h3>
+                    <p>
+                        Edit <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "mcpServers": {
+        "notes": {
+            "command": "python3",
+            "args": ["/full/path/to/notes_server.py"],
+            "env": {}
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>Windows Configuration</h3>
+                    <p>
+                        Edit <code>%APPDATA%\Claude\claude_desktop_config.json</code>:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "mcpServers": {
+        "notes": {
+            "command": "python",
+            "args": ["C:\\full\\path\\to\\notes_server.py"],
+            "env": {}
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Important</div>
+                        <p>
+                            Use the full absolute path to your <code>notes_server.py</code> file.
+                            Relative paths will not work correctly. After editing the config,
+                            restart Claude Desktop completely.
+                        </p>
+                    </div>
+
+                    <h2>Testing with Claude</h2>
+                    <p>
+                        Once configured, restart Claude Desktop and try these conversations:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>You: Create a note about my project ideas with tags "work" and "ideas"
+
+Claude: I'll create that note for you using the notes server.
+
+[Claude uses create_note tool]
+
+I've created a new note titled "Project Ideas" with your specified tags.
+The note ID is abc123.
+
+---
+
+You: Show me all my notes
+
+Claude: Let me check your notes.
+
+[Claude reads notes://list resource]
+
+You have 3 notes:
+1. [abc123] Project Ideas (tags: work, ideas)
+2. [def456] Meeting Notes (tags: work, meeting)
+3. [ghi789] Shopping List (tags: personal)
+
+---
+
+You: Summarize my work-related notes
+
+Claude: I'll summarize your work notes.
+
+[Claude uses summarize_notes prompt with tag="work"]
+
+Here's a summary of your work notes:
+- Project Ideas discusses potential new features...
+- Meeting Notes covers the Q4 planning session...</code></pre>
+                    </div>
+
+                    <h2>Debugging Common Issues</h2>
+
+                    <h3>Server Not Starting</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Test that the server runs without errors
+python3 notes_server.py &lt; /dev/null
+
+# Check for syntax errors
+python3 -m py_compile notes_server.py</code></pre>
+                    </div>
+
+                    <h3>JSON Parse Errors</h3>
+                    <p>
+                        If you see "Parse error" responses, ensure your JSON is valid:
+                    </p>
+                    <ul>
+                        <li>Use double quotes for strings, not single quotes</li>
+                        <li>No trailing commas in objects or arrays</li>
+                        <li>Escape special characters properly</li>
+                    </ul>
+
+                    <h3>Method Not Found</h3>
+                    <p>
+                        Check that you are using the correct method names:
+                    </p>
+                    <ul>
+                        <li><code>initialize</code> (not "init" or "handshake")</li>
+                        <li><code>tools/list</code> (not "listTools")</li>
+                        <li><code>tools/call</code> (not "callTool")</li>
+                    </ul>
+
+                    <h3>Claude Desktop Not Connecting</h3>
+                    <ol>
+                        <li>Check the config file syntax is valid JSON</li>
+                        <li>Verify the path to your server is correct</li>
+                        <li>Ensure Python is in your PATH</li>
+                        <li>Check Claude Desktop logs for errors</li>
+                        <li>Restart Claude Desktop completely (quit and reopen)</li>
+                    </ol>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Viewing Logs</div>
+                        <p>
+                            On macOS, check Claude Desktop logs with:
+                            <code>tail -f ~/Library/Logs/Claude/mcp*.log</code>
+                        </p>
+                    </div>
+
+                    <h2>Adding Debug Output</h2>
+                    <p>
+                        For debugging, you can add logging to your server (write to stderr
+                        so it does not interfere with STDIO communication):
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import sys
+
+def debug(message):
+    """Write debug message to stderr."""
+    print(f"[DEBUG] {message}", file=sys.stderr)
+
+# Use in your handlers:
+def handle_request(self, request: dict):
+    debug(f"Received request: {request.get('method')}")
+    # ... rest of handler</code></pre>
+                    </div>
+
+                    <h2>Testing Checklist</h2>
+                    <p>
+                        Before considering your server complete, verify:
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Test</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">Initialize handshake works</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">tools/list returns all 4 tools</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">create_note creates and persists a note</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">update_note modifies existing notes</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">delete_note removes notes</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">search_notes finds matching notes</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">resources/list shows all resources</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">resources/read returns correct data</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">prompts/list returns both prompts</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">prompts/get generates correct messages</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;">Notes persist after server restart</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;">Works with Claude Desktop</td>
+                                <td style="padding: 0.75rem;">[ ]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Almost Done!</div>
+                        <p>
+                            Once all tests pass, you have successfully completed the capstone
+                            project! In the final step, we will discuss ideas for extending
+                            your server and resources for continued learning.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-12-4.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Adding Resources and Prompts</span></span>
+                    </a>
+                    <a href="lesson-12-6.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Next Steps</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

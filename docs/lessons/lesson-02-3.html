@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <title>Your First HTTP Server - Step 3 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 2</div>
+                    <div class="lesson-info-title">Your First HTTP Server</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 60%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-02.html" class="toc-link completed"><span class="toc-number">1</span><span>HTTP Fundamentals</span></a></li>
+                    <li class="toc-item"><a href="lesson-02-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Python's http.server</span></a></li>
+                    <li class="toc-item"><a href="lesson-02-3.html" class="toc-link active"><span class="toc-number">3</span><span>Handling POST Requests</span></a></li>
+                    <li class="toc-item"><a href="lesson-02-4.html" class="toc-link"><span class="toc-number">4</span><span>JSON Request/Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-02-5.html" class="toc-link"><span class="toc-number">5</span><span>Building an Echo Server</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link current">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 2 - Step 3 of 5</span>
+                    <h1 class="step-title">Handling POST Requests</h1>
+                    <p class="step-description">Learn to read request bodies from POST requests.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Reading the Request Body</h2>
+                    <p>
+                        POST requests carry data in the body. To read it, you need to:
+                    </p>
+                    <ol>
+                        <li>Check the <code>Content-Length</code> header to know how many bytes to read</li>
+                        <li>Read that many bytes from <code>self.rfile</code></li>
+                    </ol>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from http.server import HTTPServer, BaseHTTPRequestHandler
+
+
+class PostHandler(BaseHTTPRequestHandler):
+
+    def do_POST(self):
+        # Get the content length from headers
+        content_length = int(self.headers.get("Content-Length", 0))
+
+        # Read the body
+        body = self.rfile.read(content_length)
+
+        # Decode bytes to string
+        body_str = body.decode("utf-8")
+
+        print(f"Received: {body_str}")
+
+        # Send response
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(f"Received {len(body)} bytes".encode())</code></pre>
+                    </div>
+
+                    <h2>Test with curl</h2>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Send a POST request with data
+curl -X POST http://localhost:8080 -d "Hello, Server!"
+
+# Output: Received 14 bytes</code></pre>
+                    </div>
+
+                    <h2>Handling Missing Content-Length</h2>
+                    <p>Always handle the case where Content-Length might be missing:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def do_POST(self):
+    # Safely get content length
+    content_length = self.headers.get("Content-Length")
+
+    if content_length is None:
+        self.send_response(400)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"Content-Length header required")
+        return
+
+    content_length = int(content_length)
+
+    if content_length == 0:
+        self.send_response(400)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"Empty body not allowed")
+        return
+
+    # Read the body
+    body = self.rfile.read(content_length)
+    # ... process body</code></pre>
+                    </div>
+
+                    <h2>Reading Headers</h2>
+                    <p>Access any request header using <code>self.headers</code>:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def do_POST(self):
+    # Get specific headers
+    content_type = self.headers.get("Content-Type")
+    authorization = self.headers.get("Authorization")
+    custom_header = self.headers.get("X-Custom-Header")
+
+    # Check content type
+    if content_type != "application/json":
+        self.send_response(415)  # Unsupported Media Type
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"Content-Type must be application/json")
+        return
+
+    # ... continue processing</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Header Names Are Case-Insensitive</div>
+                        <p>
+                            HTTP headers are case-insensitive, so <code>Content-Type</code>,
+                            <code>content-type</code>, and <code>CONTENT-TYPE</code> are all equivalent.
+                            Python's <code>self.headers.get()</code> handles this for you.
+                        </p>
+                    </div>
+
+                    <h2>A Complete POST Handler</h2>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def do_POST(self):
+    """Handle POST request with validation."""
+    # Check content type
+    content_type = self.headers.get("Content-Type", "")
+    if "application/json" not in content_type:
+        self.send_error(415, "Content-Type must be application/json")
+        return
+
+    # Get content length
+    try:
+        content_length = int(self.headers.get("Content-Length", 0))
+    except ValueError:
+        self.send_error(400, "Invalid Content-Length")
+        return
+
+    if content_length == 0:
+        self.send_error(400, "Empty body")
+        return
+
+    # Read body
+    body = self.rfile.read(content_length)
+
+    # Process and respond
+    self.send_response(200)
+    self.send_header("Content-Type", "application/json")
+    self.end_headers()
+    self.wfile.write(b'{"status": "ok"}')</code></pre>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-02-2.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Python's http.server</span></span>
+                    </a>
+                    <a href="lesson-02-4.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>JSON Request/Response</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

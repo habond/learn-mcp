@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building an MCP Client - Step 1 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 10</div>
+                    <div class="lesson-info-title">Building an MCP Client</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 17%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-10.html" class="toc-link active"><span class="toc-number">1</span><span>Client Architecture</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-2.html" class="toc-link"><span class="toc-number">2</span><span>STDIO Client</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-3.html" class="toc-link"><span class="toc-number">3</span><span>Initialization Flow</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-4.html" class="toc-link"><span class="toc-number">4</span><span>Calling Methods</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-5.html" class="toc-link"><span class="toc-number">5</span><span>Listing Primitives</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-6.html" class="toc-link"><span class="toc-number">6</span><span>Interactive Testing</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link current">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 10 - Step 1 of 6</span>
+                    <h1 class="step-title">Client Architecture</h1>
+                    <p class="step-description">Understand how MCP clients manage connections and track requests.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Why Build a Client?</h2>
+                    <p>
+                        So far, you've built MCP servers. Now it's time to understand the other side:
+                        the <strong>MCP client</strong>. Building your own client gives you:
+                    </p>
+                    <ul>
+                        <li>Deep understanding of the MCP protocol</li>
+                        <li>A testing tool for your servers</li>
+                        <li>The ability to integrate MCP into your own applications</li>
+                    </ul>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Phase 4: Client Side</div>
+                        <p>
+                            This lesson marks the beginning of Phase 4, where we flip perspectives
+                            from server to client. Understanding both sides makes you a complete
+                            MCP developer.
+                        </p>
+                    </div>
+
+                    <h2>Client Architecture Overview</h2>
+                    <p>
+                        An MCP client needs to manage several concerns:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                      MCP CLIENT                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────┐     ┌─────────────────┐               │
+│  │   Connection    │     │    Request      │               │
+│  │   Manager       │     │    Tracker      │               │
+│  │                 │     │                 │               │
+│  │  - Start/stop   │     │  - Pending IDs  │               │
+│  │  - Reconnect    │     │  - Callbacks    │               │
+│  │  - Health check │     │  - Timeouts     │               │
+│  └─────────────────┘     └─────────────────┘               │
+│           │                      │                          │
+│           └──────────┬───────────┘                          │
+│                      │                                      │
+│           ┌──────────▼──────────┐                          │
+│           │    Transport Layer   │                          │
+│           │  (STDIO or HTTP/SSE) │                          │
+│           └──────────────────────┘                          │
+│                      │                                      │
+└──────────────────────│──────────────────────────────────────┘
+                       │
+                       ▼
+               ┌───────────────┐
+               │  MCP Server   │
+               └───────────────┘</code></pre>
+                    </div>
+
+                    <h2>Connection Management</h2>
+                    <p>
+                        The connection manager handles the lifecycle of the server connection:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">class MCPClient:
+    """Base MCP client with connection management."""
+
+    def __init__(self):
+        self.connected = False
+        self.initialized = False
+        self.server_info = None
+        self.server_capabilities = None
+
+    def connect(self):
+        """Establish connection to the server."""
+        raise NotImplementedError
+
+    def disconnect(self):
+        """Close the connection."""
+        raise NotImplementedError
+
+    def is_connected(self) -> bool:
+        """Check if connection is active."""
+        return self.connected and self.initialized</code></pre>
+                    </div>
+
+                    <h2>Request Tracking</h2>
+                    <p>
+                        Since JSON-RPC allows responses to arrive out of order, we need to track
+                        pending requests by their ID:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import threading
+from typing import Dict, Any, Optional, Callable
+
+class RequestTracker:
+    """Track pending requests and match responses."""
+
+    def __init__(self):
+        self._next_id = 1
+        self._pending: Dict[int, dict] = {}
+        self._lock = threading.Lock()
+
+    def create_request(self, method: str, params: Optional[dict] = None) -> dict:
+        """Create a new request with a unique ID."""
+        with self._lock:
+            request_id = self._next_id
+            self._next_id += 1
+
+            request = {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "method": method,
+            }
+            if params:
+                request["params"] = params
+
+            # Track this request
+            self._pending[request_id] = {
+                "request": request,
+                "callback": None,
+            }
+
+            return request
+
+    def resolve(self, response: dict) -> Optional[dict]:
+        """Match a response to its request."""
+        response_id = response.get("id")
+        if response_id is None:
+            return None
+
+        with self._lock:
+            pending = self._pending.pop(response_id, None)
+            return pending</code></pre>
+                    </div>
+
+                    <h2>The Request-Response Cycle</h2>
+                    <p>
+                        Here's how a typical request flows through the client:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>1. Application calls client.list_tools()
+   │
+   ▼
+2. Client creates request: {"jsonrpc": "2.0", "id": 5, "method": "tools/list"}
+   │
+   ▼
+3. Request ID 5 added to pending tracker
+   │
+   ▼
+4. Request sent over transport (STDIO or HTTP)
+   │
+   ▼
+5. Server processes request
+   │
+   ▼
+6. Response arrives: {"jsonrpc": "2.0", "id": 5, "result": {...}}
+   │
+   ▼
+7. Response matched to pending request by ID
+   │
+   ▼
+8. Result returned to application</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Thread Safety</div>
+                        <p>
+                            If your client might be used from multiple threads, make sure to
+                            protect the request tracker with locks. The example above uses
+                            <code>threading.Lock()</code> for this purpose.
+                        </p>
+                    </div>
+
+                    <h2>Client States</h2>
+                    <p>
+                        An MCP client moves through several states:
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">State</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Can Call Methods?</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Disconnected</strong></td>
+                                <td style="padding: 0.75rem;">No connection to server</td>
+                                <td style="padding: 0.75rem;">No</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Connected</strong></td>
+                                <td style="padding: 0.75rem;">Transport connected, not initialized</td>
+                                <td style="padding: 0.75rem;">Only <code>initialize</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Initializing</strong></td>
+                                <td style="padding: 0.75rem;">Handshake in progress</td>
+                                <td style="padding: 0.75rem;">No</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><strong>Ready</strong></td>
+                                <td style="padding: 0.75rem;">Fully initialized</td>
+                                <td style="padding: 0.75rem;">Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Coming Up</div>
+                        <p>
+                            In the next step, we'll implement a concrete STDIO client that can
+                            launch and communicate with MCP servers via subprocess.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-09-5.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous Lesson</span><span>Implementing Prompts</span></span>
+                    </a>
+                    <a href="lesson-10-2.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>STDIO Client</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

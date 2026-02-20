@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP/SSE Transport - Step 4 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 8</div>
+                    <div class="lesson-info-title">HTTP/SSE Transport</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 67%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-08.html" class="toc-link completed"><span class="toc-number">1</span><span>Streamable HTTP Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Server-Sent Events Basics</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Handling POST Requests</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-4.html" class="toc-link active"><span class="toc-number">4</span><span>SSE Response Streaming</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-5.html" class="toc-link"><span class="toc-number">5</span><span>Session Management</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-6.html" class="toc-link"><span class="toc-number">6</span><span>Complete HTTP Server</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link current">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 8 - Step 4 of 6</span>
+                    <h1 class="step-title">SSE Response Streaming</h1>
+                    <p class="step-description">Implement Server-Sent Events to stream JSON-RPC responses to clients.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Streaming Responses with SSE</h2>
+                    <p>
+                        Instead of sending a single JSON response, we can stream multiple events
+                        using Server-Sent Events. This is useful for long-running operations,
+                        progress updates, or sending multiple responses.
+                    </p>
+
+                    <h2>SSE Writer Class</h2>
+                    <p>
+                        Let's create a helper class to properly format and send SSE events:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+sse_writer.py - Server-Sent Events writer for HTTP responses.
+"""
+
+import json
+
+
+class SSEWriter:
+    """Write Server-Sent Events to an HTTP response."""
+
+    def __init__(self, wfile):
+        """
+        Initialize with a writable file object.
+
+        Args:
+            wfile: The response write file (self.wfile from handler)
+        """
+        self.wfile = wfile
+        self.event_id = 0
+
+    def send_event(self, data, event_type="message", event_id=None):
+        """
+        Send a single SSE event.
+
+        Args:
+            data: The event data (will be JSON-encoded if dict)
+            event_type: The event type (default: "message")
+            event_id: Optional event ID (auto-incremented if None)
+        """
+        # Auto-increment event ID if not provided
+        if event_id is None:
+            self.event_id += 1
+            event_id = self.event_id
+
+        # JSON-encode dict data
+        if isinstance(data, dict):
+            data = json.dumps(data)
+
+        # Build the event
+        lines = []
+        lines.append(f"event: {event_type}")
+        lines.append(f"id: {event_id}")
+        lines.append(f"data: {data}")
+
+        # Join with newlines and add blank line
+        event = "\n".join(lines) + "\n\n"
+
+        # Write and flush
+        self.wfile.write(event.encode("utf-8"))
+        self.wfile.flush()
+
+    def send_json_rpc(self, response):
+        """
+        Send a JSON-RPC response as an SSE event.
+
+        Args:
+            response: A JSON-RPC response dict
+        """
+        self.send_event(response, event_type="message")
+
+    def send_comment(self, text):
+        """
+        Send an SSE comment (for keep-alive).
+
+        Args:
+            text: Comment text
+        """
+        comment = f": {text}\n\n"
+        self.wfile.write(comment.encode("utf-8"))
+        self.wfile.flush()</code></pre>
+                    </div>
+
+                    <h2>Using SSE in the Handler</h2>
+                    <p>
+                        Now integrate the SSE writer into your HTTP handler:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">class MCPHTTPHandler(BaseHTTPRequestHandler):
+    """Handle MCP requests with SSE support."""
+
+    def send_sse_headers(self):
+        """Send headers for SSE response."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+
+    def handle_sse_response(self, request):
+        """Handle a request with SSE streaming response."""
+        # Send SSE headers
+        self.send_sse_headers()
+
+        # Create SSE writer
+        sse = SSEWriter(self.wfile)
+
+        # Process the request
+        method = request.get("method")
+        request_id = request.get("id")
+        params = request.get("params", {})
+
+        # Route and handle the request
+        try:
+            if method == "initialize":
+                response = self.handle_initialize(request_id, params)
+            elif method == "tools/list":
+                response = self.handle_tools_list(request_id)
+            elif method == "tools/call":
+                # Tools might send progress events
+                response = self.handle_tools_call(request_id, params, sse)
+            else:
+                response = {
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {
+                        "code": -32601,
+                        "message": f"Method not found: {method}"
+                    }
+                }
+
+            # Send the final response
+            sse.send_json_rpc(response)
+
+        except Exception as e:
+            # Send error response
+            sse.send_json_rpc({
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {
+                    "code": -32603,
+                    "message": f"Internal error: {e}"
+                }
+            })</code></pre>
+                    </div>
+
+                    <h2>Progress Notifications</h2>
+                    <p>
+                        For long-running tool calls, you can send progress notifications
+                        before the final result:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def handle_tools_call(self, request_id, params, sse):
+    """Handle tools/call with progress streaming."""
+    tool_name = params.get("name")
+    arguments = params.get("arguments", {})
+
+    # For demonstration: a slow tool that reports progress
+    if tool_name == "slow_search":
+        query = arguments.get("query", "")
+
+        # Send progress notifications
+        for i in range(1, 4):
+            sse.send_json_rpc({
+                "jsonrpc": "2.0",
+                "method": "notifications/progress",
+                "params": {
+                    "progressToken": request_id,
+                    "progress": i * 25,
+                    "total": 100,
+                    "message": f"Searching... {i}/4 complete"
+                }
+            })
+            import time
+            time.sleep(0.5)  # Simulate work
+
+        # Return final result
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": f"Found 42 results for '{query}'"
+                    }
+                ]
+            }
+        }
+
+    # Unknown tool
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {
+            "code": -32602,
+            "message": f"Unknown tool: {tool_name}"
+        }
+    }</code></pre>
+                    </div>
+
+                    <h2>SSE Output Example</h2>
+                    <p>
+                        When streaming a slow tool call, the SSE output looks like this:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>event: message
+id: 1
+data: {"jsonrpc":"2.0","method":"notifications/progress","params":{"progressToken":1,"progress":25,"total":100,"message":"Searching... 1/4 complete"}}
+
+event: message
+id: 2
+data: {"jsonrpc":"2.0","method":"notifications/progress","params":{"progressToken":1,"progress":50,"total":100,"message":"Searching... 2/4 complete"}}
+
+event: message
+id: 3
+data: {"jsonrpc":"2.0","method":"notifications/progress","params":{"progressToken":1,"progress":75,"total":100,"message":"Searching... 3/4 complete"}}
+
+event: message
+id: 4
+data: {"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"Found 42 results for 'example'"}]}}
+
+</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Keep-Alive</div>
+                        <p>
+                            For long-lived SSE connections, send periodic comments (lines starting
+                            with <code>:</code>) to prevent timeouts. Comments are ignored by clients
+                            but keep the connection alive.
+                        </p>
+                    </div>
+
+                    <h2>Testing SSE Responses</h2>
+                    <p>Test SSE streaming with curl:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Request with Accept header for SSE
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "slow_search",
+      "arguments": {"query": "example"}
+    }
+  }'
+
+# Output shows streamed events in real-time:
+# event: message
+# id: 1
+# data: {"jsonrpc":"2.0","method":"notifications/progress",...}
+# ...</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Next Step</div>
+                        <p>
+                            Now let's implement session management to track client connections
+                            and maintain state between requests.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-08-3.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Handling POST Requests</span></span>
+                    </a>
+                    <a href="lesson-08-5.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Session Management</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

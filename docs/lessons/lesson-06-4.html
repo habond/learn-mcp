@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Resources - Step 4 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 6</div>
+                    <div class="lesson-info-title">Implementing Resources</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 80%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-06.html" class="toc-link completed"><span class="toc-number">1</span><span>What are MCP Resources?</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Resource Definition</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-3.html" class="toc-link completed"><span class="toc-number">3</span><span>The resources/list Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-4.html" class="toc-link active"><span class="toc-number">4</span><span>The resources/read Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-5.html" class="toc-link"><span class="toc-number">5</span><span>Building File Resources</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link current">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 6 - Step 4 of 5</span>
+                    <h1 class="step-title">The resources/read Method</h1>
+                    <p class="step-description">Implement reading resource contents with text and blob support.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Purpose of resources/read</h2>
+                    <p>
+                        The <code>resources/read</code> method retrieves the actual content of a resource.
+                        After listing resources, clients use this method to fetch the data they need.
+                    </p>
+
+                    <h2>Request Format</h2>
+                    <p>The client specifies which resource to read by its URI:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "resources/read",
+    "params": {
+        "uri": "file:///project/config.json"
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Response Format</h2>
+                    <p>
+                        The server returns a <code>contents</code> array. Each item contains the resource
+                        URI, optional MIME type, and the content as either <code>text</code> or <code>blob</code>.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+        "contents": [
+            {
+                "uri": "file:///project/config.json",
+                "mimeType": "application/json",
+                "text": "{\n  \"debug\": true,\n  \"port\": 8080\n}"
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Text vs Blob Content</h2>
+                    <p>
+                        MCP supports two content types: <strong>text</strong> for human-readable content
+                        and <strong>blob</strong> for binary data.
+                    </p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Field</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Type</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Use For</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>text</code></td>
+                                <td style="padding: 0.75rem;">UTF-8 string</td>
+                                <td style="padding: 0.75rem;">Source code, JSON, markdown, plain text</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>blob</code></td>
+                                <td style="padding: 0.75rem;">Base64-encoded string</td>
+                                <td style="padding: 0.75rem;">Images, PDFs, binary files</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Choose One: text or blob</div>
+                        <p>
+                            Each content item must have either <code>text</code> or <code>blob</code>,
+                            never both. Use <code>text</code> when possible &mdash; it's more efficient
+                            and the AI can read it directly.
+                        </p>
+                    </div>
+
+                    <h2>Text Content Example</h2>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+        "contents": [
+            {
+                "uri": "file:///project/main.py",
+                "mimeType": "text/x-python",
+                "text": "def main():\n    print('Hello, World!')\n\nif __name__ == '__main__':\n    main()"
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Blob Content Example</h2>
+                    <p>For binary content, encode it as Base64:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+        "contents": [
+            {
+                "uri": "file:///project/logo.png",
+                "mimeType": "image/png",
+                "blob": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Implementing resources/read in Python</h2>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+resources_read.py - Implementing resources/read
+"""
+
+import base64
+from pathlib import Path
+
+# Resource registry with content providers
+RESOURCES = {
+    "file:///project/config.json": {
+        "name": "config.json",
+        "mimeType": "application/json"
+    },
+    "file:///project/README.md": {
+        "name": "README.md",
+        "mimeType": "text/markdown"
+    },
+    "file:///project/logo.png": {
+        "name": "logo.png",
+        "mimeType": "image/png"
+    }
+}
+
+
+def is_binary_mime_type(mime_type: str) -> bool:
+    """Check if a MIME type represents binary content."""
+    binary_types = [
+        "image/", "audio/", "video/",
+        "application/octet-stream",
+        "application/pdf",
+        "application/zip"
+    ]
+    return any(mime_type.startswith(t) for t in binary_types)
+
+
+def read_file_content(uri: str) -> dict:
+    """Read file content and return appropriate format."""
+    # Extract file path from URI
+    if uri.startswith("file://"):
+        file_path = Path(uri[7:])  # Remove "file://" prefix
+    else:
+        raise ValueError(f"Unsupported URI scheme: {uri}")
+
+    resource = RESOURCES.get(uri)
+    if not resource:
+        raise ValueError(f"Unknown resource: {uri}")
+
+    mime_type = resource.get("mimeType", "application/octet-stream")
+
+    # Read the file
+    if is_binary_mime_type(mime_type):
+        # Binary content - encode as base64
+        with open(file_path, "rb") as f:
+            content = base64.b64encode(f.read()).decode("utf-8")
+        return {
+            "uri": uri,
+            "mimeType": mime_type,
+            "blob": content
+        }
+    else:
+        # Text content - read as UTF-8
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return {
+            "uri": uri,
+            "mimeType": mime_type,
+            "text": content
+        }
+
+
+def handle_resources_read(params: dict) -> dict:
+    """Handle resources/read requests."""
+    uri = params.get("uri")
+
+    if not uri:
+        raise ValueError("Missing required parameter: uri")
+
+    content = read_file_content(uri)
+
+    return {
+        "contents": [content]
+    }</code></pre>
+                    </div>
+
+                    <h2>Error Handling</h2>
+                    <p>
+                        When a resource cannot be read, return a JSON-RPC error with an appropriate code:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+error_handling.py - Proper error responses for resources/read
+"""
+
+
+def handle_resources_read(params: dict) -> dict:
+    """Handle resources/read with proper error handling."""
+    uri = params.get("uri")
+
+    if not uri:
+        raise MCPError(-32602, "Missing required parameter: uri")
+
+    if uri not in RESOURCES:
+        raise MCPError(-32602, f"Resource not found: {uri}")
+
+    try:
+        content = read_file_content(uri)
+        return {"contents": [content]}
+    except FileNotFoundError:
+        raise MCPError(-32002, f"File not found: {uri}")
+    except PermissionError:
+        raise MCPError(-32003, f"Permission denied: {uri}")
+    except UnicodeDecodeError:
+        raise MCPError(-32004, f"Cannot decode file as text: {uri}")
+
+
+class MCPError(Exception):
+    """Custom exception for MCP errors."""
+    def __init__(self, code: int, message: str):
+        self.code = code
+        self.message = message
+        super().__init__(message)</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">// Error response when resource not found
+{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "error": {
+        "code": -32602,
+        "message": "Resource not found: file:///nonexistent.txt"
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Complete Handler Integration</h2>
+                    <p>Here's how to integrate both methods into your server:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+complete_handler.py - Full resources implementation
+"""
+
+
+def route_request(method: str, params: dict) -> dict:
+    """Route requests to appropriate handlers."""
+    handlers = {
+        "initialize": handle_initialize,
+        "resources/list": handle_resources_list,
+        "resources/read": handle_resources_read,
+    }
+
+    handler = handlers.get(method)
+    if not handler:
+        raise MCPError(-32601, f"Method not found: {method}")
+
+    return handler(params)
+
+
+def handle_initialize(params: dict) -> dict:
+    """Handle initialization with resource capability."""
+    return {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {
+            "resources": {}  # Advertise resource support
+        },
+        "serverInfo": {
+            "name": "resource-server",
+            "version": "1.0.0"
+        }
+    }</code></pre>
+                    </div>
+
+                    <h2>Testing resources/read</h2>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Read a text resource
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "resources/read",
+    "params": {
+        "uri": "file:///project/config.json"
+    }
+  }'</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Handling Large Resources</div>
+                        <p>
+                            For very large files, consider implementing streaming or chunked responses.
+                            The standard <code>resources/read</code> method is best suited for resources
+                            that fit comfortably in memory.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-06-3.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>The resources/list Method</span></span>
+                    </a>
+                    <a href="lesson-06-5.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Building File Resources</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

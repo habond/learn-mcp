@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <title>Understanding MCP - Step 5 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo">
+                    <span>&#9889;</span>
+                    <span>MCP Learning Guide</span>
+                </a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 1</div>
+                    <div class="lesson-info-title">Understanding MCP</div>
+                    <div class="lesson-info-meta">
+                        <span>~1.5 hours</span>
+                        <span>5 steps</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-01.html" class="toc-link completed"><span class="toc-number">1</span><span>What is MCP?</span></a></li>
+                    <li class="toc-item"><a href="lesson-01-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Client-Server Architecture</span></a></li>
+                    <li class="toc-item"><a href="lesson-01-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Core Concepts</span></a></li>
+                    <li class="toc-item"><a href="lesson-01-4.html" class="toc-link completed"><span class="toc-number">4</span><span>Transport Mechanisms</span></a></li>
+                    <li class="toc-item"><a href="lesson-01-5.html" class="toc-link active"><span class="toc-number">5</span><span>Message Flow & Lifecycle</span></a></li>
+                </ol>
+            </nav>
+
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link current">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 1 - Step 5 of 5</span>
+                    <h1 class="step-title">Message Flow & Lifecycle</h1>
+                    <p class="step-description">See how a complete MCP session works from start to finish.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The MCP Connection Lifecycle</h2>
+                    <p>
+                        Every MCP session follows a specific lifecycle. Understanding this flow is
+                        essential before we start building servers.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    MCP LIFECYCLE                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. INITIALIZATION                                          │
+│     Client ──► initialize request                           │
+│     Server ◄── initialize response (capabilities)          │
+│     Client ──► notifications/initialized                    │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  2. OPERATION (normal usage)                                │
+│     Client ──► tools/list                                   │
+│     Server ◄── list of tools                                │
+│     Client ──► tools/call                                   │
+│     Server ◄── tool result                                  │
+│     ... (repeat as needed)                                  │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  3. SHUTDOWN                                                │
+│     Client ──► close connection                             │
+│     (Server exits or connection drops)                      │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+                    </div>
+
+                    <h2>Phase 1: Initialization</h2>
+                    <p>
+                        Before any tools can be called or resources read, the client and server must
+                        complete a <strong>handshake</strong>. This establishes protocol version and capabilities.
+                    </p>
+
+                    <h3>Step 1: Client sends initialize request</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+        "protocolVersion": "2025-11-25",
+        "capabilities": {
+            "sampling": {}
+        },
+        "clientInfo": {
+            "name": "claude-desktop",
+            "version": "1.0.0"
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>Step 2: Server responds with capabilities</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+        "protocolVersion": "2025-11-25",
+        "capabilities": {
+            "tools": {},
+            "resources": {}
+        },
+        "serverInfo": {
+            "name": "my-mcp-server",
+            "version": "1.0.0"
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>Step 3: Client confirms initialization</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "method": "notifications/initialized"
+}</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Notice: No ID</div>
+                        <p>
+                            The <code>notifications/initialized</code> message has no <code>id</code> field.
+                            This makes it a <strong>notification</strong>, which doesn't expect a response.
+                        </p>
+                    </div>
+
+                    <h2>Phase 2: Normal Operation</h2>
+                    <p>
+                        After initialization, the client can start using the server's capabilities.
+                        Here's a typical tool interaction:
+                    </p>
+
+                    <h3>List available tools</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">// Request
+{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/list"
+}
+
+// Response
+{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+        "tools": [
+            {
+                "name": "get_weather",
+                "description": "Get weather for a city",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "city": {"type": "string"}
+                    },
+                    "required": ["city"]
+                }
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>Call a tool</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">// Request
+{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+        "name": "get_weather",
+        "arguments": {
+            "city": "San Francisco"
+        }
+    }
+}
+
+// Response
+{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "result": {
+        "content": [
+            {
+                "type": "text",
+                "text": "San Francisco: 68°F, Sunny"
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Key MCP Methods</h2>
+                    <p>Here are the main methods you'll implement:</p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Method</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>initialize</code></td>
+                                <td style="padding: 0.75rem;">Exchange capabilities and version</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>tools/list</code></td>
+                                <td style="padding: 0.75rem;">Get available tools</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>tools/call</code></td>
+                                <td style="padding: 0.75rem;">Execute a tool</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>resources/list</code></td>
+                                <td style="padding: 0.75rem;">Get available resources</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>resources/read</code></td>
+                                <td style="padding: 0.75rem;">Read a resource's content</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>prompts/list</code></td>
+                                <td style="padding: 0.75rem;">Get available prompts</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>prompts/get</code></td>
+                                <td style="padding: 0.75rem;">Get a prompt's content</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        Congratulations! You now understand the fundamentals of MCP:
+                    </p>
+                    <ul>
+                        <li>What MCP is and why it exists</li>
+                        <li>The client-server architecture</li>
+                        <li>Tools, Resources, and Prompts</li>
+                        <li>STDIO vs HTTP/SSE transports</li>
+                        <li>The message flow and lifecycle</li>
+                    </ul>
+
+                    <p>
+                        In the next lesson, we'll build a simple HTTP server using Python's standard
+                        library. This will give you the foundation to build MCP servers with the
+                        HTTP/SSE transport.
+                    </p>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Ready to Code!</div>
+                        <p>
+                            Starting in Lesson 2, we'll write actual Python code. Make sure you have
+                            Python 3.8+ installed and a code editor ready. Let's build!
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-01-4.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Previous</span>
+                            <span>Transport Mechanisms</span>
+                        </span>
+                    </a>
+                    <a href="lesson-02.html" class="nav-button next">
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Next Lesson</span>
+                            <span>Your First HTTP Server</span>
+                        </span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Prompts - Step 3 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 9</div>
+                    <div class="lesson-info-title">Implementing Prompts</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 60%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-09.html" class="toc-link completed"><span class="toc-number">1</span><span>What are MCP Prompts?</span></a></li>
+                    <li class="toc-item"><a href="lesson-09-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Prompt Definition</span></a></li>
+                    <li class="toc-item"><a href="lesson-09-3.html" class="toc-link active"><span class="toc-number">3</span><span>The prompts/list Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-09-4.html" class="toc-link"><span class="toc-number">4</span><span>The prompts/get Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-09-5.html" class="toc-link"><span class="toc-number">5</span><span>Building Useful Prompts</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link current">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 9 - Step 3 of 5</span>
+                    <h1 class="step-title">The prompts/list Method</h1>
+                    <p class="step-description">Implement the method that lets clients discover available prompts.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Understanding prompts/list</h2>
+                    <p>
+                        The <code>prompts/list</code> method allows clients to discover what prompts
+                        your server offers. This is typically the first prompt-related request a client makes.
+                    </p>
+
+                    <h2>Request Format</h2>
+                    <p>The client sends a simple request with no required parameters:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "prompts/list",
+    "params": {}
+}</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Optional Cursor Parameter</div>
+                        <p>
+                            Like <code>tools/list</code> and <code>resources/list</code>, the prompts/list
+                            method supports pagination with an optional <code>cursor</code> parameter.
+                            For most servers with a small number of prompts, pagination isn't needed.
+                        </p>
+                    </div>
+
+                    <h2>Response Format</h2>
+                    <p>The server responds with a list of all available prompts:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+        "prompts": [
+            {
+                "name": "code-review",
+                "description": "Review code for bugs, style issues, and improvements",
+                "arguments": [
+                    {
+                        "name": "code",
+                        "description": "The code to review",
+                        "required": true
+                    },
+                    {
+                        "name": "language",
+                        "description": "Programming language (python, javascript, etc.)",
+                        "required": true
+                    },
+                    {
+                        "name": "focus",
+                        "description": "Review focus: security, performance, style, or all",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "name": "explain-code",
+                "description": "Explain what a piece of code does in plain English",
+                "arguments": [
+                    {
+                        "name": "code",
+                        "description": "The code to explain",
+                        "required": true
+                    }
+                ]
+            },
+            {
+                "name": "summarize",
+                "description": "Summarize text content concisely",
+                "arguments": [
+                    {
+                        "name": "text",
+                        "description": "The text to summarize",
+                        "required": true
+                    }
+                ]
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Python Implementation</h2>
+                    <p>
+                        Here's how to implement <code>prompts/list</code> in your MCP server:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+mcp_server.py - MCP Server with prompts support
+"""
+
+# Define available prompts
+PROMPTS = {
+    "code-review": {
+        "name": "code-review",
+        "description": "Review code for bugs, style issues, and improvements",
+        "arguments": [
+            {
+                "name": "code",
+                "description": "The code to review",
+                "required": True
+            },
+            {
+                "name": "language",
+                "description": "Programming language (python, javascript, etc.)",
+                "required": True
+            },
+            {
+                "name": "focus",
+                "description": "Review focus: security, performance, style, or all",
+                "required": False
+            }
+        ]
+    },
+    "explain-code": {
+        "name": "explain-code",
+        "description": "Explain what a piece of code does in plain English",
+        "arguments": [
+            {
+                "name": "code",
+                "description": "The code to explain",
+                "required": True
+            }
+        ]
+    },
+    "summarize": {
+        "name": "summarize",
+        "description": "Summarize text content concisely",
+        "arguments": [
+            {
+                "name": "text",
+                "description": "The text to summarize",
+                "required": True
+            },
+            {
+                "name": "max_length",
+                "description": "Maximum length in sentences (default: 3)",
+                "required": False
+            }
+        ]
+    }
+}
+
+
+def handle_prompts_list(params):
+    """Handle the prompts/list method."""
+    # Return all prompts as a list
+    return {
+        "prompts": list(PROMPTS.values())
+    }
+
+
+def handle_request(method, params, request_id):
+    """Route JSON-RPC requests to appropriate handlers."""
+    if method == "prompts/list":
+        result = handle_prompts_list(params)
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": result
+        }
+
+    # Handle other methods...
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {
+            "code": -32601,
+            "message": f"Method not found: {method}"
+        }
+    }</code></pre>
+                    </div>
+
+                    <h2>Declaring Prompts Capability</h2>
+                    <p>
+                        For clients to know your server supports prompts, you must declare
+                        the capability in your <code>initialize</code> response:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def handle_initialize(params, request_id):
+    """Handle the initialize method."""
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "result": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {
+                "prompts": {},      # Declare prompts support
+                "tools": {},        # If you also support tools
+                "resources": {}     # If you also support resources
+            },
+            "serverInfo": {
+                "name": "my-prompt-server",
+                "version": "1.0.0"
+            }
+        }
+    }</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Empty Capabilities Object</div>
+                        <p>
+                            The <code>"prompts": {}</code> capability object is currently empty,
+                            but including it tells clients that your server supports the
+                            <code>prompts/list</code> and <code>prompts/get</code> methods.
+                        </p>
+                    </div>
+
+                    <h2>Testing with curl</h2>
+                    <p>Test your prompts/list implementation:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># List all prompts
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "prompts/list",
+    "params": {}
+  }'
+
+# Expected response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "prompts": [
+      {
+        "name": "code-review",
+        "description": "Review code for bugs, style issues, and improvements",
+        "arguments": [...]
+      },
+      ...
+    ]
+  }
+}</code></pre>
+                    </div>
+
+                    <h2>Complete Server Example</h2>
+                    <p>
+                        Here's a complete HTTP server with prompts/list support:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+prompts_server.py - MCP server with prompts support
+"""
+
+import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+PROMPTS = {
+    "code-review": {
+        "name": "code-review",
+        "description": "Review code for bugs and improvements",
+        "arguments": [
+            {"name": "code", "description": "Code to review", "required": True},
+            {"name": "language", "description": "Programming language", "required": True}
+        ]
+    },
+    "summarize": {
+        "name": "summarize",
+        "description": "Summarize text concisely",
+        "arguments": [
+            {"name": "text", "description": "Text to summarize", "required": True}
+        ]
+    }
+}
+
+
+class MCPHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        # Read and parse request
+        length = int(self.headers.get("Content-Length", 0))
+        body = json.loads(self.rfile.read(length).decode())
+
+        method = body.get("method")
+        params = body.get("params", {})
+        request_id = body.get("id")
+
+        # Route to handler
+        if method == "initialize":
+            result = {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {"prompts": {}},
+                "serverInfo": {"name": "prompts-server", "version": "1.0.0"}
+            }
+        elif method == "prompts/list":
+            result = {"prompts": list(PROMPTS.values())}
+        else:
+            self.send_error_response(request_id, -32601, f"Unknown: {method}")
+            return
+
+        self.send_json({"jsonrpc": "2.0", "id": request_id, "result": result})
+
+    def send_json(self, data):
+        body = json.dumps(data).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", len(body))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def send_error_response(self, request_id, code, message):
+        self.send_json({
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {"code": code, "message": message}
+        })
+
+
+if __name__ == "__main__":
+    server = HTTPServer(("localhost", 8080), MCPHandler)
+    print("Server running on http://localhost:8080")
+    server.serve_forever()</code></pre>
+                    </div>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        Now that clients can discover your prompts, let's implement
+                        <code>prompts/get</code> to actually retrieve and expand prompts
+                        with user-provided arguments.
+                    </p>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-09-2.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Prompt Definition</span></span>
+                    </a>
+                    <a href="lesson-09-4.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>The prompts/get Method</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

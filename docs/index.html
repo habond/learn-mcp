@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Learning Guide - Build MCP Servers from Scratch</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+    <div class="landing-container">
+        <header class="landing-header">
+            <div class="logo">
+                <span class="logo-icon">&#9889;</span>
+                <span class="logo-text">MCP Learning Guide</span>
+            </div>
+            <p class="tagline">Build Model Context Protocol servers from scratch using Python</p>
+        </header>
+
+        <section class="hero">
+            <h1>Learn MCP by Building</h1>
+            <p class="hero-description">
+                A hands-on, 12-lesson journey from JSON fundamentals to production-ready MCP servers.
+                No MCP libraries allowed &mdash; just you, Python's standard library, and the protocol specification.
+            </p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">12</span>
+                    <span class="stat-label">Lessons</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">65</span>
+                    <span class="stat-label">Steps</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">~25</span>
+                    <span class="stat-label">Hours</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="phases">
+            <!-- Phase 1 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">Phase 1</span>
+                    <h2 class="phase-title">Foundations</h2>
+                    <p class="phase-description">Build the fundamental building blocks needed for MCP</p>
+                </div>
+                <div class="lessons-grid">
+                    <a href="lessons/lesson-01.html" class="lesson-card">
+                        <div class="lesson-number">01</div>
+                        <h3 class="lesson-title">Understanding MCP</h3>
+                        <p class="lesson-description">Learn what MCP is, its architecture, and core concepts: Tools, Resources, and Prompts.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~1.5 hours</span>
+                            <span class="lesson-steps">5 steps</span>
+                        </div>
+                    </a>
+                    <a href="lessons/lesson-02.html" class="lesson-card">
+                        <div class="lesson-number">02</div>
+                        <h3 class="lesson-title">Your First HTTP Server</h3>
+                        <p class="lesson-description">Build a basic HTTP server using Python's built-in http.server module.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~2 hours</span>
+                            <span class="lesson-steps">5 steps</span>
+                        </div>
+                    </a>
+                    <a href="lessons/lesson-03.html" class="lesson-card">
+                        <div class="lesson-number">03</div>
+                        <h3 class="lesson-title">JSON-RPC 2.0 Essentials</h3>
+                        <p class="lesson-description">Understand the JSON-RPC 2.0 protocol that powers MCP communication.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~1.5 hours</span>
+                            <span class="lesson-steps">5 steps</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phase 2 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">Phase 2</span>
+                    <h2 class="phase-title">MCP Protocol Core</h2>
+                    <p class="phase-description">Implement the core MCP protocol mechanics</p>
+                </div>
+                <div class="lessons-grid">
+                    <a href="lessons/lesson-04.html" class="lesson-card">
+                        <div class="lesson-number">04</div>
+                        <h3 class="lesson-title">The MCP Handshake</h3>
+                        <p class="lesson-description">Implement the initialization lifecycle and capability negotiation.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~2.5 hours</span>
+                            <span class="lesson-steps">6 steps</span>
+                        </div>
+                    </a>
+                    <a href="lessons/lesson-05.html" class="lesson-card">
+                        <div class="lesson-number">05</div>
+                        <h3 class="lesson-title">Implementing Tools</h3>
+                        <p class="lesson-description">Add your first MCP primitive &mdash; executable functions for AI models.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~2.5 hours</span>
+                            <span class="lesson-steps">6 steps</span>
+                        </div>
+                    </a>
+                    <a href="lessons/lesson-06.html" class="lesson-card">
+                        <div class="lesson-number">06</div>
+                        <h3 class="lesson-title">Implementing Resources</h3>
+                        <p class="lesson-description">Expose data sources and contextual information to language models.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~2 hours</span>
+                            <span class="lesson-steps">5 steps</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phase 3 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">Phase 3</span>
+                    <h2 class="phase-title">Transport & Integration</h2>
+                    <p class="phase-description">Connect your server to the real world</p>
+                </div>
+                <div class="lessons-grid">
+                    <a href="lessons/lesson-07.html" class="lesson-card">
+                        <div class="lesson-number">07</div>
+                        <h3 class="lesson-title">STDIO Transport</h3>
+                        <p class="lesson-description">Implement the primary transport for local MCP servers.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~2 hours</span>
+                            <span class="lesson-steps">5 steps</span>
+                        </div>
+                    </a>
+                    <a href="lessons/lesson-08.html" class="lesson-card">
+                        <div class="lesson-number">08</div>
+                        <h3 class="lesson-title">HTTP/SSE Transport</h3>
+                        <p class="lesson-description">Build a remote MCP server with Server-Sent Events.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~3 hours</span>
+                            <span class="lesson-steps">6 steps</span>
+                        </div>
+                    </a>
+                    <a href="lessons/lesson-09.html" class="lesson-card">
+                        <div class="lesson-number">09</div>
+                        <h3 class="lesson-title">Implementing Prompts</h3>
+                        <p class="lesson-description">Add user-controlled templates to complete all three MCP primitives.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~2 hours</span>
+                            <span class="lesson-steps">5 steps</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phase 4 -->
+            <div class="phase">
+                <div class="phase-header">
+                    <span class="phase-number">Phase 4</span>
+                    <h2 class="phase-title">Testing & Real-World Usage</h2>
+                    <p class="phase-description">Test, integrate, and deploy your MCP server</p>
+                </div>
+                <div class="lessons-grid">
+                    <a href="lessons/lesson-10.html" class="lesson-card">
+                        <div class="lesson-number">10</div>
+                        <h3 class="lesson-title">Building an MCP Client</h3>
+                        <p class="lesson-description">Build a Python MCP client to test any MCP server.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~3 hours</span>
+                            <span class="lesson-steps">6 steps</span>
+                        </div>
+                    </a>
+                    <a href="lessons/lesson-11.html" class="lesson-card">
+                        <div class="lesson-number">11</div>
+                        <h3 class="lesson-title">Claude Desktop Integration</h3>
+                        <p class="lesson-description">Configure and test your server with Claude Desktop.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~2 hours</span>
+                            <span class="lesson-steps">5 steps</span>
+                        </div>
+                    </a>
+                    <a href="lessons/lesson-12.html" class="lesson-card capstone">
+                        <div class="lesson-number">12</div>
+                        <h3 class="lesson-title">Capstone Project</h3>
+                        <p class="lesson-description">Build a production-ready MCP server of your choice.</p>
+                        <div class="lesson-meta">
+                            <span class="lesson-time">~4-6 hours</span>
+                            <span class="lesson-steps">6 steps</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="prerequisites">
+            <h2>Prerequisites</h2>
+            <ul>
+                <li>Python 3.8 or higher</li>
+                <li>Basic Python knowledge (functions, classes, modules)</li>
+                <li>A text editor or IDE</li>
+                <li>Terminal/command line familiarity</li>
+                <li>Optional: Claude Desktop for Lesson 11</li>
+            </ul>
+        </section>
+
+        <section class="cta">
+            <a href="lessons/lesson-01.html" class="start-button">Start Learning</a>
+        </section>
+
+        <footer class="landing-footer">
+            <p>Built for hands-on learning. No MCP libraries &mdash; just standard Python.</p>
+            <p class="footer-links">
+                <a href="https://modelcontextprotocol.io" target="_blank">MCP Specification</a> |
+                <a href="https://github.com/modelcontextprotocol" target="_blank">MCP GitHub</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

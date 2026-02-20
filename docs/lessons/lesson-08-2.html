@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP/SSE Transport - Step 2 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 8</div>
+                    <div class="lesson-info-title">HTTP/SSE Transport</div>
+                    <div class="lesson-info-meta"><span>~2 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 33%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-08.html" class="toc-link completed"><span class="toc-number">1</span><span>Streamable HTTP Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-2.html" class="toc-link active"><span class="toc-number">2</span><span>Server-Sent Events Basics</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-3.html" class="toc-link"><span class="toc-number">3</span><span>Handling POST Requests</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-4.html" class="toc-link"><span class="toc-number">4</span><span>SSE Response Streaming</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-5.html" class="toc-link"><span class="toc-number">5</span><span>Session Management</span></a></li>
+                    <li class="toc-item"><a href="lesson-08-6.html" class="toc-link"><span class="toc-number">6</span><span>Complete HTTP Server</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link current">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 8 - Step 2 of 6</span>
+                    <h1 class="step-title">Server-Sent Events Basics</h1>
+                    <p class="step-description">Understand the SSE format, event structure, and event IDs.</p>
+                </header>
+
+                <div class="content">
+                    <h2>What are Server-Sent Events?</h2>
+                    <p>
+                        <strong>Server-Sent Events (SSE)</strong> is a standard for pushing updates from
+                        a server to a client over HTTP. Unlike WebSockets, SSE is unidirectional &mdash;
+                        data flows only from server to client &mdash; which makes it simpler and works
+                        through most proxies and firewalls.
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">SSE vs WebSockets</div>
+                        <p>
+                            SSE is perfect for MCP because the client sends requests via POST (one direction)
+                            and receives responses via SSE (other direction). This clean separation is
+                            simpler than bidirectional WebSockets.
+                        </p>
+                    </div>
+
+                    <h2>SSE Event Format</h2>
+                    <p>
+                        SSE uses a simple text-based format. Each event consists of one or more
+                        fields, with each field on its own line:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>event: message
+id: 1
+data: {"jsonrpc":"2.0","id":1,"result":{"tools":[]}}
+
+event: message
+id: 2
+data: {"jsonrpc":"2.0","id":2,"result":{"resources":[]}}
+
+</code></pre>
+                    </div>
+
+                    <h2>Event Fields</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Field</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Purpose</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Required</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>event:</code></td>
+                                <td style="padding: 0.75rem;">Event type name (e.g., "message")</td>
+                                <td style="padding: 0.75rem;">Optional (defaults to "message")</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>data:</code></td>
+                                <td style="padding: 0.75rem;">The event payload (can span multiple lines)</td>
+                                <td style="padding: 0.75rem;">Required</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>id:</code></td>
+                                <td style="padding: 0.75rem;">Unique event identifier for reconnection</td>
+                                <td style="padding: 0.75rem;">Optional</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>retry:</code></td>
+                                <td style="padding: 0.75rem;">Reconnection time in milliseconds</td>
+                                <td style="padding: 0.75rem;">Optional</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Critical Formatting Rules</h2>
+                    <p>SSE has strict formatting requirements:</p>
+                    <ul>
+                        <li>Each event ends with a <strong>blank line</strong> (two newlines: <code>\n\n</code>)</li>
+                        <li>Fields are separated by a <strong>single newline</strong> (<code>\n</code>)</li>
+                        <li>The <code>data:</code> field contains your JSON payload</li>
+                        <li>Multi-line data requires multiple <code>data:</code> lines</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def format_sse_event(data, event_type="message", event_id=None):
+    """Format data as a Server-Sent Event."""
+    lines = []
+
+    # Add event type
+    if event_type:
+        lines.append(f"event: {event_type}")
+
+    # Add event ID (useful for reconnection)
+    if event_id is not None:
+        lines.append(f"id: {event_id}")
+
+    # Add data (must be a single line for JSON)
+    lines.append(f"data: {data}")
+
+    # Join with newlines and add blank line to end event
+    return "\n".join(lines) + "\n\n"
+
+
+# Example usage:
+import json
+
+response = {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {"tools": []}
+}
+
+sse_event = format_sse_event(
+    data=json.dumps(response),
+    event_type="message",
+    event_id=1
+)
+
+print(sse_event)
+# Output:
+# event: message
+# id: 1
+# data: {"jsonrpc":"2.0","id":1,"result":{"tools":[]}}
+#
+# (blank line)</code></pre>
+                    </div>
+
+                    <h2>Event IDs and Reconnection</h2>
+                    <p>
+                        Event IDs enable clients to resume after a disconnection. When a client
+                        reconnects, it sends the last received ID in the <code>Last-Event-ID</code>
+                        header:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    SSE RECONNECTION                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. Client receives events with IDs                         │
+│     ◄── id: 1, data: {...}                                  │
+│     ◄── id: 2, data: {...}                                  │
+│     ◄── id: 3, data: {...}                                  │
+│                                                             │
+│  2. Connection drops after id: 3                            │
+│     ✕ DISCONNECTED                                          │
+│                                                             │
+│  3. Client reconnects with Last-Event-ID                    │
+│     ──► GET /events                                         │
+│         Last-Event-ID: 3                                    │
+│                                                             │
+│  4. Server resumes from id: 4                               │
+│     ◄── id: 4, data: {...}                                  │
+│     ◄── id: 5, data: {...}                                  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+                    </div>
+
+                    <h2>MCP-Specific SSE Usage</h2>
+                    <p>
+                        In MCP, SSE is used for streaming JSON-RPC responses. Each event contains
+                        a complete JSON-RPC message:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>event: message
+data: {"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{}}}
+
+event: message
+data: {"jsonrpc":"2.0","method":"notifications/initialized"}
+
+</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Important: One JSON Per Data Line</div>
+                        <p>
+                            Each SSE <code>data:</code> line should contain a complete, single-line
+                            JSON object. Don't pretty-print your JSON when sending SSE events!
+                        </p>
+                    </div>
+
+                    <h2>HTTP Headers for SSE</h2>
+                    <p>When sending SSE responses, include these headers:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def send_sse_headers(self):
+    """Send the required headers for SSE responses."""
+    self.send_response(200)
+
+    # Required: Identifies this as an SSE stream
+    self.send_header("Content-Type", "text/event-stream")
+
+    # Prevent caching of the stream
+    self.send_header("Cache-Control", "no-cache")
+
+    # Keep the connection open
+    self.send_header("Connection", "keep-alive")
+
+    # Allow cross-origin requests (if needed)
+    self.send_header("Access-Control-Allow-Origin", "*")
+
+    self.end_headers()</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Next Step</div>
+                        <p>
+                            Now that you understand SSE format, let's implement the POST request
+                            handler that receives JSON-RPC requests from clients.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-08.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Streamable HTTP Overview</span></span>
+                    </a>
+                    <a href="lesson-08-3.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Handling POST Requests</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capstone Project - Step 3 | MCP Learning Guide</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 12</div>
+                    <div class="lesson-info-title">Capstone Project</div>
+                    <div class="lesson-info-meta"><span>~3 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 50%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-12.html" class="toc-link completed"><span class="toc-number">1</span><span>Project Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Planning Your Server</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-3.html" class="toc-link active"><span class="toc-number">3</span><span>Implementing Core Features</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-4.html" class="toc-link"><span class="toc-number">4</span><span>Adding Resources and Prompts</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-5.html" class="toc-link"><span class="toc-number">5</span><span>Testing and Debugging</span></a></li>
+                    <li class="toc-item"><a href="lesson-12-6.html" class="toc-link"><span class="toc-number">6</span><span>Next Steps</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link current">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 12 - Step 3 of 6</span>
+                    <h1 class="step-title">Implementing Core Features</h1>
+                    <p class="step-description">Build the server foundation and implement the four tools.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Time to Code!</h2>
+                    <p>
+                        Now we will implement the core of our Notes MCP Server. We will build:
+                    </p>
+                    <ul>
+                        <li>The server skeleton with STDIO transport</li>
+                        <li>The initialization handshake</li>
+                        <li>All four tools (create, update, delete, search)</li>
+                    </ul>
+
+                    <h2>Server Foundation</h2>
+                    <p>
+                        Let us start with the complete server file. Create <code>notes_server.py</code>:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">#!/usr/bin/env python3
+"""
+notes_server.py - A complete MCP server for managing notes.
+
+This capstone project demonstrates tools, resources, and prompts
+working together in a single MCP server.
+"""
+
+import json
+import sys
+import os
+import uuid
+from datetime import datetime
+from dataclasses import dataclass, field
+from typing import List, Optional, Dict, Any
+
+
+# =============================================================================
+# Data Model
+# =============================================================================
+
+@dataclass
+class Note:
+    """Represents a single note."""
+    id: str
+    title: str
+    content: str
+    tags: List[str] = field(default_factory=list)
+    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "content": self.content,
+            "tags": self.tags,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Note":
+        return cls(
+            id=data["id"],
+            title=data["title"],
+            content=data["content"],
+            tags=data.get("tags", []),
+            created_at=data.get("created_at", datetime.utcnow().isoformat()),
+            updated_at=data.get("updated_at", datetime.utcnow().isoformat()),
+        )
+
+    @staticmethod
+    def generate_id() -> str:
+        return str(uuid.uuid4())[:8]
+
+
+# =============================================================================
+# Storage
+# =============================================================================
+
+class NotesStorage:
+    """Handle persistent storage of notes."""
+
+    def __init__(self, filepath: str = "notes.json"):
+        self.filepath = filepath
+        self.notes: List[Note] = []
+        self.load()
+
+    def load(self):
+        if os.path.exists(self.filepath):
+            try:
+                with open(self.filepath, "r") as f:
+                    data = json.load(f)
+                    self.notes = [Note.from_dict(n) for n in data]
+            except (json.JSONDecodeError, KeyError):
+                self.notes = []
+        else:
+            self.notes = []
+
+    def save(self):
+        with open(self.filepath, "w") as f:
+            json.dump([n.to_dict() for n in self.notes], f, indent=2)
+
+    def create(self, title: str, content: str, tags: List[str] = None) -> Note:
+        note = Note(
+            id=Note.generate_id(),
+            title=title,
+            content=content,
+            tags=tags or [],
+        )
+        self.notes.append(note)
+        self.save()
+        return note
+
+    def get_by_id(self, note_id: str) -> Optional[Note]:
+        for note in self.notes:
+            if note.id == note_id:
+                return note
+        return None
+
+    def update(self, note_id: str, title: str = None,
+               content: str = None, tags: List[str] = None) -> Optional[Note]:
+        note = self.get_by_id(note_id)
+        if not note:
+            return None
+        if title is not None:
+            note.title = title
+        if content is not None:
+            note.content = content
+        if tags is not None:
+            note.tags = tags
+        note.updated_at = datetime.utcnow().isoformat()
+        self.save()
+        return note
+
+    def delete(self, note_id: str) -> bool:
+        note = self.get_by_id(note_id)
+        if not note:
+            return False
+        self.notes.remove(note)
+        self.save()
+        return True
+
+    def search(self, query: str = None, tag: str = None) -> List[Note]:
+        results = self.notes
+        if tag:
+            results = [n for n in results if tag.lower() in [t.lower() for t in n.tags]]
+        if query:
+            query = query.lower()
+            results = [n for n in results
+                      if query in n.title.lower() or query in n.content.lower()]
+        return results
+
+    def get_all_tags(self) -> List[str]:
+        tags = set()
+        for note in self.notes:
+            tags.update(note.tags)
+        return sorted(list(tags))</code></pre>
+                    </div>
+
+                    <h2>Server Class</h2>
+                    <p>
+                        Now let us add the main server class that handles MCP requests:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# MCP Server
+# =============================================================================
+
+class NotesServer:
+    """MCP server for note management."""
+
+    PROTOCOL_VERSION = "2024-11-05"
+
+    def __init__(self, storage_path: str = "notes.json"):
+        self.storage = NotesStorage(storage_path)
+        self.initialized = False
+
+    def run(self):
+        """Main loop: read from stdin, write to stdout."""
+        for line in sys.stdin:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                request = json.loads(line)
+                response = self.handle_request(request)
+                if response:  # Don't respond to notifications
+                    self.send_response(response)
+            except json.JSONDecodeError:
+                self.send_response(self.make_error(None, -32700, "Parse error"))
+            except Exception as e:
+                self.send_response(self.make_error(None, -32603, str(e)))
+
+    def send_response(self, response: dict):
+        """Send a JSON-RPC response."""
+        print(json.dumps(response), flush=True)
+
+    def make_response(self, id: Any, result: Any) -> dict:
+        """Create a successful JSON-RPC response."""
+        return {"jsonrpc": "2.0", "id": id, "result": result}
+
+    def make_error(self, id: Any, code: int, message: str, data: Any = None) -> dict:
+        """Create a JSON-RPC error response."""
+        error = {"code": code, "message": message}
+        if data:
+            error["data"] = data
+        return {"jsonrpc": "2.0", "id": id, "error": error}
+
+    def handle_request(self, request: dict) -> Optional[dict]:
+        """Route request to appropriate handler."""
+        method = request.get("method", "")
+        id = request.get("id")
+        params = request.get("params", {})
+
+        # Notifications (no id) don't get responses
+        if id is None and method == "notifications/initialized":
+            return None
+
+        handlers = {
+            "initialize": self.handle_initialize,
+            "tools/list": self.handle_tools_list,
+            "tools/call": self.handle_tools_call,
+            "resources/list": self.handle_resources_list,
+            "resources/read": self.handle_resources_read,
+            "prompts/list": self.handle_prompts_list,
+            "prompts/get": self.handle_prompts_get,
+        }
+
+        handler = handlers.get(method)
+        if handler:
+            try:
+                result = handler(params)
+                return self.make_response(id, result)
+            except Exception as e:
+                return self.make_error(id, -32603, f"Internal error: {e}")
+        else:
+            return self.make_error(id, -32601, f"Method not found: {method}")</code></pre>
+                    </div>
+
+                    <h2>Initialization Handler</h2>
+                    <p>
+                        Handle the MCP initialization handshake:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">    def handle_initialize(self, params: dict) -> dict:
+        """Handle the initialize request."""
+        self.initialized = True
+        return {
+            "protocolVersion": self.PROTOCOL_VERSION,
+            "capabilities": {
+                "tools": {},
+                "resources": {},
+                "prompts": {},
+            },
+            "serverInfo": {
+                "name": "notes-server",
+                "version": "1.0.0",
+            },
+        }</code></pre>
+                    </div>
+
+                    <h2>Tools List Handler</h2>
+                    <p>
+                        Return the list of available tools with their schemas:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">    def handle_tools_list(self, params: dict) -> dict:
+        """Return list of available tools."""
+        return {
+            "tools": [
+                {
+                    "name": "create_note",
+                    "description": "Create a new note with title, content, and optional tags",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "description": "The title of the note"
+                            },
+                            "content": {
+                                "type": "string",
+                                "description": "The content/body of the note"
+                            },
+                            "tags": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Optional tags for categorization"
+                            }
+                        },
+                        "required": ["title", "content"]
+                    }
+                },
+                {
+                    "name": "update_note",
+                    "description": "Update an existing note by ID",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "The ID of the note to update"
+                            },
+                            "title": {"type": "string", "description": "New title"},
+                            "content": {"type": "string", "description": "New content"},
+                            "tags": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "New tags (replaces existing)"
+                            }
+                        },
+                        "required": ["id"]
+                    }
+                },
+                {
+                    "name": "delete_note",
+                    "description": "Delete a note by ID",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "The ID of the note to delete"
+                            }
+                        },
+                        "required": ["id"]
+                    }
+                },
+                {
+                    "name": "search_notes",
+                    "description": "Search notes by keyword or tag",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "Search keyword for title/content"
+                            },
+                            "tag": {
+                                "type": "string",
+                                "description": "Filter by tag"
+                            }
+                        }
+                    }
+                }
+            ]
+        }</code></pre>
+                    </div>
+
+                    <h2>Tools Call Handler</h2>
+                    <p>
+                        Route tool calls to the appropriate implementation:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">    def handle_tools_call(self, params: dict) -> dict:
+        """Execute a tool and return the result."""
+        name = params.get("name")
+        arguments = params.get("arguments", {})
+
+        tool_handlers = {
+            "create_note": self.tool_create_note,
+            "update_note": self.tool_update_note,
+            "delete_note": self.tool_delete_note,
+            "search_notes": self.tool_search_notes,
+        }
+
+        handler = tool_handlers.get(name)
+        if not handler:
+            return {
+                "content": [{"type": "text", "text": f"Unknown tool: {name}"}],
+                "isError": True,
+            }
+
+        try:
+            return handler(arguments)
+        except Exception as e:
+            return {
+                "content": [{"type": "text", "text": f"Error: {e}"}],
+                "isError": True,
+            }
+
+    # -------------------------------------------------------------------------
+    # Tool Implementations
+    # -------------------------------------------------------------------------
+
+    def tool_create_note(self, args: dict) -> dict:
+        """Create a new note."""
+        title = args.get("title")
+        content = args.get("content")
+        tags = args.get("tags", [])
+
+        if not title or not content:
+            return {
+                "content": [{"type": "text", "text": "Error: title and content are required"}],
+                "isError": True,
+            }
+
+        note = self.storage.create(title, content, tags)
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"Created note '{note.title}' with ID: {note.id}"
+            }]
+        }
+
+    def tool_update_note(self, args: dict) -> dict:
+        """Update an existing note."""
+        note_id = args.get("id")
+        if not note_id:
+            return {
+                "content": [{"type": "text", "text": "Error: id is required"}],
+                "isError": True,
+            }
+
+        note = self.storage.update(
+            note_id,
+            title=args.get("title"),
+            content=args.get("content"),
+            tags=args.get("tags"),
+        )
+
+        if not note:
+            return {
+                "content": [{"type": "text", "text": f"Error: Note {note_id} not found"}],
+                "isError": True,
+            }
+
+        return {
+            "content": [{
+                "type": "text",
+                "text": f"Updated note '{note.title}' (ID: {note.id})"
+            }]
+        }
+
+    def tool_delete_note(self, args: dict) -> dict:
+        """Delete a note."""
+        note_id = args.get("id")
+        if not note_id:
+            return {
+                "content": [{"type": "text", "text": "Error: id is required"}],
+                "isError": True,
+            }
+
+        if self.storage.delete(note_id):
+            return {
+                "content": [{"type": "text", "text": f"Deleted note {note_id}"}]
+            }
+        else:
+            return {
+                "content": [{"type": "text", "text": f"Error: Note {note_id} not found"}],
+                "isError": True,
+            }
+
+    def tool_search_notes(self, args: dict) -> dict:
+        """Search notes by query or tag."""
+        query = args.get("query")
+        tag = args.get("tag")
+
+        results = self.storage.search(query=query, tag=tag)
+
+        if not results:
+            return {
+                "content": [{"type": "text", "text": "No notes found matching criteria"}]
+            }
+
+        text = f"Found {len(results)} note(s):\n\n"
+        for note in results:
+            tags_str = ", ".join(note.tags) if note.tags else "none"
+            text += f"- [{note.id}] {note.title} (tags: {tags_str})\n"
+
+        return {"content": [{"type": "text", "text": text}]}</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Tool Response Format</div>
+                        <p>
+                            Tool responses must include a <code>content</code> array with content
+                            items. Each item has a <code>type</code> (usually "text") and the
+                            corresponding data. Set <code>isError: true</code> when returning errors.
+                        </p>
+                    </div>
+
+                    <h2>Progress Check</h2>
+                    <p>
+                        At this point, you have implemented:
+                    </p>
+                    <ul>
+                        <li>The Note data model with serialization</li>
+                        <li>The NotesStorage class with CRUD operations</li>
+                        <li>The NotesServer class with STDIO transport</li>
+                        <li>The initialization handshake</li>
+                        <li>Four complete tools with error handling</li>
+                    </ul>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Coming Up Next</div>
+                        <p>
+                            In the next step, we will add resources and prompts to complete
+                            the server. Resources will expose notes as readable data, and
+                            prompts will help Claude work with notes more effectively.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-12-2.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Planning Your Server</span></span>
+                    </a>
+                    <a href="lesson-12-4.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Adding Resources and Prompts</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

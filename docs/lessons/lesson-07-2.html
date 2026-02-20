@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STDIO Transport - Step 2 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo">
+                    <span>&#9889;</span>
+                    <span>MCP Learning Guide</span>
+                </a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 7</div>
+                    <div class="lesson-info-title">STDIO Transport</div>
+                    <div class="lesson-info-meta">
+                        <span>~1.5 hours</span>
+                        <span>5 steps</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 40%"></div>
+                </div>
+            </div>
+
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-07.html" class="toc-link completed"><span class="toc-number">1</span><span>STDIO Transport Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-2.html" class="toc-link active"><span class="toc-number">2</span><span>Reading from stdin</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-3.html" class="toc-link"><span class="toc-number">3</span><span>Writing to stdout</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-4.html" class="toc-link"><span class="toc-number">4</span><span>Logging to stderr</span></a></li>
+                    <li class="toc-item"><a href="lesson-07-5.html" class="toc-link"><span class="toc-number">5</span><span>Complete STDIO Server</span></a></li>
+                </ol>
+            </nav>
+
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link current">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 7 - Step 2 of 5</span>
+                    <h1 class="step-title">Reading from stdin</h1>
+                    <p class="step-description">Learn to read and parse JSON-RPC messages from standard input.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Line-Based Reading</h2>
+                    <p>
+                        MCP STDIO transport uses <strong>line-based message framing</strong>. Each JSON-RPC
+                        message is exactly one line, terminated by a newline character. This makes reading
+                        messages straightforward:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import sys
+import json
+
+def read_message():
+    """Read a single JSON-RPC message from stdin."""
+    line = sys.stdin.readline()
+
+    # Empty line means EOF (client disconnected)
+    if not line:
+        return None
+
+    # Strip the trailing newline and parse JSON
+    return json.loads(line.strip())</code></pre>
+                    </div>
+
+                    <h2>The Main Read Loop</h2>
+                    <p>
+                        An MCP server continuously reads messages until the client disconnects.
+                        Here's the basic pattern:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">import sys
+import json
+
+def main():
+    """Main server loop - read messages until EOF."""
+    while True:
+        # Read one line from stdin
+        line = sys.stdin.readline()
+
+        # EOF - client closed the connection
+        if not line:
+            break
+
+        # Skip empty lines (shouldn't happen, but be safe)
+        line = line.strip()
+        if not line:
+            continue
+
+        try:
+            # Parse the JSON message
+            message = json.loads(line)
+
+            # Process the message
+            handle_message(message)
+
+        except json.JSONDecodeError as e:
+            # Log error to stderr, NOT stdout!
+            sys.stderr.write(f"JSON parse error: {e}\n")
+
+if __name__ == "__main__":
+    main()</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Critical: Handle EOF Correctly</div>
+                        <p>
+                            When <code>sys.stdin.readline()</code> returns an empty string, the client has
+                            closed the connection. Your server should exit gracefully, not hang or crash.
+                        </p>
+                    </div>
+
+                    <h2>Parsing JSON-RPC Messages</h2>
+                    <p>
+                        Once you've read and parsed the JSON, you need to identify the message type
+                        and extract its components:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def handle_message(message):
+    """Route a JSON-RPC message to the appropriate handler."""
+
+    # Every JSON-RPC message must have jsonrpc version
+    if message.get("jsonrpc") != "2.0":
+        sys.stderr.write("Invalid JSON-RPC version\n")
+        return
+
+    # Check if it's a request (has method) or response (has result/error)
+    method = message.get("method")
+    msg_id = message.get("id")
+
+    if method:
+        # This is a request or notification
+        if msg_id is not None:
+            # Request - expects a response
+            handle_request(msg_id, method, message.get("params", {}))
+        else:
+            # Notification - no response expected
+            handle_notification(method, message.get("params", {}))
+    else:
+        # This is a response (we don't handle these as a server)
+        sys.stderr.write(f"Received unexpected response: {message}\n")</code></pre>
+                    </div>
+
+                    <h2>Handling Specific Methods</h2>
+                    <p>
+                        Now you can implement handlers for specific MCP methods:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def handle_request(msg_id, method, params):
+    """Handle a JSON-RPC request that expects a response."""
+
+    if method == "initialize":
+        # Handle MCP initialization
+        result = {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {
+                "tools": {}
+            },
+            "serverInfo": {
+                "name": "my-stdio-server",
+                "version": "1.0.0"
+            }
+        }
+        send_response(msg_id, result)
+
+    elif method == "tools/list":
+        # Return available tools
+        result = {
+            "tools": [
+                {
+                    "name": "echo",
+                    "description": "Echo back a message",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "message": {"type": "string"}
+                        },
+                        "required": ["message"]
+                    }
+                }
+            ]
+        }
+        send_response(msg_id, result)
+
+    elif method == "tools/call":
+        # Execute a tool
+        tool_name = params.get("name")
+        arguments = params.get("arguments", {})
+
+        if tool_name == "echo":
+            result = {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": arguments.get("message", "")
+                    }
+                ]
+            }
+            send_response(msg_id, result)
+        else:
+            send_error(msg_id, -32601, f"Unknown tool: {tool_name}")
+
+    else:
+        # Method not found
+        send_error(msg_id, -32601, f"Method not found: {method}")
+
+def handle_notification(method, params):
+    """Handle a JSON-RPC notification (no response expected)."""
+
+    if method == "notifications/initialized":
+        # Client confirmed initialization - we're ready!
+        sys.stderr.write("Client initialized successfully\n")
+    else:
+        sys.stderr.write(f"Unknown notification: {method}\n")</code></pre>
+                    </div>
+
+                    <h2>Complete Reading Example</h2>
+                    <p>
+                        Here's a complete example that demonstrates proper stdin reading:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">#!/usr/bin/env python3
+"""MCP STDIO Server - stdin reading example."""
+
+import sys
+import json
+
+def read_message():
+    """
+    Read a single JSON-RPC message from stdin.
+
+    Returns:
+        dict: Parsed JSON message, or None on EOF
+    """
+    try:
+        line = sys.stdin.readline()
+
+        # EOF check
+        if not line:
+            sys.stderr.write("EOF received, shutting down\n")
+            return None
+
+        # Strip whitespace and parse
+        line = line.strip()
+        if not line:
+            return read_message()  # Skip empty lines
+
+        message = json.loads(line)
+        sys.stderr.write(f"Received: {message.get('method', 'response')}\n")
+        return message
+
+    except json.JSONDecodeError as e:
+        sys.stderr.write(f"JSON parse error: {e}\n")
+        sys.stderr.write(f"Raw line: {repr(line)}\n")
+        return read_message()  # Try to read next message
+
+def main():
+    """Main entry point."""
+    sys.stderr.write("STDIO server starting...\n")
+
+    while True:
+        message = read_message()
+        if message is None:
+            break
+
+        # Process message here...
+        handle_message(message)
+
+    sys.stderr.write("STDIO server shutting down\n")
+
+if __name__ == "__main__":
+    main()</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Testing Tip</div>
+                        <p>
+                            You can test stdin reading by piping JSON to your script:
+                            <br><br>
+                            <code>echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | python server.py</code>
+                        </p>
+                    </div>
+
+                    <h2>Common Pitfalls</h2>
+                    <ul>
+                        <li><strong>Blocking reads:</strong> <code>readline()</code> blocks until a complete line is available</li>
+                        <li><strong>Buffer issues:</strong> Always read complete lines, never partial data</li>
+                        <li><strong>Encoding:</strong> MCP uses UTF-8; ensure your stdin is UTF-8 encoded</li>
+                        <li><strong>Error recovery:</strong> Don't crash on invalid JSON; log and continue</li>
+                    </ul>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-07.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Previous</span>
+                            <span>STDIO Transport Overview</span>
+                        </span>
+                    </a>
+                    <a href="lesson-07-3.html" class="nav-button next">
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Next</span>
+                            <span>Writing to stdout</span>
+                        </span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

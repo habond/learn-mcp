@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <title>Understanding MCP - Step 1 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+
+    <div class="lesson-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo">
+                    <span>&#9889;</span>
+                    <span>MCP Learning Guide</span>
+                </a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 1</div>
+                    <div class="lesson-info-title">Understanding MCP</div>
+                    <div class="lesson-info-meta">
+                        <span>~1.5 hours</span>
+                        <span>5 steps</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 20%"></div>
+                </div>
+            </div>
+
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item">
+                        <a href="lesson-01.html" class="toc-link active">
+                            <span class="toc-number">1</span>
+                            <span>What is MCP?</span>
+                        </a>
+                    </li>
+                    <li class="toc-item">
+                        <a href="lesson-01-2.html" class="toc-link">
+                            <span class="toc-number">2</span>
+                            <span>Client-Server Architecture</span>
+                        </a>
+                    </li>
+                    <li class="toc-item">
+                        <a href="lesson-01-3.html" class="toc-link">
+                            <span class="toc-number">3</span>
+                            <span>Core Concepts</span>
+                        </a>
+                    </li>
+                    <li class="toc-item">
+                        <a href="lesson-01-4.html" class="toc-link">
+                            <span class="toc-number">4</span>
+                            <span>Transport Mechanisms</span>
+                        </a>
+                    </li>
+                    <li class="toc-item">
+                        <a href="lesson-01-5.html" class="toc-link">
+                            <span class="toc-number">5</span>
+                            <span>Message Flow & Lifecycle</span>
+                        </a>
+                    </li>
+                </ol>
+            </nav>
+
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link current">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 1 - Step 1 of 5</span>
+                    <h1 class="step-title">What is MCP?</h1>
+                    <p class="step-description">Understand the Model Context Protocol and why it matters for AI applications.</p>
+                </header>
+
+                <div class="content">
+                    <h2>The Problem MCP Solves</h2>
+                    <p>
+                        Imagine you're building an AI assistant that needs to access your files, query a database,
+                        or call an API. Before MCP, every AI application had to build custom integrations for
+                        each data source. This led to:
+                    </p>
+                    <ul>
+                        <li><strong>Fragmented ecosystems</strong> &mdash; Each AI tool had its own plugin system</li>
+                        <li><strong>Duplicated effort</strong> &mdash; Developers rebuilt the same integrations repeatedly</li>
+                        <li><strong>Limited interoperability</strong> &mdash; Integrations for one AI couldn't work with another</li>
+                    </ul>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">The USB-C Analogy</div>
+                        <p>
+                            Think of MCP as <strong>USB-C for AI applications</strong>. Just as USB-C provides a
+                            universal standard for connecting devices, MCP provides a universal standard for
+                            connecting AI models to external tools and data sources.
+                        </p>
+                    </div>
+
+                    <h2>What is the Model Context Protocol?</h2>
+                    <p>
+                        <strong>MCP (Model Context Protocol)</strong> is an open standard that defines how AI
+                        applications communicate with external systems. It was developed by Anthropic and released
+                        as an open-source specification.
+                    </p>
+
+                    <p>With MCP, you can:</p>
+                    <ul>
+                        <li>Build <strong>one server</strong> that works with any MCP-compatible AI client</li>
+                        <li>Expose <strong>tools</strong> that AI models can call (like functions)</li>
+                        <li>Provide <strong>resources</strong> that give AI models contextual data</li>
+                        <li>Define <strong>prompts</strong> that guide how AI interacts with your system</li>
+                    </ul>
+
+                    <h2>Real-World Examples</h2>
+                    <p>Here's what you can build with MCP:</p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">MCP Server</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">What It Does</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>File System Server</strong></td>
+                                <td style="padding: 0.75rem;">Let AI read, search, and analyze files on your computer</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Database Server</strong></td>
+                                <td style="padding: 0.75rem;">Allow AI to query SQLite, PostgreSQL, or other databases</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>GitHub Server</strong></td>
+                                <td style="padding: 0.75rem;">Give AI access to repositories, PRs, and issues</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><strong>Slack Server</strong></td>
+                                <td style="padding: 0.75rem;">Enable AI to read and send Slack messages</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><strong>Memory Server</strong></td>
+                                <td style="padding: 0.75rem;">Provide AI with persistent memory across conversations</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Who Uses MCP?</h2>
+                    <p>MCP is supported by major AI applications:</p>
+                    <ul>
+                        <li><strong>Claude Desktop</strong> &mdash; Anthropic's desktop app for Claude</li>
+                        <li><strong>Claude Code</strong> &mdash; Anthropic's CLI coding assistant</li>
+                        <li><strong>Cursor</strong> &mdash; AI-powered code editor</li>
+                        <li><strong>Zed</strong> &mdash; High-performance code editor</li>
+                        <li><strong>Sourcegraph Cody</strong> &mdash; AI coding assistant</li>
+                        <li>And many more...</li>
+                    </ul>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Build Once, Use Everywhere</div>
+                        <p>
+                            When you build an MCP server, it automatically works with all these clients.
+                            You don't need to build separate integrations for each one.
+                        </p>
+                    </div>
+
+                    <h2>What You'll Build in This Course</h2>
+                    <p>
+                        By the end of this course, you'll have built a complete MCP server from scratch
+                        using Python's standard library. You'll understand:
+                    </p>
+                    <ul>
+                        <li>How the MCP protocol works at a low level</li>
+                        <li>How to implement tools, resources, and prompts</li>
+                        <li>How to handle both STDIO and HTTP transports</li>
+                        <li>How to test your server with Claude Desktop</li>
+                    </ul>
+
+                    <p>Let's dive into the architecture!</p>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="../index.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Back</span>
+                            <span>Home</span>
+                        </span>
+                    </a>
+                    <a href="lesson-01-2.html" class="nav-button next">
+                        <span class="nav-button-text">
+                            <span class="nav-button-label">Next</span>
+                            <span>Client-Server Architecture</span>
+                        </span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/script.js"></script>
+</body>
+</html>

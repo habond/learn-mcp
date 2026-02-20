@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The MCP Handshake - Step 4 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 4</div>
+                    <div class="lesson-info-title">The MCP Handshake</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 67%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-04.html" class="toc-link completed"><span class="toc-number">1</span><span>MCP Lifecycle Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-2.html" class="toc-link completed"><span class="toc-number">2</span><span>The Initialize Request</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Server Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-4.html" class="toc-link active"><span class="toc-number">4</span><span>Capability Negotiation</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-5.html" class="toc-link"><span class="toc-number">5</span><span>The Initialized Notification</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-6.html" class="toc-link"><span class="toc-number">6</span><span>Building the Handshake</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link current">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 4 - Step 4 of 6</span>
+                    <h1 class="step-title">Capability Negotiation</h1>
+                    <p class="step-description">Understand what capabilities mean and how to use the tools, resources, and prompts flags.</p>
+                </header>
+
+                <div class="content">
+                    <h2>What Are Capabilities?</h2>
+                    <p>
+                        Capabilities are <strong>feature flags</strong> that tell each party what the other
+                        can do. They enable graceful feature discovery without breaking compatibility.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                   CAPABILITY EXCHANGE                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Client Capabilities          Server Capabilities            │
+│  ────────────────────         ────────────────────           │
+│  • roots                      • tools                        │
+│  • sampling                   • resources                    │
+│  • experimental               • prompts                      │
+│                               • logging                      │
+│                               • experimental                 │
+│                                                              │
+│  "I can provide roots         "I offer tools and             │
+│   and handle sampling"         resources"                    │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+                    </div>
+
+                    <h2>Server Capability Flags</h2>
+                    <p>
+                        Let's examine each server capability in detail:
+                    </p>
+
+                    <h3>tools</h3>
+                    <p>
+                        The <code>tools</code> capability indicates your server provides callable functions.
+                        When present, clients can use <code>tools/list</code> and <code>tools/call</code>.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "tools": {
+        "listChanged": true  // Optional: server will notify on tool changes
+    }
+}</code></pre>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Sub-capability</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>listChanged</code></td>
+                                <td style="padding: 0.75rem;">Server sends <code>notifications/tools/list_changed</code> when tools change</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>resources</h3>
+                    <p>
+                        The <code>resources</code> capability indicates your server provides readable data.
+                        When present, clients can use <code>resources/list</code> and <code>resources/read</code>.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "resources": {
+        "subscribe": true,    // Clients can subscribe to resource updates
+        "listChanged": true   // Server notifies when resource list changes
+    }
+}</code></pre>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Sub-capability</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>subscribe</code></td>
+                                <td style="padding: 0.75rem;">Clients can subscribe to resource changes via <code>resources/subscribe</code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem;"><code>listChanged</code></td>
+                                <td style="padding: 0.75rem;">Server sends <code>notifications/resources/list_changed</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>prompts</h3>
+                    <p>
+                        The <code>prompts</code> capability indicates your server provides prompt templates.
+                        When present, clients can use <code>prompts/list</code> and <code>prompts/get</code>.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "prompts": {
+        "listChanged": true  // Server notifies when prompt list changes
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>logging</h3>
+                    <p>
+                        The <code>logging</code> capability allows the server to send log messages to the client.
+                        Useful for debugging and monitoring.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "logging": {}  // Server can send notifications/message
+}</code></pre>
+                    </div>
+
+                    <h2>Client Capability Flags</h2>
+                    <p>
+                        Clients also advertise their capabilities:
+                    </p>
+
+                    <h3>roots</h3>
+                    <p>
+                        Indicates the client can provide filesystem roots to the server. This is useful
+                        for servers that need to access files.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "roots": {
+        "listChanged": true  // Client notifies when roots change
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>sampling</h3>
+                    <p>
+                        Indicates the client supports LLM sampling requests from the server. This allows
+                        servers to request AI completions.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "sampling": {}  // Client supports sampling/createMessage
+}</code></pre>
+                    </div>
+
+                    <h2>Capability-Based Behavior</h2>
+                    <p>
+                        Your server should adapt its behavior based on capabilities:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">from dataclasses import dataclass, field
+
+@dataclass
+class ClientCapabilities:
+    """Capabilities the client supports."""
+    roots: dict = field(default_factory=dict)
+    sampling: dict = field(default_factory=dict)
+    experimental: dict = field(default_factory=dict)
+
+    @property
+    def has_roots(self) -> bool:
+        """Check if client can provide filesystem roots."""
+        return bool(self.roots)
+
+    @property
+    def has_sampling(self) -> bool:
+        """Check if client supports LLM sampling."""
+        return bool(self.sampling)
+
+    @property
+    def supports_roots_list_changed(self) -> bool:
+        """Check if client notifies on root changes."""
+        return self.roots.get("listChanged", False)
+
+@dataclass
+class ServerCapabilities:
+    """Capabilities this server provides."""
+    tools: dict = field(default_factory=dict)
+    resources: dict = field(default_factory=dict)
+    prompts: dict = field(default_factory=dict)
+    logging: dict = field(default_factory=dict)
+
+    @property
+    def has_tools(self) -> bool:
+        return bool(self.tools)
+
+    @property
+    def has_resources(self) -> bool:
+        return bool(self.resources)
+
+    @property
+    def has_prompts(self) -> bool:
+        return bool(self.prompts)
+
+class MCPServer:
+    def __init__(self):
+        self.client_capabilities: ClientCapabilities | None = None
+        self.server_capabilities = ServerCapabilities(
+            tools={},
+            resources={"subscribe": True}
+        )
+
+    def handle_initialize(self, params: dict) -> dict:
+        """Store client capabilities during initialization."""
+        caps = params.get("capabilities", {})
+        self.client_capabilities = ClientCapabilities(
+            roots=caps.get("roots", {}),
+            sampling=caps.get("sampling", {}),
+            experimental=caps.get("experimental", {})
+        )
+
+        # Log what the client can do
+        print(f"Client has roots: {self.client_capabilities.has_roots}")
+        print(f"Client has sampling: {self.client_capabilities.has_sampling}")
+
+        # Return our capabilities
+        return {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {
+                "tools": self.server_capabilities.tools,
+                "resources": self.server_capabilities.resources,
+            },
+            "serverInfo": {
+                "name": "capability-aware-server",
+                "version": "1.0.0"
+            }
+        }
+
+    def can_request_sampling(self) -> bool:
+        """Check if we can request LLM sampling from the client."""
+        return (
+            self.client_capabilities is not None and
+            self.client_capabilities.has_sampling
+        )</code></pre>
+                    </div>
+
+                    <h2>Capability-Gated Methods</h2>
+                    <p>
+                        Clients should only call methods for advertised capabilities:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Server Capability        Enabled Methods
+─────────────────────    ───────────────────────────────────
+tools                    tools/list, tools/call
+resources                resources/list, resources/read,
+                         resources/subscribe, resources/unsubscribe
+prompts                  prompts/list, prompts/get
+logging                  (server can send notifications/message)</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">Reject Invalid Requests</div>
+                        <p>
+                            If a client calls <code>tools/list</code> but your server didn't advertise
+                            the <code>tools</code> capability, you should return a "Method not found"
+                            error (-32601).
+                        </p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">def handle_method(self, method: str, params: dict) -> dict:
+    """Route method calls with capability checking."""
+
+    # Check tools capability
+    if method.startswith("tools/"):
+        if not self.server_capabilities.has_tools:
+            return {
+                "error": {
+                    "code": -32601,
+                    "message": f"Method not found: {method} (tools not supported)"
+                }
+            }
+
+    # Check resources capability
+    if method.startswith("resources/"):
+        if not self.server_capabilities.has_resources:
+            return {
+                "error": {
+                    "code": -32601,
+                    "message": f"Method not found: {method} (resources not supported)"
+                }
+            }
+
+    # Check prompts capability
+    if method.startswith("prompts/"):
+        if not self.server_capabilities.has_prompts:
+            return {
+                "error": {
+                    "code": -32601,
+                    "message": f"Method not found: {method} (prompts not supported)"
+                }
+            }
+
+    # Route to actual handlers
+    handlers = {
+        "tools/list": self.handle_tools_list,
+        "tools/call": self.handle_tools_call,
+        "resources/list": self.handle_resources_list,
+        "resources/read": self.handle_resources_read,
+        # ... etc
+    }
+
+    handler = handlers.get(method)
+    if handler:
+        return handler(params)
+
+    return {"error": {"code": -32601, "message": f"Unknown method: {method}"}}</code></pre>
+                    </div>
+
+                    <h2>Common Capability Combinations</h2>
+                    <p>
+                        Here are typical capability configurations for different server types:
+                    </p>
+
+                    <h3>Tool-only Server (Calculator, API wrapper)</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "tools": {}
+}</code></pre>
+                    </div>
+
+                    <h3>File System Server</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "tools": {},
+    "resources": {
+        "subscribe": true,
+        "listChanged": true
+    }
+}</code></pre>
+                    </div>
+
+                    <h3>Full-Featured Server</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">"capabilities": {
+    "tools": {
+        "listChanged": true
+    },
+    "resources": {
+        "subscribe": true,
+        "listChanged": true
+    },
+    "prompts": {
+        "listChanged": true
+    },
+    "logging": {}
+}</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Start Simple</div>
+                        <p>
+                            For your first MCP server, start with just <code>"tools": {}</code>.
+                            You can add more capabilities as you implement additional features.
+                            It's better to under-promise than to advertise features you haven't built.
+                        </p>
+                    </div>
+
+                    <h2>Key Takeaways</h2>
+                    <ul>
+                        <li>Capabilities are feature flags that enable graceful feature discovery</li>
+                        <li>Servers advertise: tools, resources, prompts, logging</li>
+                        <li>Clients advertise: roots, sampling</li>
+                        <li>Only advertise capabilities you actually implement</li>
+                        <li>Reject method calls for capabilities you don't support</li>
+                        <li>Use sub-capabilities like <code>listChanged</code> and <code>subscribe</code> for advanced features</li>
+                    </ul>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-04-3.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Server Response</span></span>
+                    </a>
+                    <a href="lesson-04-5.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>The Initialized Notification</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

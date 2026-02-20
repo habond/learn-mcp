@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementing Resources - Step 3 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 6</div>
+                    <div class="lesson-info-title">Implementing Resources</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>5 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 60%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-06.html" class="toc-link completed"><span class="toc-number">1</span><span>What are MCP Resources?</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-2.html" class="toc-link completed"><span class="toc-number">2</span><span>Resource Definition</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-3.html" class="toc-link active"><span class="toc-number">3</span><span>The resources/list Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-4.html" class="toc-link"><span class="toc-number">4</span><span>The resources/read Method</span></a></li>
+                    <li class="toc-item"><a href="lesson-06-5.html" class="toc-link"><span class="toc-number">5</span><span>Building File Resources</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link current">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 6 - Step 3 of 5</span>
+                    <h1 class="step-title">The resources/list Method</h1>
+                    <p class="step-description">Implement the method that tells clients what resources are available.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Purpose of resources/list</h2>
+                    <p>
+                        The <code>resources/list</code> method allows clients to discover what resources
+                        your server provides. Clients call this to get a list of all available resources
+                        and their metadata.
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Advertising Capabilities</div>
+                        <p>
+                            Remember from the MCP handshake: your server must advertise that it supports
+                            resources by including <code>"resources": {}</code> in its capabilities.
+                            Only then will clients call <code>resources/list</code>.
+                        </p>
+                    </div>
+
+                    <h2>Request Format</h2>
+                    <p>The client sends a simple request with no required parameters:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "resources/list",
+    "params": {}
+}</code></pre>
+                    </div>
+
+                    <h2>Response Format</h2>
+                    <p>The server responds with an array of resource objects:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+        "resources": [
+            {
+                "uri": "file:///project/config.json",
+                "name": "config.json",
+                "description": "Application configuration",
+                "mimeType": "application/json"
+            },
+            {
+                "uri": "file:///project/src/main.py",
+                "name": "main.py",
+                "description": "Main application entry point",
+                "mimeType": "text/x-python"
+            },
+            {
+                "uri": "db://app/users/current",
+                "name": "Current User",
+                "description": "Currently logged in user profile",
+                "mimeType": "application/json"
+            }
+        ]
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Implementing in Python</h2>
+                    <p>Here's how to implement the <code>resources/list</code> handler:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+resource_server.py - MCP server with resources/list support
+"""
+
+import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+# Define available resources
+RESOURCES = [
+    {
+        "uri": "file:///project/config.json",
+        "name": "config.json",
+        "description": "Application configuration",
+        "mimeType": "application/json"
+    },
+    {
+        "uri": "file:///project/README.md",
+        "name": "README.md",
+        "description": "Project documentation",
+        "mimeType": "text/markdown"
+    }
+]
+
+
+def handle_resources_list(params: dict) -> dict:
+    """Handle resources/list requests."""
+    return {
+        "resources": RESOURCES
+    }
+
+
+class MCPHandler(BaseHTTPRequestHandler):
+    """Handle MCP requests."""
+
+    def send_json(self, data: dict, status: int = 200):
+        """Send a JSON response."""
+        body = json.dumps(data, indent=2).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self):
+        """Handle POST requests."""
+        # Read and parse request
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length)
+        request = json.loads(body.decode("utf-8"))
+
+        method = request.get("method")
+        params = request.get("params", {})
+        request_id = request.get("id")
+
+        # Route to appropriate handler
+        if method == "resources/list":
+            result = handle_resources_list(params)
+            self.send_json({
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": result
+            })
+        else:
+            self.send_json({
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {
+                    "code": -32601,
+                    "message": f"Method not found: {method}"
+                }
+            })</code></pre>
+                    </div>
+
+                    <h2>Pagination Support</h2>
+                    <p>
+                        For servers with many resources, MCP supports pagination using cursors.
+                        This prevents overwhelming clients with huge lists.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">// Request with cursor
+{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "resources/list",
+    "params": {
+        "cursor": "eyJvZmZzZXQiOiAxMH0="
+    }
+}
+
+// Response with next cursor
+{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": {
+        "resources": [
+            // ... resources 11-20 ...
+        ],
+        "nextCursor": "eyJvZmZzZXQiOiAyMH0="
+    }
+}</code></pre>
+                    </div>
+
+                    <h2>Implementing Pagination</h2>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+pagination.py - Resources with pagination support
+"""
+
+import base64
+import json
+
+PAGE_SIZE = 10
+
+
+def encode_cursor(offset: int) -> str:
+    """Encode offset as a cursor string."""
+    return base64.b64encode(
+        json.dumps({"offset": offset}).encode()
+    ).decode()
+
+
+def decode_cursor(cursor: str) -> int:
+    """Decode cursor string to offset."""
+    try:
+        data = json.loads(base64.b64decode(cursor))
+        return data.get("offset", 0)
+    except Exception:
+        return 0
+
+
+def handle_resources_list(params: dict) -> dict:
+    """Handle resources/list with pagination."""
+    # Get cursor from params
+    cursor = params.get("cursor")
+    offset = decode_cursor(cursor) if cursor else 0
+
+    # Get page of resources
+    page = RESOURCES[offset:offset + PAGE_SIZE]
+
+    # Build response
+    result = {"resources": page}
+
+    # Add next cursor if there are more resources
+    if offset + PAGE_SIZE < len(RESOURCES):
+        result["nextCursor"] = encode_cursor(offset + PAGE_SIZE)
+
+    return result</code></pre>
+                    </div>
+
+                    <h2>Dynamic Resources</h2>
+                    <p>
+                        Resources don't have to be static. You can generate them dynamically based
+                        on the current state of your application:
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+dynamic_resources.py - Dynamically generated resources
+"""
+
+import os
+from pathlib import Path
+
+
+def get_file_resources(directory: str) -> list[dict]:
+    """Generate resources from files in a directory."""
+    resources = []
+    base_path = Path(directory)
+
+    for file_path in base_path.rglob("*"):
+        if file_path.is_file():
+            # Determine MIME type from extension
+            mime_types = {
+                ".py": "text/x-python",
+                ".js": "text/javascript",
+                ".json": "application/json",
+                ".md": "text/markdown",
+                ".txt": "text/plain",
+            }
+            ext = file_path.suffix.lower()
+            mime_type = mime_types.get(ext, "application/octet-stream")
+
+            resources.append({
+                "uri": f"file://{file_path.absolute()}",
+                "name": file_path.name,
+                "description": f"File in {file_path.parent.name}/",
+                "mimeType": mime_type
+            })
+
+    return resources
+
+
+def handle_resources_list(params: dict) -> dict:
+    """Handle resources/list with dynamic file discovery."""
+    project_dir = os.environ.get("PROJECT_DIR", ".")
+    resources = get_file_resources(project_dir)
+    return {"resources": resources}</code></pre>
+                    </div>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Performance Tip</div>
+                        <p>
+                            If generating resources is expensive (e.g., scanning large directories or
+                            querying databases), consider caching the results and refreshing periodically
+                            or when notified of changes.
+                        </p>
+                    </div>
+
+                    <h2>Testing resources/list</h2>
+                    <p>Test your implementation with curl:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "resources/list",
+    "params": {}
+  }'</code></pre>
+                    </div>
+
+                    <p>Expected response:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">json</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-json">{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "resources": [
+      {
+        "uri": "file:///project/config.json",
+        "name": "config.json",
+        "description": "Application configuration",
+        "mimeType": "application/json"
+      },
+      {
+        "uri": "file:///project/README.md",
+        "name": "README.md",
+        "description": "Project documentation",
+        "mimeType": "text/markdown"
+      }
+    ]
+  }
+}</code></pre>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-06-2.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Resource Definition</span></span>
+                    </a>
+                    <a href="lesson-06-4.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>The resources/read Method</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The MCP Handshake - Step 6 | MCP Learning Guide</title>
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+</head>
+<body>
+    <button class="mobile-menu-toggle">&#9776;</button>
+    <div class="lesson-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo"><span>&#9889;</span><span>MCP Learning Guide</span></a>
+                <div class="lesson-info">
+                    <div class="lesson-info-label">Lesson 4</div>
+                    <div class="lesson-info-title">The MCP Handshake</div>
+                    <div class="lesson-info-meta"><span>~1.5 hours</span><span>6 steps</span></div>
+                </div>
+            </div>
+            <div class="progress-section">
+                <div class="progress-label">Progress</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 100%"></div></div>
+            </div>
+            <nav class="toc-section">
+                <div class="toc-title">Steps</div>
+                <ol class="toc-list">
+                    <li class="toc-item"><a href="lesson-04.html" class="toc-link completed"><span class="toc-number">1</span><span>MCP Lifecycle Overview</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-2.html" class="toc-link completed"><span class="toc-number">2</span><span>The Initialize Request</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Server Response</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-4.html" class="toc-link completed"><span class="toc-number">4</span><span>Capability Negotiation</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-5.html" class="toc-link completed"><span class="toc-number">5</span><span>The Initialized Notification</span></a></li>
+                    <li class="toc-item"><a href="lesson-04-6.html" class="toc-link active"><span class="toc-number">6</span><span>Complete Handshake Server</span></a></li>
+                </ol>
+            </nav>
+            <nav class="all-lessons-section">
+                <div class="all-lessons-title">All Lessons</div>
+                <ol class="all-lessons-list">
+                    <li class="all-lessons-item"><a href="lesson-01.html" class="all-lessons-link">1. Understanding MCP</a></li>
+                    <li class="all-lessons-item"><a href="lesson-02.html" class="all-lessons-link">2. Your First HTTP Server</a></li>
+                    <li class="all-lessons-item"><a href="lesson-03.html" class="all-lessons-link">3. JSON-RPC 2.0 Essentials</a></li>
+                    <li class="all-lessons-item"><a href="lesson-04.html" class="all-lessons-link current">4. The MCP Handshake</a></li>
+                    <li class="all-lessons-item"><a href="lesson-05.html" class="all-lessons-link">5. Implementing Tools</a></li>
+                    <li class="all-lessons-item"><a href="lesson-06.html" class="all-lessons-link">6. Implementing Resources</a></li>
+                    <li class="all-lessons-item"><a href="lesson-07.html" class="all-lessons-link">7. STDIO Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-08.html" class="all-lessons-link">8. HTTP/SSE Transport</a></li>
+                    <li class="all-lessons-item"><a href="lesson-09.html" class="all-lessons-link">9. Implementing Prompts</a></li>
+                    <li class="all-lessons-item"><a href="lesson-10.html" class="all-lessons-link">10. Building an MCP Client</a></li>
+                    <li class="all-lessons-item"><a href="lesson-11.html" class="all-lessons-link">11. Claude Desktop Integration</a></li>
+                    <li class="all-lessons-item"><a href="lesson-12.html" class="all-lessons-link">12. Capstone Project</a></li>
+                </ol>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+                <header class="step-header">
+                    <span class="step-badge">Lesson 4 - Step 6 of 6</span>
+                    <h1 class="step-title">Complete Handshake Server</h1>
+                    <p class="step-description">Put it all together with a complete MCP server that implements the full initialization handshake.</p>
+                </header>
+
+                <div class="content">
+                    <h2>Building a Complete Handshake Server</h2>
+                    <p>
+                        Let's bring together everything we've learned in this lesson: the MCP lifecycle,
+                        the initialize request, server response with capabilities, and the initialized
+                        notification. This complete server properly implements the full handshake sequence.
+                    </p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+handshake_server.py - Complete MCP server with proper handshake handling.
+
+This server demonstrates:
+- Connection state management (DISCONNECTED -> INITIALIZING -> READY)
+- Protocol version negotiation
+- Capability exchange
+- Proper notification handling
+- Request validation based on connection state
+
+Run with: python handshake_server.py
+Test with: curl commands below
+"""
+
+import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from enum import Enum
+from datetime import datetime
+
+
+# =============================================================================
+# Connection State Management
+# =============================================================================
+
+class ConnectionState(Enum):
+    """Track the state of an MCP connection."""
+    DISCONNECTED = "disconnected"  # Initial state, waiting for initialize
+    INITIALIZING = "initializing"  # Received initialize, waiting for initialized
+    READY = "ready"                # Handshake complete, normal operation
+
+
+class MCPConnection:
+    """Manages state and metadata for an MCP connection."""
+
+    # Supported protocol version
+    PROTOCOL_VERSION = "2024-11-05"
+
+    def __init__(self):
+        self.state = ConnectionState.DISCONNECTED
+        self.client_info = None
+        self.client_capabilities = None
+        self.negotiated_version = None
+        self.connected_at = None
+        self.ready_at = None
+
+    def reset(self):
+        """Reset connection to initial state."""
+        self.__init__()
+
+    def is_ready(self) -> bool:
+        """Check if connection is ready for normal operations."""
+        return self.state == ConnectionState.READY
+
+
+# Global connection instance (in production, you'd manage per-client)
+connection = MCPConnection()
+
+
+# =============================================================================
+# Server Capabilities
+# =============================================================================
+
+def get_server_capabilities():
+    """Return the capabilities this server supports.
+
+    This is where you advertise what features your server offers.
+    """
+    return {
+        "tools": {},           # We support tools (will implement in Lesson 5)
+        "resources": {},       # We support resources (will implement in Lesson 6)
+        # "prompts": {},       # Uncomment when you add prompt support
+        # "logging": {},       # Uncomment when you add logging support
+    }
+
+
+def get_server_info():
+    """Return information about this server."""
+    return {
+        "name": "handshake-demo-server",
+        "version": "1.0.0"
+    }
+
+
+# =============================================================================
+# Initialize Handler
+# =============================================================================
+
+def handle_initialize(request_id, params):
+    """Handle the initialize request from a client.
+
+    This is the first step of the MCP handshake. The client tells us:
+    - What protocol version it supports
+    - What capabilities it has
+    - Information about itself
+
+    We respond with:
+    - The protocol version we'll use
+    - Our capabilities
+    - Information about ourselves
+    """
+    global connection
+
+    # Check: Already initialized?
+    if connection.state != ConnectionState.DISCONNECTED:
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {
+                "code": -32600,
+                "message": "Invalid Request: Server already initialized"
+            }
+        }
+
+    # Extract client information
+    client_version = params.get("protocolVersion", "unknown")
+    connection.client_info = params.get("clientInfo", {})
+    connection.client_capabilities = params.get("capabilities", {})
+
+    # Version negotiation
+    # In a real server, you might check client_version and negotiate
+    # For now, we just use our version
+    connection.negotiated_version = MCPConnection.PROTOCOL_VERSION
+
+    # Log the connection attempt
+    client_name = connection.client_info.get("name", "unknown")
+    client_ver = connection.client_info.get("version", "unknown")
+    print(f"[INIT] Client connecting: {client_name} v{client_ver}")
+    print(f"[INIT] Client protocol version: {client_version}")
+    print(f"[INIT] Client capabilities: {list(connection.client_capabilities.keys())}")
+
+    # Transition to INITIALIZING state
+    connection.state = ConnectionState.INITIALIZING
+    connection.connected_at = datetime.now()
+
+    # Build and return the response
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "result": {
+            "protocolVersion": connection.negotiated_version,
+            "capabilities": get_server_capabilities(),
+            "serverInfo": get_server_info()
+        }
+    }
+
+
+# =============================================================================
+# Initialized Notification Handler
+# =============================================================================
+
+def handle_initialized_notification():
+    """Handle the initialized notification from the client.
+
+    This notification signals that the client has processed our capabilities
+    and is ready for normal operation. This completes the handshake.
+
+    Important: This is a notification, not a request. We do NOT send a response.
+    """
+    global connection
+
+    if connection.state == ConnectionState.DISCONNECTED:
+        print("[WARN] Received initialized notification before initialize request")
+        return None
+
+    if connection.state == ConnectionState.READY:
+        print("[WARN] Received duplicate initialized notification")
+        return None
+
+    # Transition to READY state - handshake complete!
+    connection.state = ConnectionState.READY
+    connection.ready_at = datetime.now()
+
+    client_name = connection.client_info.get("name", "unknown")
+    print(f"[READY] Handshake complete with {client_name}")
+    print(f"[READY] Server capabilities: {list(get_server_capabilities().keys())}")
+    print(f"[READY] Ready for normal operations")
+
+    return None  # Notifications don't get responses
+
+
+# =============================================================================
+# Placeholder Handlers (for testing state validation)
+# =============================================================================
+
+def handle_tools_list(request_id, params):
+    """Handle tools/list request - placeholder for Lesson 5."""
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "result": {
+            "tools": [
+                {
+                    "name": "echo",
+                    "description": "Echo back a message (demo tool)",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": "string",
+                                "description": "Message to echo"
+                            }
+                        },
+                        "required": ["message"]
+                    }
+                }
+            ]
+        }
+    }
+
+
+def handle_tools_call(request_id, params):
+    """Handle tools/call request - placeholder for Lesson 5."""
+    tool_name = params.get("name")
+    arguments = params.get("arguments", {})
+
+    if tool_name == "echo":
+        message = arguments.get("message", "")
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": {
+                "content": [
+                    {"type": "text", "text": f"Echo: {message}"}
+                ]
+            }
+        }
+
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {
+            "code": -32602,
+            "message": f"Unknown tool: {tool_name}"
+        }
+    }
+
+
+# =============================================================================
+# Request Router
+# =============================================================================
+
+def handle_request(request):
+    """Route JSON-RPC requests to appropriate handlers.
+
+    This is the main entry point for processing MCP messages.
+    It enforces state-based access control.
+    """
+    method = request.get("method")
+    request_id = request.get("id")  # None for notifications
+    params = request.get("params", {})
+    is_notification = request_id is None
+
+    # Handle initialize - allowed in DISCONNECTED state only
+    if method == "initialize":
+        return handle_initialize(request_id, params)
+
+    # Handle initialized notification
+    if method == "notifications/initialized":
+        return handle_initialized_notification()
+
+    # All other methods require READY state
+    if not connection.is_ready():
+        if is_notification:
+            # Can't respond to notifications, just log
+            print(f"[WARN] Received {method} notification before ready")
+            return None
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {
+                "code": -32002,
+                "message": "Server not initialized. Send 'initialize' request first."
+            }
+        }
+
+    # Route to appropriate handler
+    handlers = {
+        "tools/list": handle_tools_list,
+        "tools/call": handle_tools_call,
+        # Add more handlers as you implement more features
+    }
+
+    handler = handlers.get(method)
+    if handler:
+        return handler(request_id, params)
+
+    # Method not found
+    if is_notification:
+        print(f"[WARN] Unknown notification: {method}")
+        return None
+
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {
+            "code": -32601,
+            "message": f"Method not found: {method}"
+        }
+    }
+
+
+# =============================================================================
+# HTTP Server
+# =============================================================================
+
+class MCPHandler(BaseHTTPRequestHandler):
+    """HTTP request handler for MCP protocol."""
+
+    def log_message(self, format, *args):
+        """Custom logging format."""
+        print(f"[HTTP] {args[0]}")
+
+    def send_json(self, data, status=200):
+        """Send a JSON response."""
+        body = json.dumps(data, indent=2).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self):
+        """Handle POST requests containing JSON-RPC messages."""
+        # Read request body
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length)
+
+        # Parse JSON
+        try:
+            request = json.loads(body.decode("utf-8"))
+        except json.JSONDecodeError as e:
+            self.send_json({
+                "jsonrpc": "2.0",
+                "id": None,
+                "error": {
+                    "code": -32700,
+                    "message": f"Parse error: {e}"
+                }
+            }, status=400)
+            return
+
+        # Validate JSON-RPC structure
+        if request.get("jsonrpc") != "2.0":
+            self.send_json({
+                "jsonrpc": "2.0",
+                "id": request.get("id"),
+                "error": {
+                    "code": -32600,
+                    "message": "Invalid Request: jsonrpc must be '2.0'"
+                }
+            }, status=400)
+            return
+
+        # Handle the request
+        response = handle_request(request)
+
+        # Notifications don't get responses
+        if response is None:
+            self.send_response(204)
+            self.end_headers()
+            return
+
+        self.send_json(response)
+
+    def do_GET(self):
+        """Handle GET requests - return server status."""
+        status = {
+            "server": "MCP Handshake Demo Server",
+            "state": connection.state.value,
+            "connected_at": connection.connected_at.isoformat() if connection.connected_at else None,
+            "ready_at": connection.ready_at.isoformat() if connection.ready_at else None,
+            "client": connection.client_info
+        }
+        self.send_json(status)
+
+
+# =============================================================================
+# Server Entry Point
+# =============================================================================
+
+def run_server(host="localhost", port=8080):
+    """Start the MCP server."""
+    server = HTTPServer((host, port), MCPHandler)
+    print("=" * 60)
+    print("MCP Handshake Demo Server")
+    print("=" * 60)
+    print(f"Running on http://{host}:{port}")
+    print(f"Protocol version: {MCPConnection.PROTOCOL_VERSION}")
+    print(f"Capabilities: {list(get_server_capabilities().keys())}")
+    print()
+    print("GET  /        - Check server status")
+    print("POST /        - Send JSON-RPC messages")
+    print()
+    print("Press Ctrl+C to stop")
+    print("=" * 60)
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nShutting down...")
+        server.shutdown()
+
+
+if __name__ == "__main__":
+    run_server()</code></pre>
+                    </div>
+
+                    <h2>Testing the Complete Handshake</h2>
+                    <p>Start the server and test each step of the handshake:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Start the server
+python handshake_server.py</code></pre>
+                    </div>
+
+                    <h3>Step 1: Check Initial State</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># GET request shows server status
+curl http://localhost:8080
+
+# Response:
+{
+  "server": "MCP Handshake Demo Server",
+  "state": "disconnected",
+  "connected_at": null,
+  "ready_at": null,
+  "client": null
+}</code></pre>
+                    </div>
+
+                    <h3>Step 2: Try to Call tools/list Before Initialize</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># This should fail - not initialized yet
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list"
+  }'
+
+# Response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32002,
+    "message": "Server not initialized. Send 'initialize' request first."
+  }
+}</code></pre>
+                    </div>
+
+                    <h3>Step 3: Send Initialize Request</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {
+        "tools": {}
+      },
+      "clientInfo": {
+        "name": "test-client",
+        "version": "1.0.0"
+      }
+    }
+  }'
+
+# Response:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "tools": {},
+      "resources": {}
+    },
+    "serverInfo": {
+      "name": "handshake-demo-server",
+      "version": "1.0.0"
+    }
+  }
+}</code></pre>
+                    </div>
+
+                    <h3>Step 4: Check State After Initialize</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl http://localhost:8080
+
+# Response - now in "initializing" state:
+{
+  "server": "MCP Handshake Demo Server",
+  "state": "initializing",
+  "connected_at": "2024-01-15T10:30:00.123456",
+  "ready_at": null,
+  "client": {
+    "name": "test-client",
+    "version": "1.0.0"
+  }
+}</code></pre>
+                    </div>
+
+                    <h3>Step 5: Try tools/list Again (Still Not Ready)</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Still fails - waiting for initialized notification
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/list"
+  }'
+
+# Response:
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "error": {
+    "code": -32002,
+    "message": "Server not initialized. Send 'initialize' request first."
+  }
+}</code></pre>
+                    </div>
+
+                    <h3>Step 6: Send Initialized Notification</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Send the initialized notification (no id = notification)
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "notifications/initialized"
+  }'
+
+# Response: Empty (HTTP 204 No Content)
+# Notifications don't receive responses!</code></pre>
+                    </div>
+
+                    <h3>Step 7: Verify Ready State</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl http://localhost:8080
+
+# Response - now READY!
+{
+  "server": "MCP Handshake Demo Server",
+  "state": "ready",
+  "connected_at": "2024-01-15T10:30:00.123456",
+  "ready_at": "2024-01-15T10:30:05.789012",
+  "client": {
+    "name": "test-client",
+    "version": "1.0.0"
+  }
+}</code></pre>
+                    </div>
+
+                    <h3>Step 8: Normal Operations Now Work!</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Now tools/list works!
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/list"
+  }'
+
+# Response:
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "tools": [
+      {
+        "name": "echo",
+        "description": "Echo back a message (demo tool)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "Message to echo"
+            }
+          },
+          "required": ["message"]
+        }
+      }
+    ]
+  }
+}</code></pre>
+                    </div>
+
+                    <h2>The Complete Handshake Sequence</h2>
+                    <p>Here's a visual summary of what we just tested:</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">diagram</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>Client                                              Server
+   │                                                    │
+   │                                    [DISCONNECTED]  │
+   │                                                    │
+   │  1. initialize request                             │
+   │    { protocolVersion, capabilities, clientInfo }   │
+   │ ─────────────────────────────────────────────────► │
+   │                                                    │
+   │                                    [INITIALIZING]  │
+   │                                                    │
+   │  2. initialize response                            │
+   │    { protocolVersion, capabilities, serverInfo }   │
+   │ ◄───────────────────────────────────────────────── │
+   │                                                    │
+   │  3. notifications/initialized                      │
+   │    { }  (no params needed)                         │
+   │ ─────────────────────────────────────────────────► │
+   │                                                    │
+   │                                          [READY]   │
+   │          ═══ HANDSHAKE COMPLETE ═══                │
+   │                                                    │
+   │  4. tools/list, tools/call, resources/*, etc.      │
+   │ ◄────────────────────────────────────────────────► │
+   │                                                    │</code></pre>
+                    </div>
+
+                    <h2>What You've Built</h2>
+                    <p>Congratulations! Your handshake server now correctly implements:</p>
+                    <ul>
+                        <li><strong>Connection state tracking</strong> &mdash; DISCONNECTED, INITIALIZING, and READY states</li>
+                        <li><strong>Initialize request handling</strong> &mdash; Extracts client info and capabilities</li>
+                        <li><strong>Server response</strong> &mdash; Returns protocol version, capabilities, and server info</li>
+                        <li><strong>Initialized notification</strong> &mdash; Properly handles the notification without a response</li>
+                        <li><strong>State-based access control</strong> &mdash; Rejects requests before initialization is complete</li>
+                    </ul>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Production Considerations</div>
+                        <p>
+                            In a production server, you would want to:
+                        </p>
+                        <ul>
+                            <li>Handle multiple concurrent connections (connection per session)</li>
+                            <li>Implement proper protocol version negotiation</li>
+                            <li>Add timeout handling for incomplete handshakes</li>
+                            <li>Log handshake events for debugging</li>
+                        </ul>
+                    </div>
+
+                    <h2>What's Next?</h2>
+                    <p>
+                        Now that you understand the MCP handshake, you're ready to build real functionality!
+                        In the next lesson, we'll learn about <strong>Implementing Tools</strong> &mdash;
+                        the actions that MCP servers can perform. Tools are how you give AI the ability
+                        to do things like run calculations, access databases, call APIs, and more.
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Lesson Complete!</div>
+                        <p>
+                            You now understand the complete MCP initialization handshake. This three-step
+                            process (initialize request, initialize response, initialized notification)
+                            establishes a secure communication channel between client and server, with
+                            both parties knowing each other's capabilities. Every MCP connection starts
+                            with this handshake.
+                        </p>
+                    </div>
+                </div>
+
+                <nav class="step-navigation">
+                    <a href="lesson-04-5.html" class="nav-button prev">
+                        <span>&#8592;</span>
+                        <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>The Initialized Notification</span></span>
+                    </a>
+                    <a href="lesson-05.html" class="nav-button next">
+                        <span class="nav-button-text"><span class="nav-button-label">Next Lesson</span><span>Implementing Tools</span></span>
+                        <span>&#8594;</span>
+                    </a>
+                </nav>
+            </div>
+        </main>
+    </div>
+    <script src="../assets/script.js"></script>
+</body>
+</html>
