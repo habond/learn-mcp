@@ -8,6 +8,8 @@ An interactive, hands-on educational guide for learning the Model Context Protoc
 
 This guide takes you through 12 lessons across 65 interactive steps, teaching you everything from HTTP fundamentals to building a complete MCP server with tools, resources, and prompts.
 
+**Key Feature**: Each lesson builds upon code from previous lessons. You'll create reusable modules that come together in the capstone project.
+
 ## Getting Started
 
 Open the guide in your browser:
@@ -29,22 +31,47 @@ python -m http.server 8000
 ### Phase 1: Foundations (Lessons 1-3)
 - **Lesson 1**: Understanding MCP - What MCP is and core concepts
 - **Lesson 2**: Your First HTTP Server - Building with Python's http.server
-- **Lesson 3**: JSON-RPC 2.0 Essentials - The protocol underlying MCP
+- **Lesson 3**: JSON-RPC 2.0 Essentials - Build `jsonrpc.py` router module
 
 ### Phase 2: MCP Protocol Core (Lessons 4-6)
-- **Lesson 4**: The MCP Handshake - Initialize and capability negotiation
-- **Lesson 5**: Implementing Tools - Model-controlled functions
-- **Lesson 6**: Implementing Resources - Application-controlled data
+- **Lesson 4**: The MCP Handshake - Build `mcp_core.py` (imports jsonrpc.py)
+- **Lesson 5**: Implementing Tools - Build `tools.py` (imports mcp_core.py)
+- **Lesson 6**: Implementing Resources - Build `resources.py` (imports mcp_core.py)
 
 ### Phase 3: Transport & Integration (Lessons 7-9)
-- **Lesson 7**: STDIO Transport - stdin/stdout communication
-- **Lesson 8**: HTTP/SSE Transport - Server-Sent Events
-- **Lesson 9**: Implementing Prompts - User-controlled templates
+- **Lesson 7**: STDIO Transport - Build `transports/stdio.py`
+- **Lesson 8**: HTTP/SSE Transport - Build `transports/http_sse.py`
+- **Lesson 9**: Implementing Prompts - Build `prompts.py`
 
 ### Phase 4: Testing & Real-World Usage (Lessons 10-12)
 - **Lesson 10**: Building an MCP Client - Connect to your server
 - **Lesson 11**: Claude Desktop Integration - Configure and test
-- **Lesson 12**: Capstone Project - Build a complete MCP server
+- **Lesson 12**: Capstone Project - Assemble all modules into a Notes Server
+
+## Module Architecture
+
+By the end of the course, you'll have built this modular framework:
+
+```
+mcp_project/
+├── jsonrpc.py              # Lesson 3: JSON-RPC router
+├── mcp_core.py             # Lesson 4: MCP server foundation
+├── tools.py                # Lesson 5: Tool registry & handlers
+├── resources.py            # Lesson 6: Resource registry & handlers
+├── prompts.py              # Lesson 9: Prompt registry & handlers
+├── transports/
+│   ├── __init__.py
+│   ├── stdio.py            # Lesson 7: STDIO transport
+│   └── http_sse.py         # Lesson 8: HTTP/SSE transport
+└── notes_server.py         # Lesson 12: Capstone - combines all modules
+```
+
+## Code Block Types
+
+Lessons use two visually distinct code block styles:
+
+- **File-edit blocks** (green border, pencil icon): Code you should write to a file
+- **Illustrative blocks** (plain): Examples, output, or explanatory code
 
 ## Prerequisites
 

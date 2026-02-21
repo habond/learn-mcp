@@ -62,32 +62,64 @@
                 </header>
 
                 <div class="content">
-                    <h2>Create: <code>mcp_server.py</code></h2>
+                    <h2>Create: <code>mcp_core.py</code></h2>
                     <p>
-                        Let's build your MCP server piece by piece. Create a new file called
-                        <code>mcp_server.py</code> and add each section as we go.
+                        Now we'll build on the <code>jsonrpc.py</code> module from Lesson 3 to create
+                        <code>mcp_core.py</code> &mdash; the foundation for all MCP servers. Make sure
+                        <code>jsonrpc.py</code> is in the same directory.
                     </p>
 
-                    <h3>Section 1: Imports and Connection State</h3>
-                    <p>Start with the imports and connection state management:</p>
+                    <div class="info-box info">
+                        <div class="info-box-title">Building on Lesson 3</div>
+                        <p>
+                            This lesson imports and uses the <code>JsonRpcRouter</code>, error codes, and
+                            response helpers you built in Lesson 3. This is how real projects work &mdash;
+                            each module builds on previous ones.
+                        </p>
+                    </div>
 
-                    <div class="code-block">
+                    <div class="info-box warning">
+                        <div class="info-box-title">How to Read Code Blocks</div>
+                        <p>In this lesson:</p>
+                        <ul style="margin: 0.5rem 0 0 1.5rem;">
+                            <li><strong>Filename in header</strong> (e.g., <code>mcp_core.py</code>) = <strong>Write this code</strong> to that file</li>
+                            <li><strong>"Add after Section X"</strong> = Append this code to your existing file</li>
+                            <li><strong>bash</strong> blocks = Commands to <strong>run in your terminal</strong></li>
+                            <li><strong>"Expected Output"</strong> in header = What you should see (don't write this)</li>
+                        </ul>
+                    </div>
+
+                    <h3>Section 1: Imports and Connection State</h3>
+                    <p><strong>Create</strong> a new file called <code>mcp_core.py</code> with these imports:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">mcp_server.py</span>
+                            <span class="code-filename">mcp_core.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">"""
-mcp_server.py - MCP server with proper handshake handling.
+mcp_core.py - MCP server with proper handshake handling.
 
-Run: python mcp_server.py
+This module builds on jsonrpc.py from Lesson 3.
+
+Run: python mcp_core.py
 Test: curl commands below
 """
 
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from enum import Enum
-from typing import Any, cast
+from typing import Any
+
+# Import our JSON-RPC utilities from Lesson 3
+from jsonrpc import (
+    JsonRpcRouter,
+    JsonRpcError,
+    JsonRpcErrorCode,
+    create_success_response,
+    create_error_response,
+)
 
 
 # =============================================================================
@@ -109,16 +141,19 @@ SERVER_VERSION = "1.0.0"
 # Connection state (global for simplicity)
 state = ConnectionState.DISCONNECTED
 client_info: dict[str, Any] = {}
-client_capabilities: dict[str, Any] = {}</code></pre>
+client_capabilities: dict[str, Any] = {}
+
+# Create our router using JsonRpcRouter from Lesson 3
+router = JsonRpcRouter()</code></pre>
                     </div>
 
                     <h3>Section 2: Server Capabilities</h3>
-                    <p><strong>Add</strong> this after the connection state section:</p>
+                    <p><strong>Add</strong> this after Section 1:</p>
 
-                    <div class="code-block">
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">mcp_server.py - Add after Section 1</span>
+                            <span class="code-filename">mcp_core.py - Add after Section 1</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
@@ -141,33 +176,33 @@ def get_server_info() -> dict:
     }</code></pre>
                     </div>
 
-                    <h3>Section 3: Initialize Handler</h3>
-                    <p><strong>Add</strong> this after the server capabilities:</p>
+                    <h3>Section 3: MCP Handshake Handlers</h3>
+                    <p>
+                        <strong>Add</strong> the handshake handlers after Section 2. Notice how we use the
+                        <code>@router.method()</code> decorator from Lesson 3 to register handlers:
+                    </p>
 
-                    <div class="code-block">
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">mcp_server.py - Add after Section 2</span>
+                            <span class="code-filename">mcp_core.py - Add after Section 2</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
-# Initialize Handler
+# MCP Handshake Handlers
 # =============================================================================
 
-def handle_initialize(request_id: int | str, params: dict) -> dict:
+@router.method("initialize")
+def handle_initialize(params: dict) -> dict:
     """Handle the initialize request from a client."""
     global state, client_info, client_capabilities
 
     # Already initialized?
     if state != ConnectionState.DISCONNECTED:
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {
-                "code": -32600,
-                "message": "Already initialized"
-            }
-        }
+        raise JsonRpcError(
+            JsonRpcErrorCode.INVALID_REQUEST,
+            "Already initialized"
+        )
 
     # Store client information
     client_info = params.get("clientInfo", {})
@@ -181,165 +216,140 @@ def handle_initialize(request_id: int | str, params: dict) -> dict:
     # Transition to INITIALIZING
     state = ConnectionState.INITIALIZING
 
-    # Return our capabilities
+    # Return our capabilities (router wraps this in a success response)
     return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "result": {
-            "protocolVersion": PROTOCOL_VERSION,
-            "capabilities": get_server_capabilities(),
-            "serverInfo": get_server_info()
-        }
-    }</code></pre>
-                    </div>
+        "protocolVersion": PROTOCOL_VERSION,
+        "capabilities": get_server_capabilities(),
+        "serverInfo": get_server_info()
+    }
 
-                    <h3>Section 4: Initialized Notification Handler</h3>
-                    <p><strong>Add</strong> this after the initialize handler:</p>
 
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <span class="code-filename">mcp_server.py - Add after Section 3</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python"># =============================================================================
-# Initialized Notification Handler
-# =============================================================================
-
-def handle_initialized_notification() -> None:
+@router.notification("notifications/initialized")
+def handle_initialized(params: dict) -> None:
     """Handle the initialized notification from the client."""
     global state
 
     if state == ConnectionState.INITIALIZING:
         state = ConnectionState.READY
-        print(f"[READY] Handshake complete!")
+        print("[READY] Handshake complete!")
     else:
         print(f"[WARN] Unexpected initialized notification in state: {state}")</code></pre>
                     </div>
 
-                    <h3>Section 5: Placeholder Tool Handlers</h3>
-                    <p><strong>Add</strong> these placeholder handlers (we'll expand them in Lesson 5):</p>
+                    <div class="info-box tip">
+                        <div class="info-box-title">The Decorator Pattern</div>
+                        <p>
+                            Using <code>@router.method("initialize")</code> automatically registers the
+                            handler. The router calls it when a matching request arrives, and wraps the
+                            return value in a proper JSON-RPC response. No manual response building needed!
+                        </p>
+                    </div>
 
-                    <div class="code-block">
+                    <h3>Section 4: Placeholder Tool Handlers</h3>
+                    <p><strong>Add</strong> these placeholder handlers after Section 3 (we'll expand them in Lesson 5):</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">mcp_server.py - Add after Section 4</span>
+                            <span class="code-filename">mcp_core.py - Add after Section 3</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
 # Tool Handlers (placeholder - expanded in Lesson 5)
 # =============================================================================
 
-def handle_tools_list(request_id: int | str) -> dict:
+@router.method("tools/list")
+def handle_tools_list(params: dict) -> dict:
     """Return list of available tools."""
     return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "result": {
-            "tools": [
-                {
-                    "name": "echo",
-                    "description": "Echo a message back",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "message": {"type": "string"}
-                        },
-                        "required": ["message"]
-                    }
+        "tools": [
+            {
+                "name": "echo",
+                "description": "Echo a message back",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "message": {"type": "string"}
+                    },
+                    "required": ["message"]
                 }
-            ]
-        }
+            }
+        ]
     }
 
 
-def handle_tools_call(request_id: int | str, params: dict) -> dict:
+@router.method("tools/call")
+def handle_tools_call(params: dict) -> dict:
     """Execute a tool."""
     name = params.get("name")
     args = params.get("arguments", {})
 
     if name == "echo":
         return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "result": {
-                "content": [{"type": "text", "text": args.get("message", "")}]
-            }
+            "content": [{"type": "text", "text": args.get("message", "")}]
         }
 
-    return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "error": {"code": -32602, "message": f"Unknown tool: {name}"}
-    }</code></pre>
+    raise JsonRpcError(
+        JsonRpcErrorCode.INVALID_PARAMS,
+        f"Unknown tool: {name}"
+    )</code></pre>
                     </div>
 
-                    <h3>Section 6: Request Router</h3>
-                    <p><strong>Add</strong> the main request router:</p>
+                    <h3>Section 5: State-Aware Request Handler</h3>
+                    <p>
+                        <strong>Add</strong> a wrapper that enforces the MCP state machine before delegating to the router:
+                    </p>
 
-                    <div class="code-block">
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">mcp_server.py - Add after Section 5</span>
+                            <span class="code-filename">mcp_core.py - Add after Section 4</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
-# Request Router
+# State-Aware Request Handler
 # =============================================================================
 
 def handle_request(request: dict) -> dict | None:
-    """Route JSON-RPC requests to appropriate handlers."""
-    method = request.get("method")
-    request_id = cast(int | str | None, request.get("id"))
-    params = request.get("params", {})
-    is_notification = request_id is None
+    """
+    Process a JSON-RPC request with MCP state checking.
 
-    # Initialize - allowed before ready
+    The router handles method dispatch and response formatting.
+    We just need to enforce the state machine.
+    """
+    method = request.get("method", "")
+    request_id = request.get("id")
+
+    # Initialize is always allowed
     if method == "initialize":
-        return handle_initialize(request_id, params)
+        return router.handle(request)
 
-    # Initialized notification
+    # Initialized notification is always allowed
     if method == "notifications/initialized":
-        handle_initialized_notification()
-        return None  # No response for notifications
+        return router.handle(request)
 
     # All other methods require READY state
     if state != ConnectionState.READY:
-        if is_notification:
+        if request_id is None:  # Notification
             print(f"[WARN] {method} received before ready")
             return None
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {
-                "code": -32002,
-                "message": "Server not initialized"
-            }
-        }
+        return create_error_response(
+            request_id=request_id,
+            code=JsonRpcErrorCode.INVALID_REQUEST,
+            message="Server not initialized"
+        )
 
-    # Route to handlers
-    if method == "tools/list":
-        return handle_tools_list(request_id)
-    elif method == "tools/call":
-        return handle_tools_call(request_id, params)
-
-    # Unknown method
-    if is_notification:
-        return None
-    return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "error": {"code": -32601, "message": f"Method not found: {method}"}
-    }</code></pre>
+    # Delegate to the router for everything else
+    return router.handle(request)</code></pre>
                     </div>
 
-                    <h3>Section 7: HTTP Server</h3>
+                    <h3>Section 6: HTTP Server</h3>
                     <p><strong>Add</strong> the HTTP server at the end:</p>
 
-                    <div class="code-block">
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">mcp_server.py - Add after Section 6</span>
+                            <span class="code-filename">mcp_core.py - Add after Section 5</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
@@ -377,19 +387,19 @@ class MCPHandler(BaseHTTPRequestHandler):
         try:
             request = json.loads(body)
         except json.JSONDecodeError as e:
-            self.send_json({
-                "jsonrpc": "2.0",
-                "id": None,
-                "error": {"code": -32700, "message": f"Parse error: {e}"}
-            }, 400)
+            self.send_json(create_error_response(
+                request_id=None,
+                code=JsonRpcErrorCode.PARSE_ERROR,
+                message=f"Parse error: {e}"
+            ), 400)
             return
 
         if request.get("jsonrpc") != "2.0":
-            self.send_json({
-                "jsonrpc": "2.0",
-                "id": request.get("id"),
-                "error": {"code": -32600, "message": "jsonrpc must be '2.0'"}
-            }, 400)
+            self.send_json(create_error_response(
+                request_id=request.get("id"),
+                code=JsonRpcErrorCode.INVALID_REQUEST,
+                message="jsonrpc must be '2.0'"
+            ), 400)
             return
 
         response = handle_request(request)
@@ -417,14 +427,14 @@ if __name__ == "__main__":
                     </div>
 
                     <h2>Try It</h2>
-                    <p>Start your server:</p>
+                    <p>Make sure both <code>jsonrpc.py</code> (from Lesson 3) and <code>mcp_core.py</code> are in the same directory, then start your server:</p>
 
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash">python mcp_server.py</code></pre>
+                        <pre><code class="language-bash">python mcp_core.py</code></pre>
                     </div>
 
                     <h3>Test 1: Check Initial State</h3>
@@ -435,10 +445,10 @@ if __name__ == "__main__":
                         </div>
                         <pre><code class="language-bash">curl http://localhost:8080</code></pre>
                     </div>
-                    <p>Expected output:</p>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">json</span>
+                            <span class="code-filename">Expected Output</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-json">{
@@ -509,17 +519,30 @@ if __name__ == "__main__":
                     <h2>What You've Built</h2>
                     <p>Your MCP server now properly implements:</p>
                     <ul>
+                        <li><strong>Module reuse</strong> &mdash; Imports <code>JsonRpcRouter</code> and helpers from Lesson 3</li>
                         <li><strong>State tracking</strong> &mdash; DISCONNECTED &rarr; INITIALIZING &rarr; READY</li>
+                        <li><strong>Decorator-based handlers</strong> &mdash; Clean <code>@router.method()</code> syntax</li>
                         <li><strong>Initialize request</strong> &mdash; Stores client info, returns capabilities</li>
                         <li><strong>Initialized notification</strong> &mdash; Completes handshake, no response sent</li>
                         <li><strong>Access control</strong> &mdash; Rejects requests before initialization</li>
                     </ul>
 
+                    <h3>Your Project Structure</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>your_project/
+    jsonrpc.py      # Lesson 3: JSON-RPC utilities
+    mcp_core.py     # Lesson 4: MCP handshake (imports jsonrpc)</code></pre>
+                    </div>
+
                     <div class="info-box tip">
                         <div class="info-box-title">Ready for More!</div>
                         <p>
-                            This server is the foundation for everything else. In the next lesson,
-                            you'll expand the <code>handle_tools_call</code> function to implement
+                            This <code>mcp_core.py</code> is the foundation for everything else. In the next lesson,
+                            you'll create a <code>tools.py</code> module that builds on this foundation to implement
                             real, useful tools.
                         </p>
                     </div>
@@ -527,8 +550,8 @@ if __name__ == "__main__":
                     <h2>What's Next</h2>
                     <p>
                         In Lesson 5, you'll learn about <strong>Implementing Tools</strong> &mdash;
-                        the actions that MCP servers can perform. You'll add real tools like
-                        calculators, file operations, and API integrations.
+                        the actions that MCP servers can perform. You'll create a <code>tools.py</code>
+                        module with a reusable tool registry pattern.
                     </p>
                 </div>
 

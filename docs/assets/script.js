@@ -200,10 +200,18 @@ function updateProgressUI() {
 
     progressFill.style.width = progress + '%';
 
-    // Mark completed steps in TOC
+    // Mark completed steps in TOC (only steps BEFORE the active step)
+    // Find the active step index
+    let activeIndex = -1;
     tocLinks.forEach(function(link, index) {
-        const stepId = 'step-' + (index + 1);
-        if (ProgressTracker.isComplete(lessonId, stepId)) {
+        if (link.classList.contains('active')) {
+            activeIndex = index;
+        }
+    });
+
+    // Only mark steps before the active step as completed
+    tocLinks.forEach(function(link, index) {
+        if (index < activeIndex) {
             link.classList.add('completed');
         }
     });

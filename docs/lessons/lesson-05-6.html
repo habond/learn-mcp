@@ -62,149 +62,72 @@
                 </header>
 
                 <div class="content">
-                    <h2>Building Incrementally</h2>
+                    <h2>Building on Previous Lessons</h2>
                     <p>
-                        Let's build a complete MCP calculator server step by step. We'll create
-                        <code>calculator_server.py</code> incrementally, testing as we go.
+                        In this step, we'll create <code>tools.py</code> &mdash; a reusable module that
+                        provides a decorator-based tool registry. Then we'll create a calculator example
+                        that uses it.
                     </p>
 
                     <div class="info-box info">
-                        <div class="info-box-title">File Structure</div>
+                        <div class="info-box-title">Building on Lessons 3 &amp; 4</div>
                         <p>
-                            We'll build one file: <code>calculator_server.py</code>. Each section below
-                            adds to this file. Follow along and add each section in order.
+                            This lesson imports from <code>jsonrpc.py</code> (Lesson 3) and <code>mcp_core.py</code>
+                            (Lesson 4). Make sure both files are in your project directory.
                         </p>
                     </div>
 
-                    <!-- ============================================================= -->
-                    <h2>Section 1: Imports and Tool Definitions</h2>
-                    <!-- ============================================================= -->
-
-                    <h3>Create: <code>calculator_server.py</code></h3>
-                    <p>Start with the imports and tool definitions:</p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <span class="code-filename">calculator_server.py</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">"""
-calculator_server.py - MCP server with calculator tools.
-
-Run with: python calculator_server.py
-Test with: curl commands
-"""
-
-import json
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from typing import cast
-
-
-# =============================================================================
-# Section 1: Tool Definitions
-# =============================================================================
-
-TOOLS = [
-    {
-        "name": "add",
-        "description": "Add two numbers together and return the sum",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "a": {
-                    "type": "number",
-                    "description": "First number to add"
-                },
-                "b": {
-                    "type": "number",
-                    "description": "Second number to add"
-                }
-            },
-            "required": ["a", "b"]
-        }
-    },
-    {
-        "name": "subtract",
-        "description": "Subtract the second number from the first and return the difference",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "a": {
-                    "type": "number",
-                    "description": "Number to subtract from"
-                },
-                "b": {
-                    "type": "number",
-                    "description": "Number to subtract"
-                }
-            },
-            "required": ["a", "b"]
-        }
-    },
-    {
-        "name": "multiply",
-        "description": "Multiply two numbers and return the product",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "a": {
-                    "type": "number",
-                    "description": "First number to multiply"
-                },
-                "b": {
-                    "type": "number",
-                    "description": "Second number to multiply"
-                }
-            },
-            "required": ["a", "b"]
-        }
-    }
-]
-
-
-# Quick test - print tool names
-if __name__ == "__main__":
-    print("Defined tools:")
-    for tool in TOOLS:
-        print(f"  - {tool['name']}: {tool['description']}")</code></pre>
-                    </div>
-
-                    <h3>Try It</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">bash</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-bash">python calculator_server.py</code></pre>
-                    </div>
-
-                    <h3>Expected Output</h3>
+                    <h3>Your Project Structure</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>Defined tools:
-  - add: Add two numbers together and return the sum
-  - subtract: Subtract the second number from the first and return the difference
-  - multiply: Multiply two numbers and return the product</code></pre>
+                        <pre><code>your_project/
+    jsonrpc.py          # From Lesson 3
+    mcp_core.py         # From Lesson 4
+    tools.py            # NEW - We'll create this
+    calculator_example.py   # NEW - Example using tools.py</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">How to Read Code Blocks</div>
+                        <p>In this lesson:</p>
+                        <ul style="margin: 0.5rem 0 0 1.5rem;">
+                            <li><strong>Filename in header</strong> (e.g., <code>tools.py</code>) = <strong>Write this code</strong> to that file</li>
+                            <li><strong>"Add after Section X"</strong> = Append this code to your existing file</li>
+                            <li><strong>bash</strong> blocks = Commands to <strong>run in your terminal</strong></li>
+                            <li><strong>"Expected Output"</strong> in header = What you should see (don't write this)</li>
+                        </ul>
                     </div>
 
                     <!-- ============================================================= -->
-                    <h2>Section 2: Result Helpers</h2>
+                    <h2>Section 1: Create tools.py with Imports</h2>
                     <!-- ============================================================= -->
 
-                    <h3>Edit: <code>calculator_server.py</code></h3>
-                    <p><strong>Add</strong> the following after Section 1 (after the TOOLS list):</p>
+                    <h3>Create: <code>tools.py</code></h3>
+                    <p><strong>Create</strong> a new file called <code>tools.py</code> with imports from Lesson 3:</p>
 
-                    <div class="code-block">
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">tools.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python"># =============================================================================
-# Section 2: Result Helpers
+                        <pre><code class="language-python">"""
+tools.py - Reusable tool registry for MCP servers.
+
+This module builds on jsonrpc.py from Lesson 3.
+"""
+
+from typing import Callable, Any
+
+# Import error handling from Lesson 3
+from jsonrpc import JsonRpcError, JsonRpcErrorCode
+
+
+# =============================================================================
+# Section 1: Result Helpers
 # =============================================================================
 
 def text_result(text: str) -> dict:
@@ -215,7 +138,7 @@ def text_result(text: str) -> dict:
 
 
 def error_result(message: str) -> dict:
-    """Create an error result."""
+    """Create an error result (tool executed but failed)."""
     return {
         "content": [{"type": "text", "text": f"Error: {message}"}],
         "isError": True
@@ -223,87 +146,157 @@ def error_result(message: str) -> dict:
                     </div>
 
                     <!-- ============================================================= -->
-                    <h2>Section 3: Tool Implementations</h2>
+                    <h2>Section 2: Tool Registry</h2>
                     <!-- ============================================================= -->
 
-                    <h3>Edit: <code>calculator_server.py</code></h3>
-                    <p><strong>Add</strong> the following after Section 2:</p>
+                    <h3>Edit: <code>tools.py</code></h3>
+                    <p><strong>Add</strong> the ToolRegistry class after Section 1:</p>
 
-                    <div class="code-block">
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">tools.py - Add after Section 1</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
-# Section 3: Tool Implementations
+# Section 2: Tool Registry
 # =============================================================================
 
-def execute_add(arguments: dict) -> dict:
-    """Add two numbers."""
-    a = arguments.get("a")
-    b = arguments.get("b")
+class ToolRegistry:
+    """
+    Registry for MCP tools with decorator-based registration.
 
-    if a is None or b is None:
-        return error_result("Both 'a' and 'b' arguments are required")
+    Usage:
+        tools = ToolRegistry()
 
-    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
-        return error_result("Arguments must be numbers")
+        @tools.register(
+            name="add",
+            description="Add two numbers",
+            input_schema={"type": "object", "properties": {...}}
+        )
+        def add_handler(arguments: dict) -> dict:
+            return text_result(f"Sum: {arguments['a'] + arguments['b']}")
+    """
 
-    result = a + b
-    return text_result(f"{a} + {b} = {result}")
+    def __init__(self):
+        self._tools: dict[str, dict] = {}
+        self._handlers: dict[str, Callable] = {}
 
+    def register(
+        self,
+        name: str,
+        description: str,
+        input_schema: dict
+    ) -> Callable:
+        """Decorator to register a tool handler."""
+        def decorator(func: Callable[[dict], dict]) -> Callable:
+            # Store tool definition
+            self._tools[name] = {
+                "name": name,
+                "description": description,
+                "inputSchema": input_schema
+            }
+            # Store handler function
+            self._handlers[name] = func
+            return func
+        return decorator
 
-def execute_subtract(arguments: dict) -> dict:
-    """Subtract two numbers."""
-    a = arguments.get("a")
-    b = arguments.get("b")
+    def list_tools(self) -> list[dict]:
+        """Return all tool definitions for tools/list."""
+        return list(self._tools.values())
 
-    if a is None or b is None:
-        return error_result("Both 'a' and 'b' arguments are required")
-
-    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
-        return error_result("Arguments must be numbers")
-
-    result = a - b
-    return text_result(f"{a} - {b} = {result}")
-
-
-def execute_multiply(arguments: dict) -> dict:
-    """Multiply two numbers."""
-    a = arguments.get("a")
-    b = arguments.get("b")
-
-    if a is None or b is None:
-        return error_result("Both 'a' and 'b' arguments are required")
-
-    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
-        return error_result("Arguments must be numbers")
-
-    result = a * b
-    return text_result(f"{a} * {b} = {result}")
-
-
-# Map tool names to their handler functions
-TOOL_HANDLERS = {
-    "add": execute_add,
-    "subtract": execute_subtract,
-    "multiply": execute_multiply,
-}</code></pre>
+    def call_tool(self, name: str, arguments: dict) -> dict:
+        """Execute a tool by name."""
+        if name not in self._handlers:
+            raise JsonRpcError(
+                JsonRpcErrorCode.INVALID_PARAMS,
+                f"Unknown tool: {name}"
+            )
+        return self._handlers[name](arguments)</code></pre>
                     </div>
 
-                    <p><strong>Update</strong> the <code>if __name__ == "__main__"</code> block to test the tools:</p>
+                    <div class="info-box tip">
+                        <div class="info-box-title">The Decorator Pattern</div>
+                        <p>
+                            The <code>@tools.register(...)</code> decorator both defines the tool
+                            and registers its handler in one place. This keeps tool definitions
+                            close to their implementations.
+                        </p>
+                    </div>
 
-                    <div class="code-block">
+                    <!-- ============================================================= -->
+                    <h2>Section 3: MCP Tool Handlers</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Edit: <code>tools.py</code></h3>
+                    <p><strong>Add</strong> functions to integrate with the MCP router after Section 2:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">tools.py - Add after Section 2</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python"># Quick test - execute tools directly
+                        <pre><code class="language-python"># =============================================================================
+# Section 3: MCP Router Integration
+# =============================================================================
+
+def register_tool_handlers(router, tools: ToolRegistry) -> None:
+    """
+    Register tools/list and tools/call handlers with an MCP router.
+
+    Args:
+        router: A JsonRpcRouter from mcp_core.py
+        tools: A ToolRegistry with registered tools
+    """
+
+    @router.method("tools/list")
+    def handle_tools_list(params: dict) -> dict:
+        return {"tools": tools.list_tools()}
+
+    @router.method("tools/call")
+    def handle_tools_call(params: dict) -> dict:
+        name = params.get("name")
+        arguments = params.get("arguments", {})
+        return tools.call_tool(name, arguments)</code></pre>
+                    </div>
+
+                    <p><strong>Add</strong> a test block at the end of <code>tools.py</code>:</p>
+
+                    <div class="code-block file-edit">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <span class="code-filename">tools.py - Add at the end</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python"># =============================================================================
+# Test the module
+# =============================================================================
+
 if __name__ == "__main__":
-    print("Testing tools directly:")
-    print(execute_add({"a": 5, "b": 3}))
-    print(execute_subtract({"a": 10, "b": 4}))
-    print(execute_multiply({"a": 7, "b": 8}))</code></pre>
+    # Create a registry and register a test tool
+    tools = ToolRegistry()
+
+    @tools.register(
+        name="greet",
+        description="Say hello",
+        input_schema={
+            "type": "object",
+            "properties": {"name": {"type": "string"}},
+            "required": ["name"]
+        }
+    )
+    def greet(args: dict) -> dict:
+        return text_result(f"Hello, {args['name']}!")
+
+    # Test listing and calling
+    print("Registered tools:")
+    for tool in tools.list_tools():
+        print(f"  - {tool['name']}: {tool['description']}")
+
+    print("\nCalling greet tool:")
+    result = tools.call_tool("greet", {"name": "World"})
+    print(f"  {result}")</code></pre>
                     </div>
 
                     <h3>Try It</h3>
@@ -312,7 +305,7 @@ if __name__ == "__main__":
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash">python calculator_server.py</code></pre>
+                        <pre><code class="language-bash">python tools.py</code></pre>
                     </div>
 
                     <h3>Expected Output</h3>
@@ -321,158 +314,124 @@ if __name__ == "__main__":
                             <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>Testing tools directly:
-{'content': [{'type': 'text', 'text': '5 + 3 = 8'}]}
-{'content': [{'type': 'text', 'text': '10 - 4 = 6'}]}
-{'content': [{'type': 'text', 'text': '7 * 8 = 56'}]}</code></pre>
+                        <pre><code>Registered tools:
+  - greet: Say hello
+
+Calling greet tool:
+  {'content': [{'type': 'text', 'text': 'Hello, World!'}]}</code></pre>
                     </div>
 
                     <!-- ============================================================= -->
-                    <h2>Section 4: MCP Method Handlers</h2>
+                    <h2>Section 4: Calculator Example</h2>
                     <!-- ============================================================= -->
 
-                    <h3>Edit: <code>calculator_server.py</code></h3>
-                    <p><strong>Add</strong> the following after Section 3:</p>
+                    <h3>Create: <code>calculator_example.py</code></h3>
+                    <p>
+                        Now <strong>create</strong> a calculator server that uses <code>tools.py</code>
+                        and <code>mcp_core.py</code>:
+                    </p>
 
-                    <div class="code-block">
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">calculator_example.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python"># =============================================================================
-# Section 4: MCP Method Handlers
+                        <pre><code class="language-python">"""
+calculator_example.py - Calculator server using tools.py and mcp_core.py
+
+This demonstrates how to build an MCP server by combining modules
+from previous lessons.
+
+Run: python calculator_example.py
+Test: curl commands below
+"""
+
+import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+# Import from our modules (Lessons 3, 4, and 5)
+from jsonrpc import JsonRpcErrorCode, create_error_response
+from mcp_core import (
+    router, state, ConnectionState,
+    SERVER_NAME, SERVER_VERSION,
+    handle_request
+)
+from tools import ToolRegistry, text_result, error_result, register_tool_handlers
+
+
+# =============================================================================
+# Create tool registry and register calculator tools
 # =============================================================================
 
-def handle_initialize(request_id: int | str | None, params: dict) -> dict:
-    """Handle the initialize method."""
-    return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "result": {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {
-                "tools": {}  # We support tools
-            },
-            "serverInfo": {
-                "name": "calculator-server",
-                "version": "1.0.0"
-            }
-        }
+calculator_tools = ToolRegistry()
+
+
+@calculator_tools.register(
+    name="add",
+    description="Add two numbers together",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "a": {"type": "number", "description": "First number"},
+            "b": {"type": "number", "description": "Second number"}
+        },
+        "required": ["a", "b"]
     }
+)
+def add(args: dict) -> dict:
+    a, b = args["a"], args["b"]
+    return text_result(f"{a} + {b} = {a + b}")
 
 
-def handle_tools_list(request_id: int | str | None, params: dict) -> dict:
-    """Handle the tools/list method."""
-    return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "result": {
-            "tools": TOOLS
-        }
+@calculator_tools.register(
+    name="subtract",
+    description="Subtract the second number from the first",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "a": {"type": "number", "description": "Number to subtract from"},
+            "b": {"type": "number", "description": "Number to subtract"}
+        },
+        "required": ["a", "b"]
     }
+)
+def subtract(args: dict) -> dict:
+    a, b = args["a"], args["b"]
+    return text_result(f"{a} - {b} = {a - b}")
 
 
-def handle_tools_call(request_id: int | str | None, params: dict) -> dict:
-    """Handle the tools/call method."""
-    tool_name = params.get("name")
-    arguments = params.get("arguments", {})
+@calculator_tools.register(
+    name="multiply",
+    description="Multiply two numbers",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "a": {"type": "number", "description": "First number"},
+            "b": {"type": "number", "description": "Second number"}
+        },
+        "required": ["a", "b"]
+    }
+)
+def multiply(args: dict) -> dict:
+    a, b = args["a"], args["b"]
+    return text_result(f"{a} × {b} = {a * b}")
 
-    # Check if tool exists
-    if tool_name not in TOOL_HANDLERS:
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {
-                "code": -32602,
-                "message": f"Unknown tool: {tool_name}"
-            }
-        }
 
-    # Execute the tool
-    handler = TOOL_HANDLERS[tool_name]
-    result = handler(arguments)
+# Register tool handlers with the MCP router
+register_tool_handlers(router, calculator_tools)
 
-    return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "result": result
-    }</code></pre>
-                    </div>
 
-                    <!-- ============================================================= -->
-                    <h2>Section 5: Request Router</h2>
-                    <!-- ============================================================= -->
-
-                    <h3>Edit: <code>calculator_server.py</code></h3>
-                    <p><strong>Add</strong> the following after Section 4:</p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python"># =============================================================================
-# Section 5: Request Router
 # =============================================================================
-
-def handle_request(request: dict) -> dict | None:
-    """Route JSON-RPC requests to appropriate handlers."""
-    method = request.get("method")
-    request_id = cast(int | str | None, request.get("id"))
-    params = request.get("params", {})
-
-    # Route to handler based on method
-    handlers = {
-        "initialize": handle_initialize,
-        "tools/list": handle_tools_list,
-        "tools/call": handle_tools_call,
-    }
-
-    handler = handlers.get(method)
-    if handler:
-        return handler(request_id, params)
-
-    # Handle notifications (no response needed)
-    if method == "notifications/initialized":
-        return None
-
-    # Method not found
-    return {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "error": {
-            "code": -32601,
-            "message": f"Method not found: {method}"
-        }
-    }</code></pre>
-                    </div>
-
-                    <!-- ============================================================= -->
-                    <h2>Section 6: HTTP Server</h2>
-                    <!-- ============================================================= -->
-
-                    <h3>Edit: <code>calculator_server.py</code></h3>
-                    <p><strong>Add</strong> the following after Section 5:</p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python"># =============================================================================
-# Section 6: HTTP Server
+# HTTP Server (reuses mcp_core.handle_request)
 # =============================================================================
 
 class MCPHandler(BaseHTTPRequestHandler):
-    """HTTP handler for MCP requests."""
-
     def log_message(self, format, *args):
-        """Custom logging."""
-        print(f"[MCP] {args[0]}")
+        print(f"[Calculator] {args[0]}")
 
     def send_json(self, data: dict, status: int = 200):
-        """Send a JSON response."""
-        body = json.dumps(data, indent=2).encode("utf-8")
+        body = json.dumps(data, indent=2).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
@@ -480,65 +439,44 @@ class MCPHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self):
-        """Handle POST requests."""
-        # Read and parse JSON body
-        content_length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(content_length)
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length)
 
         try:
-            request = json.loads(body.decode("utf-8"))
+            request = json.loads(body)
         except json.JSONDecodeError as e:
-            self.send_json({
-                "jsonrpc": "2.0",
-                "id": None,
-                "error": {"code": -32700, "message": f"Parse error: {e}"}
-            }, status=400)
+            self.send_json(create_error_response(
+                None, JsonRpcErrorCode.PARSE_ERROR, str(e)
+            ), 400)
             return
 
-        # Validate JSON-RPC structure
         if request.get("jsonrpc") != "2.0":
-            self.send_json({
-                "jsonrpc": "2.0",
-                "id": request.get("id"),
-                "error": {"code": -32600, "message": "Invalid Request: jsonrpc must be '2.0'"}
-            }, status=400)
+            self.send_json(create_error_response(
+                request.get("id"),
+                JsonRpcErrorCode.INVALID_REQUEST,
+                "jsonrpc must be '2.0'"
+            ), 400)
             return
 
-        # Handle the request
         response = handle_request(request)
-
-        # Notifications don't get responses
         if response is None:
             self.send_response(204)
             self.end_headers()
-            return
+        else:
+            self.send_json(response)
 
-        self.send_json(response)
 
+if __name__ == "__main__":
+    print("Calculator MCP Server")
+    print("Tools: add, subtract, multiply")
+    print("Running on http://localhost:8080")
+    print("Press Ctrl+C to stop\n")
 
-def run_server(host: str = "localhost", port: int = 8080):
-    """Start the MCP calculator server."""
-    server = HTTPServer((host, port), MCPHandler)
-    print(f"Calculator MCP Server running on http://{host}:{port}")
-    print("Available tools: add, subtract, multiply")
-    print("Press Ctrl+C to stop")
-
+    server = HTTPServer(("localhost", 8080), MCPHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nShutting down...")
-        server.shutdown()</code></pre>
-                    </div>
-
-                    <p><strong>Replace</strong> the <code>if __name__ == "__main__"</code> block:</p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">if __name__ == "__main__":
-    run_server()</code></pre>
+        print("\nShutting down...")</code></pre>
                     </div>
 
                     <!-- ============================================================= -->
@@ -546,27 +484,52 @@ def run_server(host: str = "localhost", port: int = 8080):
                     <!-- ============================================================= -->
 
                     <h3>Start the Server</h3>
+                    <p>Run this command in your terminal:</p>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash">python calculator_server.py</code></pre>
+                        <pre><code class="language-bash">python calculator_example.py</code></pre>
                     </div>
 
                     <p>You should see:</p>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">text</span>
+                            <span class="code-filename">Expected Output</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>Calculator MCP Server running on http://localhost:8080
-Available tools: add, subtract, multiply
+                        <pre><code>Calculator MCP Server
+Tools: add, subtract, multiply
+Running on http://localhost:8080
 Press Ctrl+C to stop</code></pre>
                     </div>
 
-                    <h3>Test 1: List Tools</h3>
-                    <p>In another terminal:</p>
+                    <h3>Test 1: Initialize + List Tools</h3>
+                    <p>In another terminal, run the full MCP handshake:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Initialize
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","clientInfo":{"name":"test"}}}'
+
+# Initialized notification
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+
+# List tools
+curl -X POST http://localhost:8080 \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'</code></pre>
+                    </div>
+
+                    <h3>Test 2: Call the Add Tool</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -574,92 +537,49 @@ Press Ctrl+C to stop</code></pre>
                         </div>
                         <pre><code class="language-bash">curl -X POST http://localhost:8080 \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}'</code></pre>
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"add","arguments":{"a":15,"b":27}}}'</code></pre>
                     </div>
 
-                    <p>Expected: A JSON response listing all three tools with their schemas.</p>
-
-                    <h3>Test 2: Add Two Numbers</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">bash</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 2,
-    "method": "tools/call",
-    "params": {"name": "add", "arguments": {"a": 15, "b": 27}}
-  }'</code></pre>
-                    </div>
-
-                    <p>Expected:</p>
+                    <p>Expected response:</p>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">json</span>
+                            <span class="code-filename">Expected Output</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-json">{
   "jsonrpc": "2.0",
-  "id": 2,
+  "id": 3,
   "result": {
-    "content": [
-      {"type": "text", "text": "15 + 27 = 42"}
-    ]
+    "content": [{"type": "text", "text": "15 + 27 = 42"}]
   }
 }</code></pre>
                     </div>
-
-                    <h3>Test 3: Multiply</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">bash</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 3,
-    "method": "tools/call",
-    "params": {"name": "multiply", "arguments": {"a": 7, "b": 8}}
-  }'</code></pre>
-                    </div>
-
-                    <p>Expected: <code>"7 * 8 = 56"</code></p>
-
-                    <h3>Test 4: Unknown Tool (Error)</h3>
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">bash</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-bash">curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": 4,
-    "method": "tools/call",
-    "params": {"name": "divide", "arguments": {"a": 10, "b": 2}}
-  }'</code></pre>
-                    </div>
-
-                    <p>Expected: JSON-RPC error with "Unknown tool: divide"</p>
 
                     <!-- ============================================================= -->
                     <h2>What You've Built</h2>
                     <!-- ============================================================= -->
 
-                    <p>Congratulations! Your calculator server now:</p>
+                    <p>Your project now has a modular tool system:</p>
+
+                    <h3>Your Project Structure</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>your_project/
+    jsonrpc.py              # Lesson 3: JSON-RPC utilities
+    mcp_core.py             # Lesson 4: MCP handshake
+    tools.py                # Lesson 5: Reusable tool registry
+    calculator_example.py   # Lesson 5: Calculator using all modules</code></pre>
+                    </div>
+
                     <ul>
-                        <li>Defines three tools with proper <code>inputSchema</code></li>
-                        <li>Handles <code>tools/list</code> to advertise capabilities</li>
-                        <li>Handles <code>tools/call</code> to execute tools</li>
-                        <li>Returns properly formatted results with content arrays</li>
-                        <li>Handles errors gracefully with <code>isError</code> flag</li>
-                        <li>Validates arguments before execution</li>
+                        <li><strong>tools.py</strong> &mdash; Reusable <code>ToolRegistry</code> with decorator pattern</li>
+                        <li><strong>Decorator-based tools</strong> &mdash; Clean <code>@tools.register(...)</code> syntax</li>
+                        <li><strong>Module reuse</strong> &mdash; Imports from <code>jsonrpc.py</code> and <code>mcp_core.py</code></li>
+                        <li><strong>Helper functions</strong> &mdash; <code>text_result()</code> and <code>error_result()</code></li>
                     </ul>
 
                     <div class="info-box tip">
@@ -673,21 +593,10 @@ Press Ctrl+C to stop</code></pre>
 
                     <h2>What's Next?</h2>
                     <p>
-                        In the next lesson, we'll learn about <strong>Resources</strong> &mdash;
-                        the read-only data that MCP servers can expose. Resources are perfect
-                        for files, database records, API data, and other content the AI needs
-                        to read.
+                        In the next lesson, we'll create <code>resources.py</code> &mdash;
+                        a module for exposing read-only data like files, database records,
+                        and API data to the AI.
                     </p>
-
-                    <div class="info-box info">
-                        <div class="info-box-title">Lesson Complete!</div>
-                        <p>
-                            You now understand how to implement MCP tools from start to finish.
-                            Tools are the most common way to extend AI capabilities with custom
-                            functionality. The patterns you've learned here apply to any tool
-                            you build.
-                        </p>
-                    </div>
                 </div>
 
                 <nav class="step-navigation">

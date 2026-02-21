@@ -5,24 +5,24 @@
     /* MCP Theme Colors */
     --primary: #7C3AED;          /* Purple */
     --primary-dark: #5B21B6;
-    --primary-light: #A78BFA;
-    --secondary: #10B981;        /* Green */
-    --secondary-dark: #059669;
-    --secondary-light: #34D399;
+    --primary-light: #9333EA;
+    --secondary: #047857;        /* Green - darker for light bg contrast */
+    --secondary-dark: #065F46;
+    --secondary-light: #059669;
 
-    /* Neutral Colors */
-    --bg-dark: #0F172A;
-    --bg-darker: #020617;
-    --bg-card: #1E293B;
-    --bg-card-hover: #334155;
-    --text-primary: #F8FAFC;
-    --text-secondary: #94A3B8;
+    /* Neutral Colors - LIGHT THEME */
+    --bg-dark: #FFFFFF;
+    --bg-darker: #F8FAFC;
+    --bg-card: #F1F5F9;
+    --bg-card-hover: #E2E8F0;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
     --text-muted: #64748B;
-    --border-color: #334155;
+    --border-color: #CBD5E1;
 
-    /* Code Colors */
-    --code-bg: #1E293B;
-    --code-text: #E2E8F0;
+    /* Code Colors - Light theme */
+    --code-bg: #F8FAFC;
+    --code-text: #1E293B;
 
     /* Spacing */
     --spacing-xs: 0.25rem;
@@ -67,7 +67,7 @@ body {
 }
 
 a {
-    color: var(--primary-light);
+    color: var(--primary);
     text-decoration: none;
     transition: color var(--transition-fast);
 }
@@ -461,12 +461,19 @@ a:hover {
 }
 
 .toc-link.active {
-    background: var(--primary);
+    background: var(--primary-dark);
+    color: white;
+    font-weight: 600;
+}
+
+.toc-link.active:hover {
+    background: #4C1D95;
     color: white;
 }
 
 .toc-link.completed {
-    color: var(--secondary);
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
 .toc-number {
@@ -481,8 +488,31 @@ a:hover {
     border-radius: 50%;
 }
 
-.toc-link.active .toc-number {
-    background: rgba(255, 255, 255, 0.2);
+/* Completed step styling - checkmark in circle */
+.toc-link.completed .toc-number {
+    background: var(--secondary);
+    color: transparent;
+    position: relative;
+}
+
+.toc-link.completed .toc-number::after {
+    content: "✓";
+    position: absolute;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+/* Active overrides completed - show white circle, no checkmark */
+.toc-link.active .toc-number,
+.toc-link.active.completed .toc-number {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+.toc-link.active .toc-number::after,
+.toc-link.active.completed .toc-number::after {
+    content: none;
 }
 
 /* All Lessons Navigation */
@@ -522,7 +552,7 @@ a:hover {
 }
 
 .all-lessons-link.current {
-    color: var(--primary-light);
+    color: var(--primary);
     font-weight: 500;
 }
 
@@ -608,6 +638,25 @@ a:hover {
     margin: var(--spacing-lg) 0;
     border-radius: 8px;
     overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+/* File Edit Code Blocks - Code that should be written to a file */
+.code-block.file-edit {
+    border-left: 4px solid var(--secondary);
+}
+
+.code-block.file-edit .code-header {
+    background: linear-gradient(90deg, rgba(5, 150, 105, 0.12), var(--bg-darker));
+}
+
+.code-block.file-edit .code-header::before {
+    content: "📝 ";
+    margin-right: 0.25rem;
+}
+
+.code-block.file-edit pre {
+    background: linear-gradient(90deg, rgba(5, 150, 105, 0.06), var(--code-bg));
 }
 
 .code-header {
@@ -624,6 +673,14 @@ a:hover {
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
+}
+
+/* Code Filename - shown for file-edit blocks */
+.code-filename {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--secondary);
+    font-family: var(--font-mono);
 }
 
 .copy-button {
@@ -666,7 +723,7 @@ code {
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.85em;
-    color: var(--primary-light);
+    color: var(--primary);
 }
 
 /* Info/Warning/Tip Boxes */
@@ -698,15 +755,15 @@ code {
 }
 
 .info-box.info .info-box-title {
-    color: var(--primary-light);
+    color: var(--primary);
 }
 
 .info-box.warning .info-box-title {
-    color: #FBBF24;
+    color: #B45309;
 }
 
 .info-box.tip .info-box-title {
-    color: var(--secondary);
+    color: var(--secondary-dark);
 }
 
 /* Learn More Expandable */
@@ -899,61 +956,61 @@ code {
     }
 }
 
-/* ===== Syntax Highlighting (Atom One Dark inspired) ===== */
+/* ===== Syntax Highlighting (Light Theme) ===== */
 .hljs {
-    color: #abb2bf;
+    color: #383a42;
     background: var(--code-bg);
 }
 
 .hljs-comment,
 .hljs-quote {
-    color: #5c6370;
+    color: #a0a1a7;
     font-style: italic;
 }
 
 .hljs-keyword,
 .hljs-selector-tag {
-    color: #c678dd;
+    color: #a626a4;
 }
 
 .hljs-string,
 .hljs-addition {
-    color: #98c379;
+    color: #50a14f;
 }
 
 .hljs-number {
-    color: #d19a66;
+    color: #986801;
 }
 
 .hljs-built_in,
 .hljs-builtin-name {
-    color: #e6c07b;
+    color: #c18401;
 }
 
 .hljs-function {
-    color: #61afef;
+    color: #4078f2;
 }
 
 .hljs-title,
 .hljs-section {
-    color: #61afef;
+    color: #4078f2;
 }
 
 .hljs-attr,
 .hljs-variable,
 .hljs-template-variable {
-    color: #d19a66;
+    color: #986801;
 }
 
 .hljs-type,
 .hljs-class .hljs-title {
-    color: #e6c07b;
+    color: #c18401;
 }
 
 .hljs-deletion {
-    color: #e06c75;
+    color: #e45649;
 }
 
 .hljs-meta {
-    color: #61afef;
+    color: #4078f2;
 }

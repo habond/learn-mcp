@@ -73,46 +73,86 @@
                 </header>
 
                 <div class="content">
-                    <h2>Building Incrementally</h2>
+                    <h2>Building on Previous Lessons</h2>
                     <p>
-                        Let's build a complete STDIO MCP server step by step. We'll create
-                        <code>stdio_server.py</code> incrementally, testing as we go.
+                        In this step, we'll create <code>transports/stdio.py</code> &mdash; a reusable
+                        STDIO transport. Then we'll create an example that uses all our previous modules.
                     </p>
 
                     <div class="info-box info">
-                        <div class="info-box-title">File Structure</div>
+                        <div class="info-box-title">Building on Lessons 3-6</div>
                         <p>
-                            We'll build one file: <code>stdio_server.py</code>. Each section below
-                            adds to this file. Follow along and add each section in order.
+                            This lesson imports from <code>jsonrpc.py</code>, <code>mcp_core.py</code>,
+                            <code>tools.py</code>, and <code>resources.py</code>. Make sure all previous
+                            modules are in your project directory.
                         </p>
                     </div>
 
-                    <!-- ============================================================= -->
-                    <h2>Section 1: Imports and Logging Setup</h2>
-                    <!-- ============================================================= -->
-
-                    <h3>Create: <code>stdio_server.py</code></h3>
-                    <p>Start with the imports and logging (to stderr only!):</p>
-
+                    <h3>Your Project Structure</h3>
                     <div class="code-block">
                         <div class="code-header">
-                            <span class="code-language">python</span>
-                            <span class="code-filename">stdio_server.py</span>
+                            <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">#!/usr/bin/env python3
-"""
-stdio_server.py - MCP server using STDIO transport.
+                        <pre><code>your_project/
+    jsonrpc.py          # Lesson 3
+    mcp_core.py         # Lesson 4
+    tools.py            # Lesson 5
+    resources.py        # Lesson 6
+    transports/         # NEW - Create this folder
+        __init__.py     # NEW - Empty file
+        stdio.py        # NEW - We'll create this
+    stdio_example.py    # NEW - Example using transport</code></pre>
+                    </div>
 
-Run with: python stdio_server.py
-Test with: echo commands piped to stdin
+                    <div class="info-box warning">
+                        <div class="info-box-title">How to Read Code Blocks</div>
+                        <p>In this lesson:</p>
+                        <ul style="margin: 0.5rem 0 0 1.5rem;">
+                            <li><strong>Filename in header</strong> = <strong>Write this code</strong> to that file</li>
+                            <li><strong>"Add after Section X"</strong> = Append to your existing file</li>
+                            <li><strong>bash</strong> blocks = Commands to <strong>run in your terminal</strong></li>
+                            <li><strong>"Expected Output"</strong> = What you should see (don't write this)</li>
+                        </ul>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Section 1: Create the Transports Package</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Create: <code>transports/__init__.py</code></h3>
+                    <p><strong>Create</strong> an empty file to make <code>transports</code> a Python package:</p>
+
+                    <div class="code-block file-edit">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <span class="code-filename">transports/__init__.py</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""MCP transport implementations."""</code></pre>
+                    </div>
+
+                    <h3>Create: <code>transports/stdio.py</code></h3>
+                    <p><strong>Create</strong> a new file with the STDIO transport class:</p>
+
+                    <div class="code-block file-edit">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <span class="code-filename">transports/stdio.py</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+transports/stdio.py - STDIO transport for MCP servers.
+
+This module builds on mcp_core.py from Lesson 4.
 """
 
 import sys
 import json
 import logging
-from datetime import datetime
-from typing import cast
+
+# Import from Lesson 4
+from mcp_core import handle_request
 
 
 # =============================================================================
@@ -124,22 +164,7 @@ logging.basicConfig(
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[logging.StreamHandler(sys.stderr)]  # CRITICAL: stderr only!
 )
-logger = logging.getLogger("mcp-stdio-server")
-
-
-class ErrorCode:
-    """JSON-RPC error codes."""
-    PARSE_ERROR = -32700
-    INVALID_REQUEST = -32600
-    METHOD_NOT_FOUND = -32601
-    INVALID_PARAMS = -32602
-    INTERNAL_ERROR = -32603
-
-
-# Quick test
-if __name__ == "__main__":
-    logger.info("Logging test - this goes to stderr")
-    print("Print test - this goes to stdout")</code></pre>
+logger = logging.getLogger("mcp-stdio")</code></pre>
                     </div>
 
                     <h3>Try It</h3>
@@ -148,26 +173,26 @@ if __name__ == "__main__":
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash">python stdio_server.py</code></pre>
+                        <pre><code class="language-bash">python -c "from transports.stdio import logger; logger.info('Test')"</code></pre>
                     </div>
 
-                    <h3>Expected Output</h3>
-                    <p>You'll see both outputs - logging to stderr and print to stdout.</p>
+                    <p>You should see a log message to stderr.</p>
 
                     <!-- ============================================================= -->
-                    <h2>Section 2: Response Functions</h2>
+                    <h2>Section 2: STDIO Transport Class</h2>
                     <!-- ============================================================= -->
 
-                    <h3>Edit: <code>stdio_server.py</code></h3>
-                    <p><strong>Add</strong> the following after Section 1:</p>
+                    <h3>Edit: <code>transports/stdio.py</code></h3>
+                    <p><strong>Add</strong> after Section 1:</p>
 
-                    <div class="code-block">
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">transports/stdio.py - Add after Section 1</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
-# Section 2: Response Functions (stdout)
+# Section 2: STDIO Transport
 # =============================================================================
 
 def write_response(response: dict) -> None:
@@ -179,205 +204,14 @@ def write_response(response: dict) -> None:
     logger.debug(f"Sent response for id={response.get('id')}")
 
 
-def send_result(msg_id: int, result: dict) -> None:
-    """Send a successful JSON-RPC response."""
-    write_response({
-        "jsonrpc": "2.0",
-        "id": msg_id,
-        "result": result
-    })
+def run_stdio_server() -> None:
+    """
+    Run MCP server using STDIO transport.
 
-
-def send_error(msg_id: int | None, code: int, message: str) -> None:
-    """Send a JSON-RPC error response."""
-    write_response({
-        "jsonrpc": "2.0",
-        "id": msg_id,
-        "error": {"code": code, "message": message}
-    })</code></pre>
-                    </div>
-
-                    <!-- ============================================================= -->
-                    <h2>Section 3: Tool Definitions</h2>
-                    <!-- ============================================================= -->
-
-                    <h3>Edit: <code>stdio_server.py</code></h3>
-                    <p><strong>Add</strong> the following after Section 2:</p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python"># =============================================================================
-# Section 3: Tool Definitions
-# =============================================================================
-
-TOOLS = [
-    {
-        "name": "echo",
-        "description": "Echo back a message. Useful for testing.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "description": "The message to echo back"
-                }
-            },
-            "required": ["message"]
-        }
-    },
-    {
-        "name": "get_time",
-        "description": "Get the current server time.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {},
-            "required": []
-        }
-    },
-    {
-        "name": "add_numbers",
-        "description": "Add two numbers together.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "a": {"type": "number", "description": "First number"},
-                "b": {"type": "number", "description": "Second number"}
-            },
-            "required": ["a", "b"]
-        }
-    }
-]
-
-
-def execute_tool(name: str, arguments: dict) -> dict:
-    """Execute a tool and return the result content."""
-    logger.info(f"Executing tool: {name}")
-
-    if name == "echo":
-        message = arguments.get("message", "")
-        return {"type": "text", "text": message}
-
-    elif name == "get_time":
-        current_time = datetime.now().isoformat()
-        return {"type": "text", "text": f"Current time: {current_time}"}
-
-    elif name == "add_numbers":
-        a = arguments.get("a", 0)
-        b = arguments.get("b", 0)
-        return {"type": "text", "text": f"{a} + {b} = {a + b}"}
-
-    else:
-        raise ValueError(f"Unknown tool: {name}")</code></pre>
-                    </div>
-
-                    <!-- ============================================================= -->
-                    <h2>Section 4: MCP Method Handlers</h2>
-                    <!-- ============================================================= -->
-
-                    <h3>Edit: <code>stdio_server.py</code></h3>
-                    <p><strong>Add</strong> the following after Section 3:</p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python"># =============================================================================
-# Section 4: MCP Method Handlers
-# =============================================================================
-
-def handle_initialize(msg_id: int | str, params: dict) -> None:
-    """Handle the initialize request."""
-    client_info = params.get("clientInfo", {})
-    logger.info(f"Client connecting: {client_info.get('name', 'unknown')}")
-
-    send_result(msg_id, {
-        "protocolVersion": "2024-11-05",
-        "capabilities": {"tools": {}},
-        "serverInfo": {
-            "name": "stdio-demo-server",
-            "version": "1.0.0"
-        }
-    })
-
-
-def handle_tools_list(msg_id: int | str, params: dict) -> None:
-    """Handle the tools/list request."""
-    logger.debug("Listing tools")
-    send_result(msg_id, {"tools": TOOLS})
-
-
-def handle_tools_call(msg_id: int | str, params: dict) -> None:
-    """Handle the tools/call request."""
-    tool_name = params.get("name")
-    arguments = params.get("arguments", {})
-
-    try:
-        result = execute_tool(tool_name, arguments)
-        send_result(msg_id, {"content": [result]})
-    except ValueError as e:
-        send_error(msg_id, ErrorCode.METHOD_NOT_FOUND, str(e))
-    except Exception as e:
-        logger.error(f"Tool error: {e}")
-        send_error(msg_id, ErrorCode.INTERNAL_ERROR, str(e))</code></pre>
-                    </div>
-
-                    <!-- ============================================================= -->
-                    <h2>Section 5: Message Router and Main Loop</h2>
-                    <!-- ============================================================= -->
-
-                    <h3>Edit: <code>stdio_server.py</code></h3>
-                    <p><strong>Add</strong> the following after Section 4:</p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python"># =============================================================================
-# Section 5: Message Router and Main Loop
-# =============================================================================
-
-def handle_message(message: dict) -> None:
-    """Route a JSON-RPC message to the appropriate handler."""
-    if message.get("jsonrpc") != "2.0":
-        logger.error("Invalid JSON-RPC version")
-        return
-
-    method = message.get("method")
-    msg_id = cast(int | str | None, message.get("id"))
-    params = message.get("params", {})
-
-    # Notifications (no id) - no response needed
-    if method and msg_id is None:
-        if method == "notifications/initialized":
-            logger.info("Client initialization complete")
-        else:
-            logger.warning(f"Unknown notification: {method}")
-        return
-
-    # Requests (has method and id)
-    if method and msg_id is not None:
-        logger.debug(f"Request [{msg_id}]: {method}")
-
-        handlers = {
-            "initialize": handle_initialize,
-            "tools/list": handle_tools_list,
-            "tools/call": handle_tools_call,
-        }
-
-        handler = handlers.get(method)
-        if handler:
-            handler(msg_id, params)
-        else:
-            send_error(msg_id, ErrorCode.METHOD_NOT_FOUND, f"Unknown method: {method}")
-
-
-def main() -> None:
-    """Main server loop - read and process messages until EOF."""
+    Reads JSON-RPC messages from stdin (one per line).
+    Writes responses to stdout.
+    Logs to stderr.
+    """
     logger.info("STDIO MCP Server starting...")
 
     while True:
@@ -397,13 +231,17 @@ def main() -> None:
 
             # Parse JSON
             try:
-                message = json.loads(line)
+                request = json.loads(line)
             except json.JSONDecodeError as e:
                 logger.error(f"JSON parse error: {e}")
                 continue
 
-            # Handle the message
-            handle_message(message)
+            # Use shared handler from mcp_core
+            response = handle_request(request)
+
+            # Send response (None for notifications)
+            if response is not None:
+                write_response(response)
 
         except KeyboardInterrupt:
             logger.info("Interrupted, shutting down")
@@ -414,19 +252,110 @@ def main() -> None:
     logger.info("Server shutdown complete")</code></pre>
                     </div>
 
-                    <p><strong>Replace</strong> the <code>if __name__ == "__main__"</code> block:</p>
+                    <p><strong>Add</strong> a test block at the end:</p>
 
-                    <div class="code-block">
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">transports/stdio.py - Add at the end</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">if __name__ == "__main__":
-    main()</code></pre>
+                        <pre><code class="language-python"># =============================================================================
+# Run if executed directly
+# =============================================================================
+
+if __name__ == "__main__":
+    run_stdio_server()</code></pre>
                     </div>
 
                     <!-- ============================================================= -->
-                    <h2>Testing Your Server</h2>
+                    <h2>Section 3: Example with Tools</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Create: <code>stdio_example.py</code></h3>
+                    <p><strong>Create</strong> a server that uses STDIO transport with tools:</p>
+
+                    <div class="code-block file-edit">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <span class="code-filename">stdio_example.py</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">"""
+stdio_example.py - STDIO server using tools.py
+
+Run: python stdio_example.py
+Test: echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | python stdio_example.py
+"""
+
+from datetime import datetime
+
+# Import from our modules
+from mcp_core import router
+from tools import ToolRegistry, register_tool_handlers, text_result
+from transports.stdio import run_stdio_server
+
+# =============================================================================
+# Register tools
+# =============================================================================
+
+tool_registry = ToolRegistry()
+
+
+@tool_registry.register(
+    name="echo",
+    description="Echo back a message",
+    input_schema={
+        "type": "object",
+        "properties": {"message": {"type": "string", "description": "Message to echo"}},
+        "required": ["message"]
+    }
+)
+def echo(args: dict) -> dict:
+    return text_result(args.get("message", ""))
+
+
+@tool_registry.register(
+    name="get_time",
+    description="Get current server time",
+    input_schema={"type": "object", "properties": {}, "required": []}
+)
+def get_time(args: dict) -> dict:
+    return text_result(f"Current time: {datetime.now().isoformat()}")
+
+
+@tool_registry.register(
+    name="add_numbers",
+    description="Add two numbers",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "a": {"type": "number", "description": "First number"},
+            "b": {"type": "number", "description": "Second number"}
+        },
+        "required": ["a", "b"]
+    }
+)
+def add_numbers(args: dict) -> dict:
+    a = args.get("a", 0)
+    b = args.get("b", 0)
+    return text_result(f"{a} + {b} = {a + b}")
+
+
+# Register with the MCP router
+register_tool_handlers(router, tool_registry)
+
+
+# =============================================================================
+# Run the server
+# =============================================================================
+
+if __name__ == "__main__":
+    run_stdio_server()</code></pre>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Section 4: Test Your Server</h2>
                     <!-- ============================================================= -->
 
                     <h3>Test 1: Initialize Handshake</h3>
@@ -435,10 +364,17 @@ def main() -> None:
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash">echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | python stdio_server.py</code></pre>
+                        <pre><code class="language-bash">echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}' | python stdio_example.py</code></pre>
                     </div>
 
-                    <p>Expected: JSON response with protocolVersion, capabilities, and serverInfo.</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <span class="code-filename">Expected Output (stdout)</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"mcp-server","version":"1.0.0"}}}</code></pre>
+                    </div>
 
                     <h3>Test 2: List Tools</h3>
                     <div class="code-block">
@@ -447,13 +383,13 @@ def main() -> None:
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-bash">(
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}'
 echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
-echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
-) | python stdio_server.py</code></pre>
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+) | python stdio_example.py 2>/dev/null</code></pre>
                     </div>
 
-                    <p>Expected: Two responses - initialize result and tools list.</p>
+                    <p>Expected: Two JSON responses - initialize result and tools list with echo, get_time, add_numbers.</p>
 
                     <h3>Test 3: Call a Tool</h3>
                     <div class="code-block">
@@ -462,13 +398,13 @@ echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-bash">(
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}'
 echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
-echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arguments":{"message":"Hello, MCP!"}}}'
-) | python stdio_server.py</code></pre>
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arguments":{"message":"Hello, STDIO!"}}}'
+) | python stdio_example.py 2>/dev/null</code></pre>
                     </div>
 
-                    <p>Expected: Response with <code>"text": "Hello, MCP!"</code></p>
+                    <p>Expected: Response with <code>"text": "Hello, STDIO!"</code></p>
 
                     <!-- ============================================================= -->
                     <h2>Claude Desktop Configuration</h2>
@@ -504,23 +440,41 @@ echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arg
                     <h2>What You've Built</h2>
                     <!-- ============================================================= -->
 
-                    <p>Your STDIO MCP server now:</p>
+                    <p>You've created a reusable STDIO transport:</p>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border-color);">
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">File</th>
+                                <th style="text-align: left; padding: 0.75rem; color: var(--text-primary);">Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>transports/stdio.py</code></td>
+                                <td style="padding: 0.75rem;">Reusable STDIO transport using <code>mcp_core.py</code></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.75rem;"><code>stdio_example.py</code></td>
+                                <td style="padding: 0.75rem;">Example server combining STDIO + tools</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>The key insight: the same MCP router handles requests regardless of transport!</p>
                     <ul>
-                        <li>Reads JSON-RPC messages from stdin (one per line)</li>
-                        <li>Writes compact JSON responses to stdout</li>
-                        <li>Logs debug information to stderr</li>
-                        <li>Handles the MCP initialization handshake</li>
-                        <li>Exposes three tools: echo, get_time, add_numbers</li>
-                        <li>Handles errors gracefully</li>
+                        <li><code>mcp_core.py</code> handles MCP protocol logic</li>
+                        <li><code>tools.py</code> registers tools</li>
+                        <li><code>transports/stdio.py</code> handles I/O over stdin/stdout</li>
                     </ul>
 
                     <div class="info-box warning">
-                        <div class="info-box-title">Common Mistakes to Avoid</div>
+                        <div class="info-box-title">STDIO Rules</div>
                         <ul>
-                            <li>Using <code>print()</code> anywhere (it goes to stdout!)</li>
-                            <li>Forgetting to call <code>flush()</code> after writing</li>
-                            <li>Pretty-printing JSON responses (breaks line-based protocol)</li>
-                            <li>Not handling EOF properly (server hangs)</li>
+                            <li><strong>Never</strong> use <code>print()</code> (it goes to stdout!)</li>
+                            <li><strong>Always</strong> call <code>flush()</code> after writing</li>
+                            <li><strong>Never</strong> pretty-print JSON (breaks line-based protocol)</li>
+                            <li><strong>Always</strong> log to stderr only</li>
                         </ul>
                     </div>
 

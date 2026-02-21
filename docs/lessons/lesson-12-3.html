@@ -62,14 +62,61 @@
                 </header>
 
                 <div class="content">
-                    <h2>Time to Code!</h2>
+                    <h2>Assembling Your Modules</h2>
                     <p>
-                        Now we will implement the core of our Notes MCP Server. We will build:
+                        The capstone project brings together everything you have built in previous lessons.
+                        You will use your existing modules to create a complete Notes MCP Server.
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">Building on All Previous Lessons</div>
+                        <p>
+                            This capstone imports from the modules you created in Lessons 3-9.
+                            Make sure all previous modules are in your project directory.
+                        </p>
+                    </div>
+
+                    <h3>Your Complete Project Structure</h3>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>your_project/
+    jsonrpc.py          # Lesson 3
+    mcp_core.py         # Lesson 4
+    tools.py            # Lesson 5
+    resources.py        # Lesson 6
+    prompts.py          # Lesson 9
+    transports/
+        __init__.py     # Lesson 7
+        stdio.py        # Lesson 7
+        http_sse.py     # Lesson 8
+    notes_server.py     # CAPSTONE - We'll create this
+    notes.json          # Data storage (auto-created)</code></pre>
+                    </div>
+
+                    <div class="info-box warning">
+                        <div class="info-box-title">How to Read Code Blocks</div>
+                        <p>In this lesson:</p>
+                        <ul style="margin: 0.5rem 0 0 1.5rem;">
+                            <li><strong>Filename in header</strong> = <strong>Write this code</strong> to that file</li>
+                            <li><strong>"Add after X"</strong> = Append to your existing file</li>
+                            <li><strong>bash</strong> blocks = Commands to <strong>run in your terminal</strong></li>
+                            <li><strong>"Expected Output"</strong> = What you should see (don't write this)</li>
+                        </ul>
+                    </div>
+
+                    <h2>The Full Implementation</h2>
+                    <p>
+                        Below is the complete <code>notes_server.py</code> implementation. While this version
+                        is self-contained for clarity, note that it follows the same patterns you learned:
                     </p>
                     <ul>
-                        <li>The server skeleton with STDIO transport</li>
-                        <li>The initialization handshake</li>
-                        <li>All four tools (create, update, delete, search)</li>
+                        <li>Tool registration patterns from Lesson 5</li>
+                        <li>Resource patterns from Lesson 6</li>
+                        <li>STDIO transport from Lesson 7</li>
+                        <li>Prompt patterns from Lesson 9</li>
                     </ul>
 
                     <h2>Server Foundation</h2>
