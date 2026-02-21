@@ -415,7 +415,25 @@ if __name__ == "__main__":
                         <pre><code class="language-bash">python prompts_example.py</code></pre>
                     </div>
 
-                    <h3>Test 1: List Prompts</h3>
+                    <h3>Test 1: Initialize the Server</h3>
+                    <p>In another terminal, initialize the MCP connection:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash"># Initialize
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","clientInfo":{"name":"test"}}}'
+
+# Initialized notification
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'</code></pre>
+                    </div>
+
+                    <h3>Test 2: List Prompts</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -423,10 +441,10 @@ if __name__ == "__main__":
                         </div>
                         <pre><code class="language-bash">curl -X POST http://localhost:8080/mcp \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc": "2.0", "id": 1, "method": "prompts/list", "params": {}}'</code></pre>
+  -d '{"jsonrpc": "2.0", "id": 2, "method": "prompts/list", "params": {}}'</code></pre>
                     </div>
 
-                    <h3>Test 2: Get a Code Review Prompt</h3>
+                    <h3>Test 3: Get a Code Review Prompt</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -436,7 +454,7 @@ if __name__ == "__main__":
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
-    "id": 2,
+    "id": 3,
     "method": "prompts/get",
     "params": {
       "name": "code-review",
@@ -449,7 +467,7 @@ if __name__ == "__main__":
   }'</code></pre>
                     </div>
 
-                    <h3>Test 3: Get a Summary Prompt</h3>
+                    <h3>Test 4: Get a Summary Prompt</h3>
                     <div class="code-block">
                         <div class="code-header">
                             <span class="code-language">bash</span>
@@ -459,7 +477,7 @@ if __name__ == "__main__":
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
-    "id": 3,
+    "id": 4,
     "method": "prompts/get",
     "params": {"name": "summarize", "arguments": {"text": "MCP is great!", "style": "tldr"}}
   }'</code></pre>
