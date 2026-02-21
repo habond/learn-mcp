@@ -6,5 +6,6 @@ __pycache__/
 venv/
 *.log
 .claude/
+.vscode/
 /implementation/*
 !/implementation/.gitkeep
