@@ -130,77 +130,10 @@ function initKeyboardNavigation() {
     });
 }
 
-/* ===== Progress Tracking (Local Storage) ===== */
-const ProgressTracker = {
-    STORAGE_KEY: 'mcp-learning-progress',
-
-    getProgress: function() {
-        const stored = localStorage.getItem(this.STORAGE_KEY);
-        return stored ? JSON.parse(stored) : {};
-    },
-
-    markComplete: function(lessonId, stepId) {
-        const progress = this.getProgress();
-        if (!progress[lessonId]) {
-            progress[lessonId] = [];
-        }
-        if (!progress[lessonId].includes(stepId)) {
-            progress[lessonId].push(stepId);
-        }
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(progress));
-    },
-
-    isComplete: function(lessonId, stepId) {
-        const progress = this.getProgress();
-        return progress[lessonId] && progress[lessonId].includes(stepId);
-    },
-
-    getLessonProgress: function(lessonId, totalSteps) {
-        const progress = this.getProgress();
-        const completed = progress[lessonId] ? progress[lessonId].length : 0;
-        return Math.round((completed / totalSteps) * 100);
-    },
-
-    reset: function() {
-        localStorage.removeItem(this.STORAGE_KEY);
-    }
-};
-
-/* ===== Auto-mark current step as visited ===== */
-function markCurrentStepVisited() {
-    const stepBadge = document.querySelector('.step-badge');
-    if (stepBadge) {
-        const match = stepBadge.textContent.match(/Lesson (\d+) - Step (\d+)/);
-        if (match) {
-            const lessonId = 'lesson-' + match[1];
-            const stepId = 'step-' + match[2];
-            ProgressTracker.markComplete(lessonId, stepId);
-            updateProgressUI();
-        }
-    }
-}
-
-/* ===== Update Progress UI ===== */
-function updateProgressUI() {
-    const progressFill = document.querySelector('.progress-fill');
+/* ===== Mark Completed Steps in TOC ===== */
+function markCompletedSteps() {
     const tocLinks = document.querySelectorAll('.toc-link');
 
-    if (!progressFill) return;
-
-    // Get current lesson info from the page
-    const stepBadge = document.querySelector('.step-badge');
-    if (!stepBadge) return;
-
-    const match = stepBadge.textContent.match(/Lesson (\d+)/);
-    if (!match) return;
-
-    const lessonId = 'lesson-' + match[1];
-    const totalSteps = tocLinks.length;
-    const progress = ProgressTracker.getLessonProgress(lessonId, totalSteps);
-
-    progressFill.style.width = progress + '%';
-
-    // Mark completed steps in TOC (only steps BEFORE the active step)
     // Find the active step index
     let activeIndex = -1;
     tocLinks.forEach(function(link, index) {
@@ -209,7 +142,7 @@ function updateProgressUI() {
         }
     });
 
-    // Only mark steps before the active step as completed
+    // Mark steps before the active step as completed
     tocLinks.forEach(function(link, index) {
         if (index < activeIndex) {
             link.classList.add('completed');
@@ -217,7 +150,7 @@ function updateProgressUI() {
     });
 }
 
-// Initialize progress tracking if on a lesson page
+// Initialize on lesson pages
 if (document.querySelector('.step-badge')) {
-    markCurrentStepVisited();
+    markCompletedSteps();
 }
