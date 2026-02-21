@@ -189,8 +189,28 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def send_sse(self, data: dict) -> None:
+        """
+        Send a Server-Sent Events response.
+        SSE format: "data: &lt;json&gt;\n\n"
+        """
+        sse_data = f"data: {json.dumps(data)}\n\n".encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.send_cors_headers()
+        self.end_headers()
+        self.wfile.write(sse_data)
+        self.wfile.flush()
+
+    def client_accepts_sse(self) -> bool:
+        """Check if client prefers SSE responses via Accept header."""
+        accept = self.headers.get("Accept", "")
+        return "text/event-stream" in accept
+
     def do_POST(self) -> None:
-        """Handle MCP JSON-RPC requests."""
+        """Handle MCP JSON-RPC requests with SSE support."""
         if self.path != "/mcp":
             self.send_error(404, "Not Found")
             return
@@ -213,7 +233,11 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
             self.send_response(204)
             self.send_cors_headers()
             self.end_headers()
+        elif self.client_accepts_sse():
+            # Client requested SSE via Accept header
+            self.send_sse(response)
         else:
+            # Default JSON response
             self.send_json(response)</code></pre>
                     </div>
 
@@ -242,8 +266,9 @@ def run_http_server(host: str = "localhost", port: int = 8080) -> None:
         port: Port to listen on (default: 8080)
     """
     server = HTTPServer((host, port), MCPHTTPHandler)
-    logger.info(f"MCP HTTP Server running on http://{host}:{port}")
+    logger.info(f"MCP HTTP/SSE Server running on http://{host}:{port}")
     logger.info(f"Endpoint: POST http://{host}:{port}/mcp")
+    logger.info("Add 'Accept: text/event-stream' header for SSE responses")
     logger.info("Press Ctrl+C to stop")
 
     try:
@@ -360,8 +385,9 @@ if __name__ == "__main__":
                             <span class="code-filename">Expected Output</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>... [INFO] MCP HTTP Server running on http://localhost:8080
+                        <pre><code>... [INFO] MCP HTTP/SSE Server running on http://localhost:8080
 ... [INFO] Endpoint: POST http://localhost:8080/mcp
+... [INFO] Add 'Accept: text/event-stream' header for SSE responses
 ... [INFO] Press Ctrl+C to stop</code></pre>
                     </div>
 
@@ -422,6 +448,45 @@ curl -X POST http://localhost:8080/mcp \
     ]
   }
 }</code></pre>
+                    </div>
+
+                    <h3>Test 3: SSE Response</h3>
+                    <p>Add the <code>Accept: text/event-stream</code> header to receive SSE format:</p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">bash</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-bash">curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tools/call",
+    "params": {"name": "add_numbers", "arguments": {"a": 5, "b": 3}}
+  }'</code></pre>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-language">text</span>
+                            <span class="code-filename">Expected Output (SSE format)</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code>data: {"jsonrpc": "2.0", "id": 4, "result": {"content": [{"type": "text", "text": "5 + 3 = 8"}]}}
+
+</code></pre>
+                    </div>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">SSE vs JSON Response</div>
+                        <p>
+                            Notice the difference: SSE responses use <code>Content-Type: text/event-stream</code>
+                            and format data as <code>data: {...}\n\n</code>. The client controls which format
+                            it receives via the <code>Accept</code> header. This demonstrates the SSE concepts
+                            from Steps 2-4 in action!
+                        </p>
                     </div>
 
                     <!-- ============================================================= -->
