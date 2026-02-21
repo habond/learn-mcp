@@ -97,17 +97,19 @@
 
                     <h2>Listing Tools</h2>
                     <p>
-                        The <code>tools/list</code> method returns all available tools:
+                        The <code>tools/list</code> method returns all available tools.
                     </p>
 
-                    <div class="code-block">
+                    <h3>Edit: <code>stdio_client.py</code></h3>
+                    <p><strong>Add</strong> the <code>Tool</code> dataclass and <code>list_tools</code> method:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">stdio_client.py - Add Tool class and list_tools</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">from dataclasses import dataclass
-from typing import List, Optional, Any
-
+                        <pre><code class="language-python"># Dataclasses (add outside the StdioClient class)
 @dataclass
 class Tool:
     """Represents an MCP tool."""
@@ -168,12 +170,16 @@ def list_tools(self) -> List[Tool]:
 
                     <h2>Listing Resources</h2>
                     <p>
-                        Resources are data that the server can provide:
+                        Resources are data that the server can provide.
                     </p>
 
-                    <div class="code-block">
+                    <h3>Edit: <code>stdio_client.py</code></h3>
+                    <p><strong>Add</strong> the <code>Resource</code> dataclass and <code>list_resources</code> method:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">stdio_client.py - Add Resource class and list_resources</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">@dataclass
@@ -236,12 +242,16 @@ def list_resources(self) -> List[Resource]:
 
                     <h2>Listing Prompts</h2>
                     <p>
-                        Prompts are templates that can be filled with arguments:
+                        Prompts are templates that can be filled with arguments.
                     </p>
 
-                    <div class="code-block">
+                    <h3>Edit: <code>stdio_client.py</code></h3>
+                    <p><strong>Add</strong> the <code>Prompt</code> dataclasses and <code>list_prompts</code> method:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">stdio_client.py - Add Prompt classes and list_prompts</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">@dataclass

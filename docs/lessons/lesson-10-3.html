@@ -264,15 +264,57 @@
 
                     <h2>Checking Capabilities</h2>
                     <p>
-                        Add helper methods to check what the server supports:
+                        Add helper methods to check what the server supports.
                     </p>
 
-                    <div class="code-block">
+                    <h3>Edit: <code>stdio_client.py</code></h3>
+                    <p><strong>Add</strong> these methods to the <code>StdioClient</code> class:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">stdio_client.py - Add to StdioClient class</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">def has_tools(self) -> bool:
+                        <pre><code class="language-python">    # Add these instance variables in __init__:
+    # self.server_info = {}
+    # self.server_capabilities = {}
+    # self.protocol_version = None
+    # self.initialized = False
+
+    def initialize(self) -> dict:
+        """Perform the MCP initialization handshake."""
+        # Step 1: Send initialize request
+        response = self.send_request("initialize", {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {
+                "roots": {"listChanged": True},
+                "sampling": {}
+            },
+            "clientInfo": {
+                "name": "my-mcp-client",
+                "version": "1.0.0"
+            }
+        })
+
+        if "error" in response:
+            raise RuntimeError(f"Initialize failed: {response['error']}")
+
+        # Step 2: Store server capabilities
+        result = response["result"]
+        self.server_info = result.get("serverInfo", {})
+        self.server_capabilities = result.get("capabilities", {})
+        self.protocol_version = result.get("protocolVersion")
+
+        # Step 3: Send initialized notification
+        self.send_notification("notifications/initialized")
+
+        # Mark as ready
+        self.initialized = True
+
+        return response
+
+    def has_tools(self) -> bool:
     """Check if the server provides tools."""
     return "tools" in self.server_capabilities
 

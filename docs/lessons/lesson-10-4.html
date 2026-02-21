@@ -69,13 +69,16 @@
                         ID generation, request formatting, and response parsing.
                     </p>
 
-                    <div class="code-block">
+                    <h3>Edit: <code>stdio_client.py</code></h3>
+                    <p><strong>Add</strong> these error classes and the <code>call</code> method:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">stdio_client.py - Add error classes and call method</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">from typing import Any, Optional
-
+                        <pre><code class="language-python"># Error classes (add outside the StdioClient class)
 class MCPClientError(Exception):
     """Base exception for MCP client errors."""
     pass
@@ -279,12 +282,16 @@ def call_with_timeout(self, method: str, params: Optional[dict] = None,
                     <h2>High-Level Method Wrappers</h2>
                     <p>
                         With a generic <code>call</code> method, you can create convenient wrappers
-                        for specific MCP methods:
+                        for specific MCP methods.
                     </p>
 
-                    <div class="code-block">
+                    <h3>Edit: <code>stdio_client.py</code></h3>
+                    <p><strong>Add</strong> these wrapper methods to the <code>StdioClient</code> class:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">stdio_client.py - Add wrapper methods</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">def call_tool(self, name: str, arguments: Optional[dict] = None) -> Any:

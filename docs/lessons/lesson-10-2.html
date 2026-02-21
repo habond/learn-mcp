@@ -163,7 +163,7 @@ class StdioClient:
                         </div>
                         <pre><code class="language-python">def send_request(self, request: dict) -> None:
     """Send a JSON-RPC request to the server."""
-    if not self.process or self.process.poll() is not None:
+    if not self.process or not self.process.stdin or self.process.poll() is not None:
         raise RuntimeError("Server not running")
 
     # Serialize to JSON and add newline
@@ -188,7 +188,7 @@ class StdioClient:
                         </div>
                         <pre><code class="language-python">def read_response(self) -> dict:
     """Read a JSON-RPC response from the server."""
-    if not self.process or self.process.poll() is not None:
+    if not self.process or not self.process.stdout or self.process.poll() is not None:
         raise RuntimeError("Server not running")
 
     # Read one line from stdout
@@ -206,12 +206,14 @@ class StdioClient:
 
                     <h2>Complete STDIO Client Class</h2>
                     <p>
-                        Here's the complete basic client putting it all together:
+                        Here's the complete basic client putting it all together.
                     </p>
 
-                    <div class="code-block">
+                    <h3>Create: <code>stdio_client.py</code></h3>
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">stdio_client.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">"""
@@ -220,6 +222,7 @@ stdio_client.py - Basic STDIO MCP client.
 
 import subprocess
 import json
+from dataclasses import dataclass
 from typing import Optional, List, Any
 
 
@@ -254,7 +257,7 @@ class StdioClient:
 
     def send_request(self, method: str, params: Optional[dict] = None) -> dict:
         """Send a request and wait for the response."""
-        if not self.process:
+        if not self.process or not self.process.stdin or not self.process.stdout:
             raise RuntimeError("Not connected")
 
         # Create request
@@ -282,7 +285,7 @@ class StdioClient:
 
     def send_notification(self, method: str, params: Optional[dict] = None):
         """Send a notification (no response expected)."""
-        if not self.process:
+        if not self.process or not self.process.stdin:
             raise RuntimeError("Not connected")
 
         notification: dict[str, Any] = {
