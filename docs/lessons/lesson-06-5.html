@@ -119,7 +119,7 @@ resources.py - Reusable resource registry for MCP servers.
 This module builds on jsonrpc.py from Lesson 3.
 """
 
-from typing import Callable, Any
+from typing import Callable
 
 # Import error handling from Lesson 3
 from jsonrpc import JsonRpcError, JsonRpcErrorCode
@@ -216,7 +216,7 @@ def register_resource_handlers(router, resources: ResourceRegistry) -> None:
 
     @router.method("resources/read")
     def handle_resources_read(params: dict) -> dict:
-        uri = params.get("uri")
+        uri = params.get("uri", "")
         return resources.read_resource(uri)</code></pre>
                     </div>
 

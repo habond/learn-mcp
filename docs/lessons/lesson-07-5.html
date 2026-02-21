@@ -75,7 +75,7 @@
                 <div class="content">
                     <h2>Building on Previous Lessons</h2>
                     <p>
-                        In this step, we'll create <code>transports/stdio.py</code> &mdash; a reusable
+                        In this step, we'll create <code>stdio_transport.py</code> &mdash; a reusable
                         STDIO transport. Then we'll create an example that uses all our previous modules.
                     </p>
 
@@ -99,9 +99,7 @@
     mcp_core.py         # Lesson 4
     tools.py            # Lesson 5
     resources.py        # Lesson 6
-    transports/         # NEW - Create this folder
-        __init__.py     # NEW - Empty file
-        stdio.py        # NEW - We'll create this
+    stdio_transport.py  # NEW - We'll create this
     stdio_example.py    # NEW - Example using transport</code></pre>
                     </div>
 
@@ -117,32 +115,20 @@
                     </div>
 
                     <!-- ============================================================= -->
-                    <h2>Section 1: Create the Transports Package</h2>
+                    <h2>Section 1: Create the STDIO Transport</h2>
                     <!-- ============================================================= -->
 
-                    <h3>Create: <code>transports/__init__.py</code></h3>
-                    <p><strong>Create</strong> an empty file to make <code>transports</code> a Python package:</p>
+                    <h3>Create: <code>stdio_transport.py</code></h3>
+                    <p><strong>Create</strong> a new file with the STDIO transport:</p>
 
                     <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">transports/__init__.py</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">"""MCP transport implementations."""</code></pre>
-                    </div>
-
-                    <h3>Create: <code>transports/stdio.py</code></h3>
-                    <p><strong>Create</strong> a new file with the STDIO transport class:</p>
-
-                    <div class="code-block file-edit">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <span class="code-filename">transports/stdio.py</span>
+                            <span class="code-filename">stdio_transport.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">"""
-transports/stdio.py - STDIO transport for MCP servers.
+stdio_transport.py - STDIO transport for MCP servers.
 
 This module builds on mcp_core.py from Lesson 4.
 """
@@ -173,7 +159,7 @@ logger = logging.getLogger("mcp-stdio")</code></pre>
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash">python -c "from transports.stdio import logger; logger.info('Test')"</code></pre>
+                        <pre><code class="language-bash">python -c "from stdio_transport import logger; logger.info('Test')"</code></pre>
                     </div>
 
                     <p>You should see a log message to stderr.</p>
@@ -182,13 +168,13 @@ logger = logging.getLogger("mcp-stdio")</code></pre>
                     <h2>Section 2: STDIO Transport Class</h2>
                     <!-- ============================================================= -->
 
-                    <h3>Edit: <code>transports/stdio.py</code></h3>
+                    <h3>Edit: <code>stdio_transport.py</code></h3>
                     <p><strong>Add</strong> after Section 1:</p>
 
                     <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">transports/stdio.py - Add after Section 1</span>
+                            <span class="code-filename">stdio_transport.py - Add after Section 1</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
@@ -257,7 +243,7 @@ def run_stdio_server() -> None:
                     <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">transports/stdio.py - Add at the end</span>
+                            <span class="code-filename">stdio_transport.py - Add at the end</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
@@ -293,7 +279,7 @@ from datetime import datetime
 # Import from our modules
 from mcp_core import router
 from tools import ToolRegistry, register_tool_handlers, text_result
-from transports.stdio import run_stdio_server
+from stdio_transport import run_stdio_server
 
 # =============================================================================
 # Register tools
@@ -451,7 +437,7 @@ echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arg
                         </thead>
                         <tbody style="color: var(--text-secondary);">
                             <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 0.75rem;"><code>transports/stdio.py</code></td>
+                                <td style="padding: 0.75rem;"><code>stdio_transport.py</code></td>
                                 <td style="padding: 0.75rem;">Reusable STDIO transport using <code>mcp_core.py</code></td>
                             </tr>
                             <tr style="border-bottom: 1px solid var(--border-color);">
@@ -465,7 +451,7 @@ echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"echo","arg
                     <ul>
                         <li><code>mcp_core.py</code> handles MCP protocol logic</li>
                         <li><code>tools.py</code> registers tools</li>
-                        <li><code>transports/stdio.py</code> handles I/O over stdin/stdout</li>
+                        <li><code>stdio_transport.py</code> handles I/O over stdin/stdout</li>
                     </ul>
 
                     <div class="info-box warning">

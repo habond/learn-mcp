@@ -64,7 +64,7 @@
                 <div class="content">
                     <h2>Building on Previous Lessons</h2>
                     <p>
-                        In this step, we'll create <code>transports/http_sse.py</code> &mdash; a reusable
+                        In this step, we'll create <code>http_sse_transport.py</code> &mdash; a reusable
                         HTTP/SSE transport. Then we'll create an example using all our modules.
                     </p>
 
@@ -84,15 +84,13 @@
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code>your_project/
-    jsonrpc.py          # Lesson 3
-    mcp_core.py         # Lesson 4
-    tools.py            # Lesson 5
-    resources.py        # Lesson 6
-    transports/
-        __init__.py     # Lesson 7
-        stdio.py        # Lesson 7
-        http_sse.py     # NEW - We'll create this
-    http_example.py     # NEW - Example using HTTP transport</code></pre>
+    jsonrpc.py              # Lesson 3
+    mcp_core.py             # Lesson 4
+    tools.py                # Lesson 5
+    resources.py            # Lesson 6
+    stdio_transport.py      # Lesson 7
+    http_sse_transport.py   # NEW - We'll create this
+    http_example.py         # NEW - Example using HTTP transport</code></pre>
                     </div>
 
                     <div class="info-box warning">
@@ -109,17 +107,17 @@
                     <!-- Section 1 -->
                     <h2>Section 1: Create HTTP Transport</h2>
 
-                    <h3>Create: <code>transports/http_sse.py</code></h3>
+                    <h3>Create: <code>http_sse_transport.py</code></h3>
                     <p><strong>Create</strong> the HTTP/SSE transport module:</p>
 
                     <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">transports/http_sse.py</span>
+                            <span class="code-filename">http_sse_transport.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">"""
-transports/http_sse.py - HTTP/SSE transport for MCP servers.
+http_sse_transport.py - HTTP/SSE transport for MCP servers.
 
 This module builds on mcp_core.py from Lesson 4.
 """
@@ -127,7 +125,6 @@ This module builds on mcp_core.py from Lesson 4.
 import json
 import logging
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from typing import cast
 
 # Import from Lesson 4
 from mcp_core import handle_request
@@ -148,13 +145,13 @@ logger = logging.getLogger("mcp-http")</code></pre>
                     <!-- Section 2 -->
                     <h2>Section 2: HTTP Handler</h2>
 
-                    <h3>Edit: <code>transports/http_sse.py</code></h3>
+                    <h3>Edit: <code>http_sse_transport.py</code></h3>
                     <p><strong>Add</strong> after Section 1:</p>
 
                     <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">transports/http_sse.py - Add after Section 1</span>
+                            <span class="code-filename">http_sse_transport.py - Add after Section 1</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
@@ -223,13 +220,13 @@ class MCPHTTPHandler(BaseHTTPRequestHandler):
                     <!-- Section 3 -->
                     <h2>Section 3: Server Runner</h2>
 
-                    <h3>Edit: <code>transports/http_sse.py</code></h3>
+                    <h3>Edit: <code>http_sse_transport.py</code></h3>
                     <p><strong>Add</strong> after Section 2:</p>
 
                     <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">transports/http_sse.py - Add after Section 2</span>
+                            <span class="code-filename">http_sse_transport.py - Add after Section 2</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
@@ -284,7 +281,7 @@ from datetime import datetime
 # Import from our modules
 from mcp_core import router
 from tools import ToolRegistry, register_tool_handlers, text_result
-from transports.http_sse import run_http_server
+from http_sse_transport import run_http_server
 
 # =============================================================================
 # Register tools (same as stdio_example.py!)
@@ -442,7 +439,7 @@ if __name__ == "__main__":
                         </thead>
                         <tbody style="color: var(--text-secondary);">
                             <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 0.75rem;"><code>transports/http_sse.py</code></td>
+                                <td style="padding: 0.75rem;"><code>http_sse_transport.py</code></td>
                                 <td style="padding: 0.75rem;">Reusable HTTP transport using <code>mcp_core.py</code></td>
                             </tr>
                             <tr style="border-bottom: 1px solid var(--border-color);">

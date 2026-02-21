@@ -190,7 +190,7 @@ PROMPTS = {
 
 def handle_prompts_get(params):
     """Handle the prompts/get method."""
-    name = params.get("name")
+    name = params.get("name", "")
     arguments = params.get("arguments", {})
 
     # Check if prompt exists

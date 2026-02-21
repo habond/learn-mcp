@@ -83,17 +83,15 @@
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code>your_project/
-    jsonrpc.py          # Lesson 3
-    mcp_core.py         # Lesson 4
-    tools.py            # Lesson 5
-    resources.py        # Lesson 6
-    prompts.py          # Lesson 9
-    transports/
-        __init__.py     # Lesson 7
-        stdio.py        # Lesson 7
-        http_sse.py     # Lesson 8
-    notes_server.py     # CAPSTONE - We'll create this
-    notes.json          # Data storage (auto-created)</code></pre>
+    jsonrpc.py              # Lesson 3
+    mcp_core.py             # Lesson 4
+    tools.py                # Lesson 5
+    resources.py            # Lesson 6
+    prompts.py              # Lesson 9
+    stdio_transport.py      # Lesson 7
+    http_sse_transport.py   # Lesson 8
+    notes_server.py         # CAPSTONE - We'll create this
+    notes.json              # Data storage (auto-created)</code></pre>
                     </div>
 
                     <div class="info-box warning">
@@ -487,7 +485,7 @@ class NotesServer:
                         </div>
                         <pre><code class="language-python">    def handle_tools_call(self, params: dict) -> dict:
         """Execute a tool and return the result."""
-        name = params.get("name")
+        name = params.get("name", "")
         arguments = params.get("arguments", {})
 
         tool_handlers = {

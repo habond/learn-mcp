@@ -258,7 +258,7 @@ class StdioClient:
             raise RuntimeError("Not connected")
 
         # Create request
-        request = {
+        request: dict[str, Any] = {
             "jsonrpc": "2.0",
             "id": self._next_id,
             "method": method,
@@ -285,7 +285,7 @@ class StdioClient:
         if not self.process:
             raise RuntimeError("Not connected")
 
-        notification = {
+        notification: dict[str, Any] = {
             "jsonrpc": "2.0",
             "method": method,
         }

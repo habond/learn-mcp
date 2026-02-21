@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The MCP Handshake - Step 6 | MCP Learning Guide</title>
-    <link rel="stylesheet" href="../assets/style.css">
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
     <button class="mobile-menu-toggle">&#9776;</button>
@@ -108,6 +108,7 @@ Test: curl commands below
 """
 
 import json
+import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from enum import Enum
 from typing import Any
@@ -117,7 +118,6 @@ from jsonrpc import (
     JsonRpcRouter,
     JsonRpcError,
     JsonRpcErrorCode,
-    create_success_response,
     create_error_response,
 )
 
@@ -208,10 +208,10 @@ def handle_initialize(params: dict) -> dict:
     client_info = params.get("clientInfo", {})
     client_capabilities = params.get("capabilities", {})
 
-    # Log the connection
+    # Log the connection (stderr only for STDIO compatibility)
     name = client_info.get("name", "unknown")
     version = client_info.get("version", "unknown")
-    print(f"[INIT] Client: {name} v{version}")
+    print(f"[INIT] Client: {name} v{version}", file=sys.stderr)
 
     # Transition to INITIALIZING
     state = ConnectionState.INITIALIZING
@@ -231,9 +231,9 @@ def handle_initialized(params: dict) -> None:
 
     if state == ConnectionState.INITIALIZING:
         state = ConnectionState.READY
-        print("[READY] Handshake complete!")
+        print("[READY] Handshake complete!", file=sys.stderr)
     else:
-        print(f"[WARN] Unexpected initialized notification in state: {state}")</code></pre>
+        print(f"[WARN] Unexpected initialized notification in state: {state}", file=sys.stderr)</code></pre>
                     </div>
 
                     <div class="info-box tip">
@@ -281,7 +281,7 @@ def handle_tools_list(params: dict) -> dict:
 @router.method("tools/call")
 def handle_tools_call(params: dict) -> dict:
     """Execute a tool."""
-    name = params.get("name")
+    name = params.get("name", "")
     args = params.get("arguments", {})
 
     if name == "echo":
@@ -331,7 +331,7 @@ def handle_request(request: dict) -> dict | None:
     # All other methods require READY state
     if state != ConnectionState.READY:
         if request_id is None:  # Notification
-            print(f"[WARN] {method} received before ready")
+            print(f"[WARN] {method} received before ready", file=sys.stderr)
             return None
         return create_error_response(
             request_id=request_id,

@@ -272,7 +272,7 @@ def read_file_content(uri: str) -> dict:
 
 def handle_resources_read(params: dict) -> dict:
     """Handle resources/read requests."""
-    uri = params.get("uri")
+    uri = params.get("uri", "")
 
     if not uri:
         raise ValueError("Missing required parameter: uri")
@@ -301,7 +301,7 @@ error_handling.py - Proper error responses for resources/read
 
 def handle_resources_read(params: dict) -> dict:
     """Handle resources/read with proper error handling."""
-    uri = params.get("uri")
+    uri = params.get("uri", "")
 
     if not uri:
         raise MCPError(-32602, "Missing required parameter: uri")

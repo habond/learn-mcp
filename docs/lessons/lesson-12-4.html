@@ -259,7 +259,7 @@
                         </div>
                         <pre><code class="language-python">    def handle_prompts_get(self, params: dict) -> dict:
         """Get a specific prompt with its messages."""
-        name = params.get("name")
+        name = params.get("name", "")
         arguments = params.get("arguments", {})
 
         if name == "summarize_notes":

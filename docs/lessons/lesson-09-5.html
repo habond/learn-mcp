@@ -82,16 +82,14 @@
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code>your_project/
-    jsonrpc.py          # Lesson 3
-    mcp_core.py         # Lesson 4
-    tools.py            # Lesson 5
-    resources.py        # Lesson 6
-    transports/         # Lessons 7-8
-        __init__.py
-        stdio.py
-        http_sse.py
-    prompts.py          # NEW - We'll create this
-    prompts_example.py  # NEW - Example using prompts.py</code></pre>
+    jsonrpc.py              # Lesson 3
+    mcp_core.py             # Lesson 4
+    tools.py                # Lesson 5
+    resources.py            # Lesson 6
+    stdio_transport.py      # Lesson 7
+    http_sse_transport.py   # Lesson 8
+    prompts.py              # NEW - We'll create this
+    prompts_example.py      # NEW - Example using prompts.py</code></pre>
                     </div>
 
                     <div class="info-box warning">
@@ -123,7 +121,7 @@ prompts.py - Reusable prompt registry for MCP servers.
 This module builds on jsonrpc.py from Lesson 3.
 """
 
-from typing import Callable, Any
+from typing import Callable
 
 # Import error handling from Lesson 3
 from jsonrpc import JsonRpcError, JsonRpcErrorCode
@@ -229,7 +227,7 @@ def register_prompt_handlers(router, prompts: PromptRegistry) -> None:
 
     @router.method("prompts/get")
     def handle_prompts_get(params: dict) -> dict:
-        name = params.get("name")
+        name = params.get("name", "")
         arguments = params.get("arguments", {})
         return prompts.get_prompt(name, arguments)</code></pre>
                     </div>
@@ -300,7 +298,7 @@ Run: python prompts_example.py
 # Import from our modules
 from mcp_core import router
 from prompts import PromptRegistry, register_prompt_handlers
-from transports.http_sse import run_http_server
+from http_sse_transport import run_http_server
 
 # =============================================================================
 # Register prompts

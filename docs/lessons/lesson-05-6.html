@@ -120,7 +120,7 @@ tools.py - Reusable tool registry for MCP servers.
 This module builds on jsonrpc.py from Lesson 3.
 """
 
-from typing import Callable, Any
+from typing import Callable
 
 # Import error handling from Lesson 3
 from jsonrpc import JsonRpcError, JsonRpcErrorCode
@@ -256,7 +256,7 @@ def register_tool_handlers(router, tools: ToolRegistry) -> None:
 
     @router.method("tools/call")
     def handle_tools_call(params: dict) -> dict:
-        name = params.get("name")
+        name = params.get("name", "")
         arguments = params.get("arguments", {})
         return tools.call_tool(name, arguments)</code></pre>
                     </div>
@@ -357,7 +357,7 @@ from mcp_core import (
     SERVER_NAME, SERVER_VERSION,
     handle_request
 )
-from tools import ToolRegistry, text_result, error_result, register_tool_handlers
+from tools import ToolRegistry, text_result, register_tool_handlers
 
 
 # =============================================================================

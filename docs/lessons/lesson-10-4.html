@@ -222,7 +222,7 @@ def call_with_timeout(self, method: str, params: Optional[dict] = None,
 
     # Create and send request
     request_id = self.tracker.next_id()
-    request = {
+    request: dict[str, Any] = {
         "jsonrpc": "2.0",
         "id": request_id,
         "method": method,

@@ -269,7 +269,7 @@ if __name__ == "__main__":
 
     @router.method("tools/call")
     def handle_tools_call(params: dict) -> dict:
-        tool_name = params.get("name")
+        tool_name = params.get("name", "")
         if tool_name != "calculator":
             raise JsonRpcError(
                 JsonRpcErrorCode.INVALID_PARAMS,

@@ -233,7 +233,7 @@ class SSEWriter:
                         </div>
                         <pre><code class="language-python">def handle_tools_call(self, request_id, params, sse):
     """Handle tools/call with progress streaming."""
-    tool_name = params.get("name")
+    tool_name = params.get("name", "")
     arguments = params.get("arguments", {})
 
     # For demonstration: a slow tool that reports progress

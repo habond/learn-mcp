@@ -188,7 +188,7 @@ def handle_tools_call(request_id, params):
     Returns:
         JSON-RPC response with tool result or error
     """
-    tool_name = params.get("name")
+    tool_name = params.get("name", "")
     arguments = params.get("arguments", {})
 
     # Check if tool exists
@@ -291,7 +291,7 @@ def handle_tools_call(request_id, params):
 
 def handle_tools_call_with_validation(request_id, params):
     """Handle tools/call with argument validation."""
-    tool_name = params.get("name")
+    tool_name = params.get("name", "")
     arguments = params.get("arguments", {})
 
     # Validate arguments
