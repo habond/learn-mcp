@@ -30,7 +30,7 @@
                     <li class="toc-item"><a href="lesson-10-2.html" class="toc-link completed"><span class="toc-number">2</span><span>STDIO Client</span></a></li>
                     <li class="toc-item"><a href="lesson-10-3.html" class="toc-link completed"><span class="toc-number">3</span><span>Initialization Flow</span></a></li>
                     <li class="toc-item"><a href="lesson-10-4.html" class="toc-link active"><span class="toc-number">4</span><span>Calling Methods</span></a></li>
-                    <li class="toc-item"><a href="lesson-10-5.html" class="toc-link"><span class="toc-number">5</span><span>Listing Primitives</span></a></li>
+                    <li class="toc-item"><a href="lesson-10-5.html" class="toc-link"><span class="toc-number">5</span><span>Supporting Classes</span></a></li>
                     <li class="toc-item"><a href="lesson-10-6.html" class="toc-link"><span class="toc-number">6</span><span>Interactive Testing</span></a></li>
                 </ol>
             </nav>
@@ -58,42 +58,42 @@
                 <header class="step-header">
                     <span class="step-badge">Lesson 10 - Step 4 of 6</span>
                     <h1 class="step-title">Calling Methods</h1>
-                    <p class="step-description">Build a generic call method with request ID tracking.</p>
+                    <p class="step-description">Complete the StdioClient class with all remaining methods.</p>
                 </header>
 
                 <div class="content">
-                    <h2>A Generic Call Method</h2>
                     <p>
-                        Instead of writing separate code for each MCP method, we can create a
-                        generic <code>call</code> method that handles all the common logic:
-                        ID generation, request formatting, and response parsing.
+                        In this step, we'll add all the remaining methods to complete our <code>StdioClient</code> class.
+                        We'll add them sequentially - just keep appending to the class.
+                    </p>
+
+                    <div class="info-box info">
+                        <div class="info-box-title">File Structure</div>
+                        <p>
+                            Your <code>stdio_client.py</code> currently has the <code>StdioClient</code> class
+                            ending with <code>supports_resource_subscriptions()</code>. We'll add all new methods
+                            right after that, still inside the class.
+                        </p>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Step 1: Add the Generic Call Method</h2>
+                    <!-- ============================================================= -->
+                    <p>
+                        Instead of writing separate code for each MCP method, we create a generic
+                        <code>call</code> method that handles request/response logic.
                     </p>
 
                     <h3>Edit: <code>stdio_client.py</code></h3>
-                    <p><strong>Add</strong> these error classes and the <code>call</code> method:</p>
+                    <p>Add this method inside the <code>StdioClient</code> class, after <code>supports_resource_subscriptions</code>:</p>
 
                     <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">stdio_client.py - Add error classes and call method</span>
+                            <span class="code-filename">stdio_client.py - Append to StdioClient class</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python"># Error classes (add outside the StdioClient class)
-class MCPClientError(Exception):
-    """Base exception for MCP client errors."""
-    pass
-
-class MCPProtocolError(MCPClientError):
-    """Error in the MCP protocol (JSON-RPC error from server)."""
-    def __init__(self, code: int, message: str, data: Any = None):
-        self.code = code
-        self.message = message
-        self.data = data
-        super().__init__(f"MCP Error {code}: {message}")
-
-
-# Add this method inside the StdioClient class:
-    def call(self, method: str, params: Optional[dict] = None) -> Any:
+                        <pre><code class="language-python">    def call(self, method: str, params: Optional[dict] = None) -> Any:
         """
         Call an MCP method and return the result.
 
@@ -105,7 +105,6 @@ class MCPProtocolError(MCPClientError):
             The result from the server response
 
         Raises:
-            MCPProtocolError: If the server returns an error
             RuntimeError: If not connected or initialized
         """
         if not self.initialized:
@@ -117,182 +116,27 @@ class MCPProtocolError(MCPClientError):
         # Check for error response
         if "error" in response:
             error = response["error"]
-            raise MCPProtocolError(
-                code=error.get("code", -1),
-                message=error.get("message", "Unknown error"),
-                data=error.get("data")
-            )
+            raise RuntimeError(f"MCP Error {error.get('code')}: {error.get('message')}")
 
         # Return the result
         return response.get("result")</code></pre>
                     </div>
 
-                    <h2>Request ID Management</h2>
+                    <!-- ============================================================= -->
+                    <h2>Step 2: Add Method Wrappers</h2>
+                    <!-- ============================================================= -->
                     <p>
-                        Each request needs a unique ID to match with its response. Here's a
-                        robust ID tracker:
-                    </p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">import threading
-from typing import Dict, Optional
-from dataclasses import dataclass, field
-from datetime import datetime
-
-@dataclass
-class PendingRequest:
-    """Track a pending request."""
-    id: int
-    method: str
-    sent_at: datetime = field(default_factory=datetime.now)
-    params: Optional[dict] = None
-
-
-class RequestTracker:
-    """Thread-safe request ID tracker."""
-
-    def __init__(self):
-        self._next_id = 1
-        self._pending: Dict[int, PendingRequest] = {}
-        self._lock = threading.Lock()
-
-    def next_id(self) -> int:
-        """Get the next request ID."""
-        with self._lock:
-            request_id = self._next_id
-            self._next_id += 1
-            return request_id
-
-    def track(self, request_id: int, method: str, params: Optional[dict] = None):
-        """Track a pending request."""
-        with self._lock:
-            self._pending[request_id] = PendingRequest(
-                id=request_id,
-                method=method,
-                params=params
-            )
-
-    def resolve(self, request_id: int) -> Optional[PendingRequest]:
-        """Mark a request as resolved and return its info."""
-        with self._lock:
-            return self._pending.pop(request_id, None)
-
-    def pending_count(self) -> int:
-        """Return the number of pending requests."""
-        with self._lock:
-            return len(self._pending)</code></pre>
-                    </div>
-
-                    <h2>Adding Timeouts</h2>
-                    <p>
-                        Requests should timeout if the server doesn't respond:
-                    </p>
-
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">python</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code class="language-python">import select
-import time
-
-class TimeoutError(MCPClientError):
-    """Request timed out."""
-    pass
-
-
-def call_with_timeout(self, method: str, params: Optional[dict] = None,
-                      timeout: float = 30.0) -> Any:
-    """
-    Call an MCP method with a timeout.
-
-    Args:
-        method: The MCP method name
-        params: Optional parameters
-        timeout: Timeout in seconds (default 30)
-
-    Returns:
-        The result from the server
-
-    Raises:
-        TimeoutError: If the request times out
-    """
-    if not self.initialized:
-        raise RuntimeError("Client not initialized")
-
-    # Create and send request
-    request_id = self.tracker.next_id()
-    request: dict[str, Any] = {
-        "jsonrpc": "2.0",
-        "id": request_id,
-        "method": method,
-    }
-    if params:
-        request["params"] = params
-
-    self.tracker.track(request_id, method, params)
-
-    # Send request
-    message = json.dumps(request) + "\n"
-    self.process.stdin.write(message)
-    self.process.stdin.flush()
-
-    # Wait for response with timeout
-    start_time = time.time()
-    while True:
-        # Check timeout
-        elapsed = time.time() - start_time
-        if elapsed >= timeout:
-            self.tracker.resolve(request_id)
-            raise TimeoutError(f"Request {method} timed out after {timeout}s")
-
-        # Check if data available (Unix only - use threads for Windows)
-        remaining = timeout - elapsed
-        readable, _, _ = select.select(
-            [self.process.stdout], [], [], min(remaining, 0.1)
-        )
-
-        if readable:
-            line = self.process.stdout.readline()
-            if line:
-                response = json.loads(line.strip())
-                if response.get("id") == request_id:
-                    self.tracker.resolve(request_id)
-                    if "error" in response:
-                        error = response["error"]
-                        raise MCPProtocolError(
-                            error.get("code", -1),
-                            error.get("message", "Unknown error"),
-                            error.get("data")
-                        )
-                    return response.get("result")</code></pre>
-                    </div>
-
-                    <div class="info-box warning">
-                        <div class="info-box-title">Platform Considerations</div>
-                        <p>
-                            The <code>select</code> module works differently on Windows.
-                            For cross-platform code, consider using threads or async I/O.
-                        </p>
-                    </div>
-
-                    <h2>High-Level Method Wrappers</h2>
-                    <p>
-                        With a generic <code>call</code> method, you can create convenient wrappers
+                        With a generic <code>call</code> method, we can create convenient wrappers
                         for specific MCP methods.
                     </p>
 
                     <h3>Edit: <code>stdio_client.py</code></h3>
-                    <p><strong>Add</strong> these wrapper methods to the <code>StdioClient</code> class:</p>
+                    <p>Continue appending to the <code>StdioClient</code> class:</p>
 
                     <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
-                            <span class="code-filename">stdio_client.py - Add wrapper methods</span>
+                            <span class="code-filename">stdio_client.py - Append to StdioClient class</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">    def call_tool(self, name: str, arguments: Optional[dict] = None) -> Any:
@@ -343,9 +187,91 @@ def call_with_timeout(self, method: str, params: Optional[dict] = None,
         return result.get("messages", [])</code></pre>
                     </div>
 
-                    <h2>Error Handling Best Practices</h2>
+                    <!-- ============================================================= -->
+                    <h2>Step 3: Add List Methods</h2>
+                    <!-- ============================================================= -->
                     <p>
-                        Handle different types of errors appropriately:
+                        Finally, add methods to list available tools, resources, and prompts.
+                        These return simple dictionaries for now - we'll add proper dataclasses in the next step.
+                    </p>
+
+                    <h3>Edit: <code>stdio_client.py</code></h3>
+                    <p>Continue appending to the <code>StdioClient</code> class:</p>
+
+                    <div class="code-block file-edit">
+                        <div class="code-header">
+                            <span class="code-language">python</span>
+                            <span class="code-filename">stdio_client.py - Append to StdioClient class</span>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                        <pre><code class="language-python">    def list_tools(self) -> List[dict]:
+        """
+        List all tools available on the server.
+
+        Returns:
+            List of tool dictionaries
+        """
+        if not self.has_tools():
+            return []
+        result = self.call("tools/list")
+        return result.get("tools", [])
+
+    def list_resources(self) -> List[dict]:
+        """
+        List all resources available on the server.
+
+        Returns:
+            List of resource dictionaries
+        """
+        if not self.has_resources():
+            return []
+        result = self.call("resources/list")
+        return result.get("resources", [])
+
+    def list_prompts(self) -> List[dict]:
+        """
+        List all prompts available on the server.
+
+        Returns:
+            List of prompt dictionaries
+        """
+        if not self.has_prompts():
+            return []
+        result = self.call("prompts/list")
+        return result.get("prompts", [])</code></pre>
+                    </div>
+
+                    <!-- ============================================================= -->
+                    <h2>Class Complete!</h2>
+                    <!-- ============================================================= -->
+                    <p>
+                        Your <code>StdioClient</code> class is now complete with all the methods needed
+                        to interact with an MCP server.
+                    </p>
+
+                    <div class="info-box tip">
+                        <div class="info-box-title">Current File Structure</div>
+                        <p>Your <code>stdio_client.py</code> should now look like this:</p>
+                        <pre style="margin: 0.5rem 0; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 4px; font-size: 0.85rem;">
+imports...
+
+class StdioClient:
+    __init__, connect, disconnect
+    send_request, send_notification
+    __enter__, __exit__
+    initialize
+    has_tools, has_resources, has_prompts
+    supports_resource_subscriptions
+    call                    # Added in Step 1
+    call_tool, read_resource, get_prompt  # Added in Step 2
+    list_tools, list_resources, list_prompts  # Added in Step 3
+
+# End of file</pre>
+                    </div>
+
+                    <h2>Error Handling</h2>
+                    <p>
+                        When using these methods, handle errors appropriately:
                     </p>
 
                     <div class="code-block">
@@ -356,20 +282,13 @@ def call_with_timeout(self, method: str, params: Optional[dict] = None,
                         <pre><code class="language-python">try:
     result = client.call_tool("get_weather", {"city": "London"})
     print(f"Weather: {result}")
-
-except MCPProtocolError as e:
-    if e.code == -32601:
-        print("Method not found - server doesn't support this")
-    elif e.code == -32602:
-        print(f"Invalid params: {e.message}")
-    else:
-        print(f"Server error: {e.message}")
-
-except TimeoutError:
-    print("Request timed out - server may be overloaded")
-
 except RuntimeError as e:
-    print(f"Connection error: {e}")</code></pre>
+    if "MCP Error -32601" in str(e):
+        print("Method not found - server doesn't support this")
+    elif "MCP Error -32602" in str(e):
+        print("Invalid parameters")
+    else:
+        print(f"Error: {e}")</code></pre>
                     </div>
 
                     <div class="info-box tip">
@@ -390,7 +309,7 @@ except RuntimeError as e:
                         <span class="nav-button-text"><span class="nav-button-label">Previous</span><span>Initialization Flow</span></span>
                     </a>
                     <a href="lesson-10-5.html" class="nav-button next">
-                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Listing Primitives</span></span>
+                        <span class="nav-button-text"><span class="nav-button-label">Next</span><span>Supporting Classes</span></span>
                         <span>&#8594;</span>
                     </a>
                 </nav>
