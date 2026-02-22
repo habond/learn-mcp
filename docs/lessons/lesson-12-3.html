@@ -117,14 +117,17 @@
                         <li>Prompt patterns from Lesson 9</li>
                     </ul>
 
-                    <h2>Server Foundation</h2>
-                    <p>
-                        Let us start with the complete server file. Create <code>notes_server.py</code>:
-                    </p>
+                    <!-- ============================================================= -->
+                    <h2>Section 1: Create notes_server.py</h2>
+                    <!-- ============================================================= -->
 
-                    <div class="code-block">
+                    <h3>Create: <code>notes_server.py</code></h3>
+                    <p><strong>Create</strong> a new file called <code>notes_server.py</code> with the data model and storage:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">notes_server.py</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">#!/usr/bin/env python3
@@ -268,18 +271,21 @@ class NotesStorage:
         return sorted(list(tags))</code></pre>
                     </div>
 
-                    <h2>Server Class</h2>
-                    <p>
-                        Now let us add the main server class that handles MCP requests:
-                    </p>
+                    <!-- ============================================================= -->
+                    <h2>Section 2: Server Class</h2>
+                    <!-- ============================================================= -->
 
-                    <div class="code-block">
+                    <h3>Edit: <code>notes_server.py</code></h3>
+                    <p><strong>Add</strong> the NotesServer class after Section 1:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">notes_server.py - Add after Section 1</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
-# MCP Server
+# Section 2: MCP Server
 # =============================================================================
 
 class NotesServer:
@@ -353,17 +359,24 @@ class NotesServer:
             return self.make_error(id, -32601, f"Method not found: {method}")</code></pre>
                     </div>
 
-                    <h2>Initialization Handler</h2>
-                    <p>
-                        Handle the MCP initialization handshake:
-                    </p>
+                    <!-- ============================================================= -->
+                    <h2>Section 3: Initialization Handler</h2>
+                    <!-- ============================================================= -->
 
-                    <div class="code-block">
+                    <h3>Edit: <code>notes_server.py</code></h3>
+                    <p><strong>Add</strong> the initialization handler to the NotesServer class:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">notes_server.py - Add to NotesServer class</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">    def handle_initialize(self, params: dict) -> dict:
+                        <pre><code class="language-python">    # -------------------------------------------------------------------------
+    # Section 3: Initialization Handler
+    # -------------------------------------------------------------------------
+
+    def handle_initialize(self, params: dict) -> dict:
         """Handle the initialize request."""
         self.initialized = True
         return {
@@ -380,17 +393,24 @@ class NotesServer:
         }</code></pre>
                     </div>
 
-                    <h2>Tools List Handler</h2>
-                    <p>
-                        Return the list of available tools with their schemas:
-                    </p>
+                    <!-- ============================================================= -->
+                    <h2>Section 4: Tools List Handler</h2>
+                    <!-- ============================================================= -->
 
-                    <div class="code-block">
+                    <h3>Edit: <code>notes_server.py</code></h3>
+                    <p><strong>Add</strong> the tools list handler after Section 3:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">notes_server.py - Add after Section 3</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">    def handle_tools_list(self, params: dict) -> dict:
+                        <pre><code class="language-python">    # -------------------------------------------------------------------------
+    # Section 4: Tools List Handler
+    # -------------------------------------------------------------------------
+
+    def handle_tools_list(self, params: dict) -> dict:
         """Return list of available tools."""
         return {
             "tools": [
@@ -473,17 +493,24 @@ class NotesServer:
         }</code></pre>
                     </div>
 
-                    <h2>Tools Call Handler</h2>
-                    <p>
-                        Route tool calls to the appropriate implementation:
-                    </p>
+                    <!-- ============================================================= -->
+                    <h2>Section 5: Tools Call Handler</h2>
+                    <!-- ============================================================= -->
 
-                    <div class="code-block">
+                    <h3>Edit: <code>notes_server.py</code></h3>
+                    <p><strong>Add</strong> the tools call handler and tool implementations after Section 4:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">notes_server.py - Add after Section 4</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">    def handle_tools_call(self, params: dict) -> dict:
+                        <pre><code class="language-python">    # -------------------------------------------------------------------------
+    # Section 5: Tools Call Handler
+    # -------------------------------------------------------------------------
+
+    def handle_tools_call(self, params: dict) -> dict:
         """Execute a tool and return the result."""
         name = params.get("name", "")
         arguments = params.get("arguments", {})

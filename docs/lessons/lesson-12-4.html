@@ -69,18 +69,32 @@
                         prompts provide Claude with helpful templates.
                     </p>
 
-                    <h2>Resources Implementation</h2>
-                    <p>
-                        Add these methods to your <code>NotesServer</code> class:
-                    </p>
+                    <div class="info-box info">
+                        <div class="info-box-title">Continuing from Step 3</div>
+                        <p>
+                            You are continuing to edit <code>notes_server.py</code> from the previous step.
+                            All code in this step should be added to your existing file.
+                        </p>
+                    </div>
 
-                    <h3>Resources List Handler</h3>
-                    <div class="code-block">
+                    <!-- ============================================================= -->
+                    <h2>Section 6: Resources Implementation</h2>
+                    <!-- ============================================================= -->
+
+                    <h3>Edit: <code>notes_server.py</code></h3>
+                    <p><strong>Add</strong> the resources handlers to the NotesServer class:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">notes_server.py - Add after Section 5</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">    def handle_resources_list(self, params: dict) -> dict:
+                        <pre><code class="language-python">    # -------------------------------------------------------------------------
+    # Section 6: Resources List Handler
+    # -------------------------------------------------------------------------
+
+    def handle_resources_list(self, params: dict) -> dict:
         """Return list of available resources."""
         # Start with static resources
         resources = [
@@ -110,10 +124,13 @@
         return {"resources": resources}</code></pre>
                     </div>
 
-                    <h3>Resources Read Handler</h3>
-                    <div class="code-block">
+                    <h3>Edit: <code>notes_server.py</code></h3>
+                    <p><strong>Add</strong> the resources read handler and implementations:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">notes_server.py - Add after resources list</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">    def handle_resources_read(self, params: dict) -> dict:
@@ -200,18 +217,24 @@
                         </p>
                     </div>
 
-                    <h2>Prompts Implementation</h2>
-                    <p>
-                        Now let us add prompts that help Claude work with notes effectively:
-                    </p>
+                    <!-- ============================================================= -->
+                    <h2>Section 7: Prompts Implementation</h2>
+                    <!-- ============================================================= -->
 
-                    <h3>Prompts List Handler</h3>
-                    <div class="code-block">
+                    <h3>Edit: <code>notes_server.py</code></h3>
+                    <p><strong>Add</strong> the prompts handlers after Section 6:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">notes_server.py - Add after Section 6</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">    def handle_prompts_list(self, params: dict) -> dict:
+                        <pre><code class="language-python">    # -------------------------------------------------------------------------
+    # Section 7: Prompts List Handler
+    # -------------------------------------------------------------------------
+
+    def handle_prompts_list(self, params: dict) -> dict:
         """Return list of available prompts."""
         return {
             "prompts": [
@@ -251,10 +274,13 @@
         }</code></pre>
                     </div>
 
-                    <h3>Prompts Get Handler</h3>
-                    <div class="code-block">
+                    <h3>Edit: <code>notes_server.py</code></h3>
+                    <p><strong>Add</strong> the prompts get handler and implementations:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">notes_server.py - Add after prompts list</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python">    def handle_prompts_get(self, params: dict) -> dict:
@@ -411,18 +437,21 @@ Format it as a structured note that I can save.""",
         }</code></pre>
                     </div>
 
-                    <h2>Main Entry Point</h2>
-                    <p>
-                        Finally, add the main entry point at the end of your file:
-                    </p>
+                    <!-- ============================================================= -->
+                    <h2>Section 8: Main Entry Point</h2>
+                    <!-- ============================================================= -->
 
-                    <div class="code-block">
+                    <h3>Edit: <code>notes_server.py</code></h3>
+                    <p><strong>Add</strong> the main entry point at the end of your file:</p>
+
+                    <div class="code-block file-edit">
                         <div class="code-header">
                             <span class="code-language">python</span>
+                            <span class="code-filename">notes_server.py - Add at end of file</span>
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-python"># =============================================================================
-# Main Entry Point
+# Section 8: Main Entry Point
 # =============================================================================
 
 if __name__ == "__main__":
