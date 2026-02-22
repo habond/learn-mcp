@@ -473,8 +473,8 @@ if __name__ == "__main__":
                             <span class="code-language">bash</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-bash"># Test with your STDIO calculator server
-python main.py python stdio_server.py</code></pre>
+                        <pre><code class="language-bash"># Test with your STDIO server from Lesson 7
+python main.py python stdio_example.py</code></pre>
                     </div>
 
                     <h3>Example REPL Session</h3>
@@ -483,16 +483,16 @@ python main.py python stdio_server.py</code></pre>
                             <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>$ python main.py python stdio_server.py
-Starting server: python stdio_server.py
-Connected to stdio-calculator
+                        <pre><code>$ python main.py python stdio_example.py
+Starting server: python stdio_example.py
+Connected to mcp-server
 
 MCP Interactive Client
 Type 'help' for commands, 'quit' to exit
 
 mcp> info
 
-Server: stdio-calculator
+Server: mcp-server
 Version: 1.0.0
 Protocol: 2024-11-05
 
@@ -503,27 +503,23 @@ mcp> tools
 
 Available tools (3):
 
-  add
-    Add two numbers together
+  echo
+    Echo back a message
+    Parameters:
+      message*: Message to echo
+
+  get_time
+    Get current server time
+
+  add_numbers
+    Add two numbers
     Parameters:
       a*: First number
       b*: Second number
 
-  subtract
-    Subtract second number from first
-    Parameters:
-      a*: First number
-      b*: Second number
+mcp> call add_numbers {"a": 5, "b": 3}
 
-  multiply
-    Multiply two numbers
-    Parameters:
-      a*: First number
-      b*: Second number
-
-mcp> call add {"a": 5, "b": 3}
-
-Calling tool: add
+Calling tool: add_numbers
 Arguments: {"a": 5, "b": 3}
 
 Result:
