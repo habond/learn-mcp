@@ -92,38 +92,39 @@ class MCPProtocolError(MCPClientError):
         super().__init__(f"MCP Error {code}: {message}")
 
 
-def call(self, method: str, params: Optional[dict] = None) -> Any:
-    """
-    Call an MCP method and return the result.
+# Add this method inside the StdioClient class:
+    def call(self, method: str, params: Optional[dict] = None) -> Any:
+        """
+        Call an MCP method and return the result.
 
-    Args:
-        method: The MCP method name (e.g., "tools/list")
-        params: Optional parameters for the method
+        Args:
+            method: The MCP method name (e.g., "tools/list")
+            params: Optional parameters for the method
 
-    Returns:
-        The result from the server response
+        Returns:
+            The result from the server response
 
-    Raises:
-        MCPProtocolError: If the server returns an error
-        RuntimeError: If not connected or initialized
-    """
-    if not self.initialized:
-        raise RuntimeError("Client not initialized. Call initialize() first.")
+        Raises:
+            MCPProtocolError: If the server returns an error
+            RuntimeError: If not connected or initialized
+        """
+        if not self.initialized:
+            raise RuntimeError("Client not initialized. Call initialize() first.")
 
-    # Send request and get response
-    response = self.send_request(method, params)
+        # Send request and get response
+        response = self.send_request(method, params)
 
-    # Check for error response
-    if "error" in response:
-        error = response["error"]
-        raise MCPProtocolError(
-            code=error.get("code", -1),
-            message=error.get("message", "Unknown error"),
-            data=error.get("data")
-        )
+        # Check for error response
+        if "error" in response:
+            error = response["error"]
+            raise MCPProtocolError(
+                code=error.get("code", -1),
+                message=error.get("message", "Unknown error"),
+                data=error.get("data")
+            )
 
-    # Return the result
-    return response.get("result")</code></pre>
+        # Return the result
+        return response.get("result")</code></pre>
                     </div>
 
                     <h2>Request ID Management</h2>
@@ -294,54 +295,52 @@ def call_with_timeout(self, method: str, params: Optional[dict] = None,
                             <span class="code-filename">stdio_client.py - Add wrapper methods</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">def call_tool(self, name: str, arguments: Optional[dict] = None) -> Any:
-    """
-    Call a tool on the server.
+                        <pre><code class="language-python">    def call_tool(self, name: str, arguments: Optional[dict] = None) -> Any:
+        """
+        Call a tool on the server.
 
-    Args:
-        name: The tool name
-        arguments: Arguments to pass to the tool
+        Args:
+            name: The tool name
+            arguments: Arguments to pass to the tool
 
-    Returns:
-        The tool's result content
-    """
-    result = self.call("tools/call", {
-        "name": name,
-        "arguments": arguments or {}
-    })
-    return result.get("content", [])
+        Returns:
+            The tool's result content
+        """
+        result = self.call("tools/call", {
+            "name": name,
+            "arguments": arguments or {}
+        })
+        return result.get("content", [])
 
+    def read_resource(self, uri: str) -> Any:
+        """
+        Read a resource from the server.
 
-def read_resource(self, uri: str) -> Any:
-    """
-    Read a resource from the server.
+        Args:
+            uri: The resource URI
 
-    Args:
-        uri: The resource URI
+        Returns:
+            The resource contents
+        """
+        result = self.call("resources/read", {"uri": uri})
+        return result.get("contents", [])
 
-    Returns:
-        The resource contents
-    """
-    result = self.call("resources/read", {"uri": uri})
-    return result.get("contents", [])
+    def get_prompt(self, name: str, arguments: Optional[dict] = None) -> Any:
+        """
+        Get a prompt from the server.
 
+        Args:
+            name: The prompt name
+            arguments: Arguments for the prompt
 
-def get_prompt(self, name: str, arguments: Optional[dict] = None) -> Any:
-    """
-    Get a prompt from the server.
-
-    Args:
-        name: The prompt name
-        arguments: Arguments for the prompt
-
-    Returns:
-        The prompt messages
-    """
-    result = self.call("prompts/get", {
-        "name": name,
-        "arguments": arguments or {}
-    })
-    return result.get("messages", [])</code></pre>
+        Returns:
+            The prompt messages
+        """
+        result = self.call("prompts/get", {
+            "name": name,
+            "arguments": arguments or {}
+        })
+        return result.get("messages", [])</code></pre>
                     </div>
 
                     <h2>Error Handling Best Practices</h2>

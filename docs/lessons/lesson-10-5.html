@@ -126,20 +126,21 @@ class Tool:
         )
 
 
-def list_tools(self) -> List[Tool]:
-    """
-    List all tools available on the server.
+# Add this method inside the StdioClient class:
+    def list_tools(self) -> List[Tool]:
+        """
+        List all tools available on the server.
 
-    Returns:
-        List of Tool objects
-    """
-    if not self.has_tools():
-        return []
+        Returns:
+            List of Tool objects
+        """
+        if not self.has_tools():
+            return []
 
-    result = self.call("tools/list")
-    tools_data = result.get("tools", [])
+        result = self.call("tools/list")
+        tools_data = result.get("tools", [])
 
-    return [Tool.from_dict(t) for t in tools_data]</code></pre>
+        return [Tool.from_dict(t) for t in tools_data]</code></pre>
                     </div>
 
                     <h3>Tool Response Example</h3>
@@ -182,7 +183,8 @@ def list_tools(self) -> List[Tool]:
                             <span class="code-filename">stdio_client.py - Add Resource class and list_resources</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">@dataclass
+                        <pre><code class="language-python"># Dataclass (add outside the StdioClient class)
+@dataclass
 class Resource:
     """Represents an MCP resource."""
     uri: str
@@ -200,20 +202,21 @@ class Resource:
         )
 
 
-def list_resources(self) -> List[Resource]:
-    """
-    List all resources available on the server.
+# Add this method inside the StdioClient class:
+    def list_resources(self) -> List[Resource]:
+        """
+        List all resources available on the server.
 
-    Returns:
-        List of Resource objects
-    """
-    if not self.has_resources():
-        return []
+        Returns:
+            List of Resource objects
+        """
+        if not self.has_resources():
+            return []
 
-    result = self.call("resources/list")
-    resources_data = result.get("resources", [])
+        result = self.call("resources/list")
+        resources_data = result.get("resources", [])
 
-    return [Resource.from_dict(r) for r in resources_data]</code></pre>
+        return [Resource.from_dict(r) for r in resources_data]</code></pre>
                     </div>
 
                     <h3>Resource Response Example</h3>
@@ -254,7 +257,8 @@ def list_resources(self) -> List[Resource]:
                             <span class="code-filename">stdio_client.py - Add Prompt classes and list_prompts</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code class="language-python">@dataclass
+                        <pre><code class="language-python"># Dataclasses (add outside the StdioClient class)
+@dataclass
 class PromptArgument:
     """Represents a prompt argument."""
     name: str
@@ -287,20 +291,21 @@ class Prompt:
         )
 
 
-def list_prompts(self) -> List[Prompt]:
-    """
-    List all prompts available on the server.
+# Add this method inside the StdioClient class:
+    def list_prompts(self) -> List[Prompt]:
+        """
+        List all prompts available on the server.
 
-    Returns:
-        List of Prompt objects
-    """
-    if not self.has_prompts():
-        return []
+        Returns:
+            List of Prompt objects
+        """
+        if not self.has_prompts():
+            return []
 
-    result = self.call("prompts/list")
-    prompts_data = result.get("prompts", [])
+        result = self.call("prompts/list")
+        prompts_data = result.get("prompts", [])
 
-    return [Prompt.from_dict(p) for p in prompts_data]</code></pre>
+        return [Prompt.from_dict(p) for p in prompts_data]</code></pre>
                     </div>
 
                     <h2>Displaying Server Inventory</h2>

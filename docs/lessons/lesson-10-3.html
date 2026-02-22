@@ -315,21 +315,21 @@
         return response
 
     def has_tools(self) -> bool:
-    """Check if the server provides tools."""
-    return "tools" in self.server_capabilities
+        """Check if the server provides tools."""
+        return "tools" in self.server_capabilities
 
-def has_resources(self) -> bool:
-    """Check if the server provides resources."""
-    return "resources" in self.server_capabilities
+    def has_resources(self) -> bool:
+        """Check if the server provides resources."""
+        return "resources" in self.server_capabilities
 
-def has_prompts(self) -> bool:
-    """Check if the server provides prompts."""
-    return "prompts" in self.server_capabilities
+    def has_prompts(self) -> bool:
+        """Check if the server provides prompts."""
+        return "prompts" in self.server_capabilities
 
-def supports_resource_subscriptions(self) -> bool:
-    """Check if the server supports resource subscriptions."""
-    resources = self.server_capabilities.get("resources", {})
-    return resources.get("subscribe", False)</code></pre>
+    def supports_resource_subscriptions(self) -> bool:
+        """Check if the server supports resource subscriptions."""
+        resources = self.server_capabilities.get("resources", {})
+        return resources.get("subscribe", False)</code></pre>
                     </div>
 
                     <h2>Complete Initialization Example</h2>
