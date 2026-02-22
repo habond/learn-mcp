@@ -165,12 +165,9 @@
                         </div>
                         <pre><code class="language-json">{
   "mcpServers": {
-    "weather": {
+    "mcp-tools": {
       "command": "python3",
-      "args": ["/Users/you/projects/mcp-weather/server.py"],
-      "env": {
-        "WEATHER_API_KEY": "your-api-key-here"
-      }
+      "args": ["/Users/you/projects/mcp-server/stdio_example.py"]
     }
   }
 }</code></pre>
@@ -211,23 +208,17 @@
                         </div>
                         <pre><code class="language-json">{
   "mcpServers": {
-    "weather": {
+    "mcp-tools": {
       "command": "python3",
-      "args": ["/path/to/weather_server.py"]
+      "args": ["/path/to/stdio_example.py"]
     },
-    "database": {
+    "calculator": {
       "command": "python3",
-      "args": ["/path/to/db_server.py"],
-      "env": {
-        "DATABASE_URL": "postgresql://localhost/mydb"
-      }
+      "args": ["/path/to/calculator_example.py"]
     },
-    "github": {
-      "command": "node",
-      "args": ["/path/to/github_server.js"],
-      "env": {
-        "GITHUB_TOKEN": "ghp_xxxxxxxxxxxx"
-      }
+    "files": {
+      "command": "python3",
+      "args": ["/path/to/file_example.py"]
     }
   }
 }</code></pre>
@@ -304,7 +295,7 @@
                         <li>Use lowercase letters, numbers, and hyphens</li>
                         <li>Make names descriptive of the server's function</li>
                         <li>Keep names relatively short</li>
-                        <li>Examples: "weather", "file-browser", "postgres-db", "github-api"</li>
+                        <li>Examples: "calculator", "mcp-tools", "file-browser", "postgres-db"</li>
                     </ul>
 
                     <h2>Configuration Schema</h2>

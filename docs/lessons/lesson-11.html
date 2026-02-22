@@ -107,7 +107,7 @@
                     ▼                ▼                ▼
             ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
             │ MCP Server  │  │ MCP Server  │  │ MCP Server  │
-            │ (Weather)   │  │ (Files)     │  │ (Database)  │
+            │ (Tools)     │  │ (Files)     │  │ (Prompts)   │
             └─────────────┘  └─────────────┘  └─────────────┘</code></pre>
                     </div>
 
@@ -179,16 +179,16 @@
                             <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>User: "What's the weather in Tokyo?"
+                        <pre><code>User: "What's 42 plus 17?"
 
 Claude's internal process:
-  1. Recognizes this needs weather data
-  2. Sees "get_weather" tool from your MCP server
-  3. Calls: tools/call with {"name": "get_weather", "arguments": {"city": "Tokyo"}}
-  4. Receives weather data from your server
+  1. Recognizes this is a calculation
+  2. Sees "add_numbers" tool from your MCP server
+  3. Calls: tools/call with {"name": "add_numbers", "arguments": {"a": 42, "b": 17}}
+  4. Receives result from your server
   5. Formulates natural language response
 
-Claude: "The current weather in Tokyo is 22°C with partly cloudy skies."</code></pre>
+Claude: "42 plus 17 equals 59."</code></pre>
                     </div>
 
                     <h2>Supported Platforms</h2>

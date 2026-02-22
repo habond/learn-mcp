@@ -63,9 +63,8 @@
                 <div class="content">
                     <h2>Step-by-Step Configuration</h2>
                     <p>
-                        Let's walk through adding your MCP server to Claude Desktop. We'll use
-                        a weather server as an example, but the process is the same for any
-                        STDIO-based server.
+                        Let's walk through adding the MCP server you built in this course to
+                        Claude Desktop. We'll use <code>stdio_example.py</code> from Lesson 7.
                     </p>
 
                     <h2>Step 1: Locate Your Server</h2>
@@ -79,15 +78,15 @@
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-bash"># Navigate to your server directory
-cd /path/to/your/mcp-server
+cd /path/to/your/mcp-project
 
 # Get the absolute path
 pwd
-# Output: /Users/you/projects/mcp-weather
+# Output: /Users/you/projects/mcp-learning
 
 # Your server script
 ls *.py
-# Output: server.py</code></pre>
+# Output: stdio_example.py</code></pre>
                     </div>
 
                     <h2>Step 2: Test Your Server Manually</h2>
@@ -102,7 +101,7 @@ ls *.py
                             <button class="copy-button">Copy</button>
                         </div>
                         <pre><code class="language-bash"># Test that your server starts
-python3 /Users/you/projects/mcp-weather/server.py
+python3 /Users/you/projects/mcp-learning/stdio_example.py
 
 # It should wait for input (STDIO mode)
 # Type this to test initialization:
@@ -158,9 +157,9 @@ code ~/.config/claude/claude_desktop_config.json</code></pre>
                         </div>
                         <pre><code class="language-json">{
   "mcpServers": {
-    "weather": {
+    "mcp-tools": {
       "command": "python3",
-      "args": ["/Users/you/projects/mcp-weather/server.py"]
+      "args": ["/Users/you/projects/mcp-learning/stdio_example.py"]
     }
   }
 }</code></pre>
@@ -182,9 +181,9 @@ code ~/.config/claude/claude_desktop_config.json</code></pre>
       "command": "node",
       "args": ["/path/to/existing/server.js"]
     },
-    "weather": {
+    "mcp-tools": {
       "command": "python3",
-      "args": ["/Users/you/projects/mcp-weather/server.py"]
+      "args": ["/Users/you/projects/mcp-learning/stdio_example.py"]
     }
   }
 }</code></pre>
@@ -192,8 +191,8 @@ code ~/.config/claude/claude_desktop_config.json</code></pre>
 
                     <h2>Step 5: Add Environment Variables (If Needed)</h2>
                     <p>
-                        If your server requires environment variables (like API keys), add them
-                        to the configuration:
+                        If your server requires environment variables (like API keys or config),
+                        add them to the configuration:
                     </p>
 
                     <div class="code-block">
@@ -203,12 +202,12 @@ code ~/.config/claude/claude_desktop_config.json</code></pre>
                         </div>
                         <pre><code class="language-json">{
   "mcpServers": {
-    "weather": {
+    "mcp-tools": {
       "command": "python3",
-      "args": ["/Users/you/projects/mcp-weather/server.py"],
+      "args": ["/Users/you/projects/mcp-learning/stdio_example.py"],
       "env": {
-        "OPENWEATHER_API_KEY": "your-api-key-here",
-        "DEFAULT_UNITS": "metric"
+        "DEBUG": "true",
+        "LOG_LEVEL": "info"
       }
     }
   }
@@ -237,9 +236,9 @@ code ~/.config/claude/claude_desktop_config.json</code></pre>
                         </div>
                         <pre><code class="language-json">{
   "mcpServers": {
-    "weather": {
-      "command": "/Users/you/projects/mcp-weather/.venv/bin/python",
-      "args": ["/Users/you/projects/mcp-weather/server.py"]
+    "mcp-tools": {
+      "command": "/Users/you/projects/mcp-learning/.venv/bin/python",
+      "args": ["/Users/you/projects/mcp-learning/stdio_example.py"]
     }
   }
 }</code></pre>
@@ -286,26 +285,17 @@ code ~/.config/claude/claude_desktop_config.json</code></pre>
                         </div>
                         <pre><code class="language-json">{
   "mcpServers": {
-    "weather": {
-      "command": "/Users/you/projects/mcp-weather/.venv/bin/python",
-      "args": ["/Users/you/projects/mcp-weather/server.py"],
-      "env": {
-        "OPENWEATHER_API_KEY": "abc123"
-      }
+    "mcp-tools": {
+      "command": "/Users/you/projects/mcp-learning/.venv/bin/python",
+      "args": ["/Users/you/projects/mcp-learning/stdio_example.py"]
     },
-    "filesystem": {
+    "calculator": {
       "command": "python3",
-      "args": ["/Users/you/projects/mcp-files/server.py"],
-      "env": {
-        "ALLOWED_DIRECTORIES": "/Users/you/Documents,/Users/you/Projects"
-      }
+      "args": ["/Users/you/projects/mcp-learning/calculator_example.py"]
     },
-    "notes": {
+    "files": {
       "command": "python3",
-      "args": ["/Users/you/projects/mcp-notes/server.py"],
-      "env": {
-        "NOTES_DIR": "/Users/you/Notes"
-      }
+      "args": ["/Users/you/projects/mcp-learning/file_example.py"]
     }
   }
 }</code></pre>

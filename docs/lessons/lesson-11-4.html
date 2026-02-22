@@ -69,37 +69,25 @@
 
                     <h2>Check Server Status</h2>
                     <p>
-                        Claude Desktop provides visual indicators for MCP server status. Look for
-                        the MCP tools icon in the input area:
+                        To verify your MCP server is connected, open Claude Desktop's settings
+                        and look for the MCP or Developer section. You should see your configured
+                        servers listed with their connection status.
                     </p>
 
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-language">text</span>
-                            <button class="copy-button">Copy</button>
-                        </div>
-                        <pre><code>┌────────────────────────────────────────────────────────────┐
-│  Claude Desktop                                             │
-├────────────────────────────────────────────────────────────┤
-│                                                             │
-│  [Chat conversation area]                                   │
-│                                                             │
-├────────────────────────────────────────────────────────────┤
-│  [Message input]                          [Tools icon: 🔧]  │
-│                                                             │
-│  Clicking the tools icon shows available MCP tools          │
-└────────────────────────────────────────────────────────────┘
-
-Status indicators:
-  ✓ Tools icon visible = Server(s) connected
-  ✗ No tools icon = No servers connected or configuration error</code></pre>
+                    <div class="info-box tip">
+                        <div class="info-box-title">Quick Test</div>
+                        <p>
+                            The easiest way to verify your server is working: just ask Claude
+                            to use one of your tools! If the server is connected, Claude will
+                            be able to call the tool. If not, Claude will tell you it doesn't
+                            have access to that capability.
+                        </p>
                     </div>
 
                     <h2>View Available Tools</h2>
                     <p>
-                        Click the tools icon (or hammer icon) to see all available tools from
-                        your connected MCP servers:
-                    </p>
+                        When your MCP server is connected, Claude can see and use your tools.
+                        You can ask Claude "What tools do you have available?" to see a list:
 
                     <div class="code-block">
                         <div class="code-header">
@@ -108,19 +96,13 @@ Status indicators:
                         </div>
                         <pre><code>Available Tools:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-weather
-├── get_weather
-│   └── Get current weather for a city
-└── get_forecast
-    └── Get 5-day weather forecast
-
-filesystem
-├── read_file
-│   └── Read contents of a file
-├── write_file
-│   └── Write content to a file
-└── list_directory
-    └── List files in a directory</code></pre>
+mcp-server
+├── echo
+│   └── Echo back a message
+├── get_time
+│   └── Get current server time
+└── add_numbers
+    └── Add two numbers</code></pre>
                     </div>
 
                     <h2>Test with a Simple Query</h2>
@@ -134,19 +116,18 @@ filesystem
                             <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>You: "What's the weather in San Francisco?"
+                        <pre><code>You: "What's 125 plus 375?"
 
-[Claude thinks: This requires weather data. I have a 'get_weather'
-tool from the 'weather' MCP server. Let me use it.]
+[Claude thinks: This is a calculation. I have an 'add_numbers'
+tool from my MCP server. Let me use it.]
 
-Claude: I'll check the current weather for you.
+Claude: I'll calculate that for you.
 
-[Tool call: get_weather]
-[Arguments: {"city": "San Francisco"}]
-[Result: "San Francisco: 18°C, Foggy"]
+[Tool call: add_numbers]
+[Arguments: {"a": 125, "b": 375}]
+[Result: "125 + 375 = 500"]
 
-Claude: The current weather in San Francisco is 18°C (64°F)
-with foggy conditions - classic San Francisco weather!</code></pre>
+Claude: 125 plus 375 equals 500.</code></pre>
                     </div>
 
                     <h2>Test Multiple Tools</h2>
@@ -159,14 +140,14 @@ with foggy conditions - classic San Francisco weather!</code></pre>
                             <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code># Tool 1: get_weather
-You: "What's the weather in Tokyo?"
+                        <pre><code># Tool 1: add_numbers
+You: "What's 42 times 3? Oh wait, can you add 99 and 1?"
 
-# Tool 2: get_forecast
-You: "What's the 5-day forecast for London?"
+# Tool 2: echo
+You: "Can you echo 'Hello, MCP!' back to me?"
 
-# Tool 3: (if you have more tools)
-You: "Compare the weather in Paris and Berlin"</code></pre>
+# Tool 3: get_time
+You: "What time is it on the server?"</code></pre>
                     </div>
 
                     <h2>Test Resources (If Available)</h2>
@@ -179,16 +160,15 @@ You: "Compare the weather in Paris and Berlin"</code></pre>
                             <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>You: "What weather data sources are available?"
+                        <pre><code>You: "Can you read the project README?"
 
-Claude: Let me check the available resources from the weather server.
+Claude: Let me check the available resources from the file server.
 
-[Resource read: weather://sources]
+[Resource read: file://readme]
 
-Claude: The weather server provides data from the following sources:
-- OpenWeatherMap (primary)
-- National Weather Service (US only)
-- Environment Canada (Canada only)</code></pre>
+Claude: Here's what the README contains:
+# My MCP Project
+This is an example MCP server built following the MCP Learning Guide...</code></pre>
                     </div>
 
                     <h2>Test Prompts (If Available)</h2>
@@ -201,12 +181,12 @@ Claude: The weather server provides data from the following sources:
                             <span class="code-language">text</span>
                             <button class="copy-button">Copy</button>
                         </div>
-                        <pre><code>You: "Use the weather report prompt for New York"
+                        <pre><code>You: "Use the code-review prompt for this Python function"
 
-[Prompt: weather_report]
-[Arguments: {"city": "New York"}]
+[Prompt: code-review]
+[Arguments: {"code": "def add(a, b): return a + b", "language": "python"}]
 
-Claude: [Generates formatted weather report based on prompt template]</code></pre>
+Claude: [Generates code review based on prompt template]</code></pre>
                     </div>
 
                     <h2>Expected Behavior</h2>
@@ -258,19 +238,19 @@ Claude: [Generates formatted weather report based on prompt template]</code></pr
                         <pre><code>Test Checklist:
 
 □ Basic tool call
-  "What's the weather in [city]?"
+  "What's 15 plus 27?"
 
 □ Tool with multiple parameters
-  "Get the weather in Paris in Celsius"
+  "Add 100 and 250 together"
 
-□ Tool with optional parameters
-  "What's the weather in Berlin?" (uses defaults)
+□ Different tools
+  "Echo 'Hello world' and then tell me the time"
 
 □ Invalid input handling
-  "What's the weather in XYZ123?" (should handle gracefully)
+  "Add the number five to banana" (should handle gracefully)
 
 □ Multiple sequential calls
-  "Weather in NYC, then London, then Tokyo"
+  "Add 1+2, then 3+4, then 5+6"
 
 □ Error recovery
   [Stop your server, try a query, restart, try again]
@@ -331,8 +311,8 @@ def handle_tool_call(name: str, arguments: dict):
                     </p>
 
                     <ul>
-                        <li>The tools icon appears in Claude Desktop</li>
-                        <li>Your tools are listed when clicking the icon</li>
+                        <li>Your server appears in Claude Desktop settings as connected</li>
+                        <li>Claude can list your tools when asked</li>
                         <li>Claude uses your tools when appropriate</li>
                         <li>Tool results are incorporated into responses</li>
                         <li>Errors are handled gracefully</li>

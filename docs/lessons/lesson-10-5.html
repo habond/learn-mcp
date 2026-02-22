@@ -122,14 +122,15 @@ class Tool:
                         <pre><code class="language-json">{
     "tools": [
         {
-            "name": "get_weather",
-            "description": "Get current weather for a city",
+            "name": "add_numbers",
+            "description": "Add two numbers",
             "inputSchema": {
                 "type": "object",
                 "properties": {
-                    "city": {"type": "string", "description": "City name"}
+                    "a": {"type": "number", "description": "First number"},
+                    "b": {"type": "number", "description": "Second number"}
                 },
-                "required": ["city"]
+                "required": ["a", "b"]
             }
         }
     ]
