@@ -142,7 +142,7 @@ import json
 import sys
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 
@@ -158,8 +158,8 @@ class Note:
     title: str
     content: str
     tags: List[str] = field(default_factory=list)
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-    updated_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def to_dict(self) -> dict:
         return {
@@ -178,8 +178,8 @@ class Note:
             title=data["title"],
             content=data["content"],
             tags=data.get("tags", []),
-            created_at=data.get("created_at", datetime.utcnow().isoformat()),
-            updated_at=data.get("updated_at", datetime.utcnow().isoformat()),
+            created_at=data.get("created_at", datetime.now(timezone.utc).isoformat()),
+            updated_at=data.get("updated_at", datetime.now(timezone.utc).isoformat()),
         )
 
     @staticmethod
@@ -214,7 +214,7 @@ class NotesStorage:
         with open(self.filepath, "w") as f:
             json.dump([n.to_dict() for n in self.notes], f, indent=2)
 
-    def create(self, title: str, content: str, tags: List[str] = None) -> Note:
+    def create(self, title: str, content: str, tags: Optional[List[str]] = None) -> Note:
         note = Note(
             id=Note.generate_id(),
             title=title,
@@ -231,8 +231,8 @@ class NotesStorage:
                 return note
         return None
 
-    def update(self, note_id: str, title: str = None,
-               content: str = None, tags: List[str] = None) -> Optional[Note]:
+    def update(self, note_id: str, title: Optional[str] = None,
+               content: Optional[str] = None, tags: Optional[List[str]] = None) -> Optional[Note]:
         note = self.get_by_id(note_id)
         if not note:
             return None
@@ -242,7 +242,7 @@ class NotesStorage:
             note.content = content
         if tags is not None:
             note.tags = tags
-        note.updated_at = datetime.utcnow().isoformat()
+        note.updated_at = datetime.now(timezone.utc).isoformat()
         self.save()
         return note
 
@@ -254,7 +254,7 @@ class NotesStorage:
         self.save()
         return True
 
-    def search(self, query: str = None, tag: str = None) -> List[Note]:
+    def search(self, query: Optional[str] = None, tag: Optional[str] = None) -> List[Note]:
         results = self.notes
         if tag:
             results = [n for n in results if tag.lower() in [t.lower() for t in n.tags]]
